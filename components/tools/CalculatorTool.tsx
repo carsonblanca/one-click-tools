@@ -1,32 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolInput,
+  ToolPanel,
+  ToolResultBox,
+} from "../tool-ui/ToolUI";
 
 export default function CalculatorTool() {
   const [input, setInput] = useState("");
+  const [result, setResult] = useState("");
+
+  const calculate = () => {
+    try {
+      const safePattern = /^[0-9+\-*/().\s%]+$/;
+
+      if (!safePattern.test(input)) {
+        alert("Only basic math expressions are allowed.");
+        return;
+      }
+
+      // eslint-disable-next-line no-new-func
+      const value = Function(`"use strict"; return (${input})`)();
+      setResult(String(value));
+    } catch {
+      alert("Invalid calculation.");
+    }
+  };
 
   return (
-    <div className="mt-8">
-      <input
+    <ToolPanel>
+      <ToolInput
         value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Enter calculation..."
-        className="w-full rounded-xl bg-black/30 p-4 border border-white/10"
+        onChange={setInput}
+        placeholder="Enter calculation, e.g. 24 * 8 + 10"
       />
 
-      <button
-        onClick={() => {
-          try {
-            // eslint-disable-next-line no-eval
-            setInput(eval(input).toString());
-          } catch {
-            alert("Invalid calculation");
-          }
-        }}
-        className="mt-4 rounded-xl bg-purple-600 px-5 py-3"
-      >
-        Calculate
-      </button>
-    </div>
+      <ToolButtonRow>
+        <ToolButton onClick={calculate}>Calculate</ToolButton>
+        <ToolButton
+          onClick={() => {
+            setInput("");
+            setResult("");
+          }}
+          variant="danger"
+        >
+          Clear
+        </ToolButton>
+      </ToolButtonRow>
+
+      <ToolResultBox muted={!result}>
+        {result || "Result will appear here."}
+      </ToolResultBox>
+    </ToolPanel>
   );
 }

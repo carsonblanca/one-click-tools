@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolPanel,
+  ToolTextarea,
+} from "../tool-ui/ToolUI";
 
 export default function CaseConverterTool() {
   const [text, setText] = useState("");
@@ -12,44 +18,31 @@ export default function CaseConverterTool() {
   };
 
   return (
-    <div className="mt-8">
-      <textarea
+    <ToolPanel>
+      <ToolTextarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={setText}
         placeholder="Enter text..."
-        className="w-full rounded-xl bg-black/30 p-4 border border-white/10"
         rows={10}
       />
 
-      <div className="mt-4 flex flex-wrap gap-4">
-        <button
-          onClick={() => setText(text.toUpperCase())}
-          className="rounded-xl bg-purple-600 px-5 py-3"
-        >
+      <ToolButtonRow>
+        <ToolButton onClick={() => setText(text.toUpperCase())}>
           UPPERCASE
-        </button>
+        </ToolButton>
 
-        <button
-          onClick={() => setText(text.toLowerCase())}
-          className="rounded-xl bg-white/10 px-5 py-3"
-        >
+        <ToolButton onClick={() => setText(text.toLowerCase())} variant="secondary">
           lowercase
-        </button>
+        </ToolButton>
 
-        <button
-          onClick={() => setText(toTitleCase(text))}
-          className="rounded-xl bg-white/10 px-5 py-3"
-        >
+        <ToolButton onClick={() => setText(toTitleCase(text))} variant="secondary">
           Title Case
-        </button>
+        </ToolButton>
 
-        <button
-          onClick={() => setText("")}
-          className="rounded-xl bg-red-500/20 px-5 py-3 text-red-300"
-        >
+        <ToolButton onClick={() => setText("")} variant="danger">
           Clear
-        </button>
-      </div>
-    </div>
+        </ToolButton>
+      </ToolButtonRow>
+    </ToolPanel>
   );
 }

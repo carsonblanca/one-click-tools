@@ -1,35 +1,50 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolPanel,
+  ToolTextarea,
+} from "../tool-ui/ToolUI";
 
 export default function Base64Tool() {
   const [text, setText] = useState("");
 
+  const encode = () => {
+    try {
+      setText(btoa(unescape(encodeURIComponent(text))));
+    } catch {
+      alert("Unable to encode this text.");
+    }
+  };
+
+  const decode = () => {
+    try {
+      setText(decodeURIComponent(escape(atob(text))));
+    } catch {
+      alert("Invalid Base64 input.");
+    }
+  };
+
   return (
-    <div className="mt-8">
-      <textarea
+    <ToolPanel>
+      <ToolTextarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Enter text..."
-        className="w-full rounded-xl bg-black/30 p-4 border border-white/10"
+        onChange={setText}
+        placeholder="Enter text or Base64..."
         rows={8}
       />
 
-      <div className="mt-4 flex gap-4">
-        <button
-          onClick={() => setText(btoa(text))}
-          className="rounded-xl bg-purple-600 px-5 py-3"
-        >
-          Encode
-        </button>
-
-        <button
-          onClick={() => setText(atob(text))}
-          className="rounded-xl bg-white/10 px-5 py-3"
-        >
+      <ToolButtonRow>
+        <ToolButton onClick={encode}>Encode</ToolButton>
+        <ToolButton onClick={decode} variant="secondary">
           Decode
-        </button>
-      </div>
-    </div>
+        </ToolButton>
+        <ToolButton onClick={() => setText("")} variant="danger">
+          Clear
+        </ToolButton>
+      </ToolButtonRow>
+    </ToolPanel>
   );
 }

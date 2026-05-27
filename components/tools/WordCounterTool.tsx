@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolPanel,
+  ToolStatCard,
+  ToolTextarea,
+} from "../tool-ui/ToolUI";
 
 export default function WordCounterTool() {
   const [text, setText] = useState("");
@@ -9,40 +16,30 @@ export default function WordCounterTool() {
   const characters = text.length;
   const charactersNoSpaces = text.replace(/\s/g, "").length;
   const paragraphs = text.trim()
-    ? text.split(/\n+/).filter((p) => p.trim()).length
+    ? text.split(/\n+/).filter((paragraph) => paragraph.trim()).length
     : 0;
 
   return (
-    <div className="mt-8">
-      <textarea
+    <ToolPanel>
+      <ToolTextarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={setText}
         placeholder="Enter or paste your text..."
-        className="w-full rounded-xl bg-black/30 p-4 border border-white/10"
         rows={10}
       />
 
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="text-sm text-white/50">Words</div>
-          <div className="mt-2 text-2xl font-bold">{words}</div>
-        </div>
-
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="text-sm text-white/50">Characters</div>
-          <div className="mt-2 text-2xl font-bold">{characters}</div>
-        </div>
-
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="text-sm text-white/50">No Spaces</div>
-          <div className="mt-2 text-2xl font-bold">{charactersNoSpaces}</div>
-        </div>
-
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="text-sm text-white/50">Paragraphs</div>
-          <div className="mt-2 text-2xl font-bold">{paragraphs}</div>
-        </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-4">
+        <ToolStatCard label="Words" value={words} />
+        <ToolStatCard label="Characters" value={characters} />
+        <ToolStatCard label="No Spaces" value={charactersNoSpaces} />
+        <ToolStatCard label="Paragraphs" value={paragraphs} />
       </div>
-    </div>
+
+      <ToolButtonRow>
+        <ToolButton onClick={() => setText("")} variant="danger">
+          Clear
+        </ToolButton>
+      </ToolButtonRow>
+    </ToolPanel>
   );
 }

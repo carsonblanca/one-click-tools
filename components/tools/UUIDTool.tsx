@@ -1,22 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolPanel,
+  ToolResultBox,
+} from "../tool-ui/ToolUI";
 
 export default function UUIDTool() {
   const [uuid, setUuid] = useState("");
 
-  return (
-    <div className="mt-8">
-      <div className="rounded-xl border border-white/10 bg-black/30 p-6 text-lg break-all">
-        {uuid || "Click generate UUID"}
-      </div>
+  const generate = () => {
+    setUuid(crypto.randomUUID());
+  };
 
-      <button
-        onClick={() => setUuid(crypto.randomUUID())}
-        className="mt-4 rounded-xl bg-purple-600 px-5 py-3"
-      >
-        Generate UUID
-      </button>
-    </div>
+  const copy = async () => {
+    if (!uuid) return;
+    await navigator.clipboard.writeText(uuid);
+  };
+
+  return (
+    <ToolPanel>
+      <ToolResultBox muted={!uuid}>
+        {uuid || "Click generate to create a UUID."}
+      </ToolResultBox>
+
+      <ToolButtonRow>
+        <ToolButton onClick={generate}>Generate UUID</ToolButton>
+        <ToolButton onClick={copy} variant="secondary">
+          Copy
+        </ToolButton>
+        <ToolButton onClick={() => setUuid("")} variant="danger">
+          Clear
+        </ToolButton>
+      </ToolButtonRow>
+    </ToolPanel>
   );
 }

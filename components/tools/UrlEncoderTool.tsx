@@ -1,48 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import {
+  ToolButton,
+  ToolButtonRow,
+  ToolPanel,
+  ToolTextarea,
+} from "../tool-ui/ToolUI";
 
 export default function UrlEncoderTool() {
   const [text, setText] = useState("");
 
+  const encode = () => {
+    setText(encodeURIComponent(text));
+  };
+
+  const decode = () => {
+    try {
+      setText(decodeURIComponent(text));
+    } catch {
+      alert("Invalid encoded URL.");
+    }
+  };
+
   return (
-    <div className="mt-8">
-      <textarea
+    <ToolPanel>
+      <ToolTextarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={setText}
         placeholder="Enter URL or text..."
-        className="w-full rounded-xl bg-black/30 p-4 border border-white/10"
         rows={8}
       />
 
-      <div className="mt-4 flex flex-wrap gap-4">
-        <button
-          onClick={() => setText(encodeURIComponent(text))}
-          className="rounded-xl bg-purple-600 px-5 py-3"
-        >
-          Encode URL
-        </button>
-
-        <button
-          onClick={() => {
-            try {
-              setText(decodeURIComponent(text));
-            } catch {
-              alert("Invalid encoded URL");
-            }
-          }}
-          className="rounded-xl bg-white/10 px-5 py-3"
-        >
+      <ToolButtonRow>
+        <ToolButton onClick={encode}>Encode URL</ToolButton>
+        <ToolButton onClick={decode} variant="secondary">
           Decode URL
-        </button>
-
-        <button
-          onClick={() => setText("")}
-          className="rounded-xl bg-red-500/20 px-5 py-3 text-red-300"
-        >
+        </ToolButton>
+        <ToolButton onClick={() => setText("")} variant="danger">
           Clear
-        </button>
-      </div>
-    </div>
+        </ToolButton>
+      </ToolButtonRow>
+    </ToolPanel>
   );
 }
