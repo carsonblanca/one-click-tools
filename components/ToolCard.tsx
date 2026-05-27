@@ -1,13 +1,13 @@
-import Link from "next/link";
+"use client";
 
-type Theme = "dark" | "light";
+import Link from "next/link";
+import { useTheme } from "./ThemeProvider";
 
 type ToolCardProps = {
   name: string;
   slug: string;
   desc: string;
   tag: string;
-  theme?: Theme;
 };
 
 const darkCategoryStyles: Record<string, string> = {
@@ -45,9 +45,8 @@ export default function ToolCard({
   slug,
   desc,
   tag,
-  theme = "dark",
 }: ToolCardProps) {
-  const isDark = theme === "dark";
+  const { isDark } = useTheme();
 
   const style = isDark
     ? darkCategoryStyles[tag] ||

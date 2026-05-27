@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ToolCard from "./ToolCard";
-
-type Theme = "dark" | "light";
+import { useTheme } from "./ThemeProvider";
 
 type Tool = {
   name: string;
@@ -24,16 +23,13 @@ type Category = {
 export default function ToolsBrowser({
   tools,
   categories,
-  theme = "dark",
 }: {
   tools: Tool[];
   categories: Category[];
-  theme?: Theme;
 }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-
-  const isDark = theme === "dark";
+  const { isDark } = useTheme();
 
   const categoriesWithTools = categories.filter((category) =>
     tools.some((tool) => tool.categorySlug === category.slug)
@@ -210,7 +206,6 @@ export default function ToolsBrowser({
               slug={tool.slug}
               tag={tool.category || tool.tag}
               desc={tool.desc || tool.description}
-              theme={theme}
             />
           ))}
         </div>

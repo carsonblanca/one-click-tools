@@ -1,42 +1,42 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { ThemeProvider } from "../components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "OneClick AI Tools",
+  title: "OneClick Tools",
   description:
-    "Free online AI tools, image tools, developer tools and productivity utilities.",
-
+    "Free online tools for images, text, developers and everyday web work.",
   verification: {
-    google:
-      "OPJSUI9zewuMidmtCZ1Zuo009SX3JPhaFAW91HBQiwY",
+    google: "OPJSUI9zewuMidmtCZ1Zuo009SX3JPhaFAW91HBQiwY",
   },
-
   openGraph: {
-    title: "OneClick AI Tools",
+    title: "OneClick Tools",
     description:
-      "Free online AI tools and utilities.",
+      "Free online tools for images, text, developers and everyday web work.",
     url: "https://one-click-tools.com",
-    siteName: "OneClick AI Tools",
+    siteName: "OneClick Tools",
     locale: "en_US",
     type: "website",
   },
-
   twitter: {
     card: "summary_large_image",
-    title: "OneClick AI Tools",
+    title: "OneClick Tools",
     description:
-      "Free online AI tools and utilities.",
+      "Free online tools for images, text, developers and everyday web work.",
   },
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

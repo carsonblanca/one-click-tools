@@ -1,19 +1,13 @@
 "use client";
 
-type Theme = "dark" | "light";
+import { useTheme } from "./ThemeProvider";
 
-export default function ThemeToggle({
-  theme,
-  setTheme,
-}: {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}) {
-  const isDark = theme === "dark";
+export default function ThemeToggle() {
+  const { theme, setTheme, isDark } = useTheme();
 
   return (
     <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className={`rounded-full border px-4 py-2 text-sm transition ${
         isDark
           ? "border-white/10 bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
