@@ -91,6 +91,36 @@ export function ToolTextarea({
   );
 }
 
+export function ToolCheckbox({
+  checked,
+  children,
+  onChange,
+}: {
+  checked: boolean;
+  children: ReactNode;
+  onChange: (checked: boolean) => void;
+}) {
+  const { isDark } = useTheme();
+
+  return (
+    <label
+      className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
+        isDark
+          ? "border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+          : "border-[#E5DED0] bg-[#F5F2EA] text-[#6B665D] hover:border-[#2563EB]/30"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className={isDark ? "accent-lime-300" : "accent-[#2563EB]"}
+      />
+      <span>{children}</span>
+    </label>
+  );
+}
+
 export function ToolButton({
   children,
   onClick,
