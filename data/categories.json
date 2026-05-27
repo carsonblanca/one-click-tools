@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Image",
+    "slug": "image",
+    "description": "Image conversion, compression and resizing tools."
+  },
+  {
+    "name": "Text",
+    "slug": "text",
+    "description": "Text editing, counting and formatting tools."
+  },
+  {
+    "name": "Developer",
+    "slug": "developer",
+    "description": "Developer utilities for coding, formatting and encoding."
+  },
+  {
+    "name": "Utility",
+    "slug": "utility",
+    "description": "Simple everyday online utilities."
+  },
+  {
+    "name": "SEO",
+    "slug": "seo",
+    "description": "SEO tools for metadata, slugs and search optimization."
+  },
+  {
+    "name": "Color",
+    "slug": "color",
+    "description": "Color conversion and design tools."
+  },
+  {
+    "name": "Date Time",
+    "slug": "date-time",
+    "description": "Date, time, timezone and timestamp tools."
+  },
+  {
+    "name": "Security",
+    "slug": "security",
+    "description": "Security tools such as passwords, hashes and tokens."
+  },
+  {
+    "name": "Unit",
+    "slug": "unit",
+    "description": "Unit conversion tools."
+  },
+  {
+    "name": "File",
+    "slug": "file",
+    "description": "File processing and conversion tools."
+  },
+  {
+    "name": "AI",
+    "slug": "ai",
+    "description": "AI prompt and productivity tools."
+  },
+  {
+    "name": "Finance",
+    "slug": "finance",
+    "description": "Finance, tax and profit calculation tools."
+  }
+]

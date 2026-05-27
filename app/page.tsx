@@ -1,16 +1,27 @@
+import Link from "next/link";
 import tools from "../data/tools.json";
-import ToolCard from "../components/ToolCard";
+import categories from "../data/categories.json";
+import ToolsBrowser from "../components/ToolsBrowser";
 
 type Tool = {
   name: string;
   slug: string;
   tag: string;
+  category: string;
+  categorySlug: string;
   desc: string;
+  description: string;
+};
+
+type Category = {
+  name: string;
+  slug: string;
   description: string;
 };
 
 export default function Home() {
   const toolList = tools as Tool[];
+  const categoryList = categories as Category[];
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
@@ -18,17 +29,18 @@ export default function Home() {
 
       <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="text-xl font-semibold">
+          <Link href="/" className="text-xl font-semibold">
             OneClick Tools
-          </div>
+          </Link>
 
           <nav className="hidden gap-6 text-sm text-white/60 md:flex">
             <a href="#tools" className="hover:text-white">
               Tools
             </a>
-            <a href="/sitemap.xml" className="hover:text-white">
-              Sitemap
-            </a>
+
+            <Link href="/site-map" className="hover:text-white">
+              Site Map
+            </Link>
           </nav>
         </div>
       </header>
@@ -44,39 +56,27 @@ export default function Home() {
 
         <p className="mt-6 max-w-2xl text-lg leading-8 text-white/60">
           OneClick Tools provides free online utilities for developers,
-          creators and everyday users. No login, no clutter, just useful tools.
+          creators and everyday users. Search, browse, and use tools instantly
+          with no login required.
         </p>
       </section>
 
-      <section
-        id="tools"
-        className="relative z-10 mx-auto max-w-7xl px-6 pb-24"
-      >
-        <div className="mb-10">
-          <h2 className="text-3xl font-bold">
-            All Tools
-          </h2>
-
-          <p className="mt-3 text-white/50">
-            Choose a tool and get things done in one click.
-          </p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {toolList.map((tool) => (
-            <ToolCard
-              key={tool.slug}
-              name={tool.name}
-              slug={tool.slug}
-              tag={tool.tag}
-              desc={tool.desc || tool.description}
-            />
-          ))}
-        </div>
-      </section>
+      <ToolsBrowser tools={toolList} categories={categoryList} />
 
       <footer className="relative z-10 border-t border-white/10 py-10 text-center text-sm text-white/40">
-        © 2026 OneClick Tools
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-3 px-6 md:flex-row md:justify-between">
+          <div>© 2026 OneClick Tools</div>
+
+          <div className="flex gap-5">
+            <Link href="/site-map" className="hover:text-white">
+              Site Map
+            </Link>
+
+            <a href="/sitemap.xml" className="hover:text-white">
+              XML Sitemap
+            </a>
+          </div>
+        </div>
       </footer>
     </main>
   );
