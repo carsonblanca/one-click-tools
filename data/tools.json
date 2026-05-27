@@ -1,26 +1,58 @@
 [
   {
-    "slug": "png-to-webp",
-    "name": "PNG to WEBP",
-    "desc": "Convert PNG images to WEBP instantly",
-    "tag": "Image"
-  },
-  {
-    "slug": "json-formatter",
-    "name": "JSON Formatter",
-    "desc": "Format and validate JSON instantly",
-    "tag": "Dev"
-  },
-  {
+    "name": "Base64 Encoder",
     "slug": "base64",
-    "name": "Base64 Tool",
-    "desc": "Encode and decode Base64 strings",
-    "tag": "Dev"
+    "tag": "Dev",
+    "desc": "Encode and decode Base64 online.",
+    "description": "Encode and decode Base64 online."
   },
   {
-    "slug": "calculator",
+    "name": "JSON Formatter",
+    "slug": "json-formatter",
+    "tag": "Dev",
+    "desc": "Format and beautify JSON online.",
+    "description": "Format and beautify JSON online."
+  },
+  {
     "name": "Calculator",
-    "desc": "Simple online calculator",
-    "tag": "Utility"
+    "slug": "calculator",
+    "tag": "Utility",
+    "desc": "Simple online calculator.",
+    "description": "Simple online calculator."
+  },
+  {
+    "name": "UUID Generator",
+    "slug": "uuid-generator",
+    "tag": "Dev",
+    "desc": "Generate random UUID instantly.",
+    "description": "Generate random UUID instantly."
+  },
+  {
+    "name": "Word Counter",
+    "slug": "word-counter",
+    "tag": "Text",
+    "desc": "Count words, characters and paragraphs online.",
+    "description": "Count words, characters and paragraphs online."
+  },
+  {
+    "name": "Case Converter",
+    "slug": "case-converter",
+    "tag": "Text",
+    "desc": "Convert text to uppercase, lowercase and title case.",
+    "description": "Convert text to uppercase, lowercase and title case."
+  },
+  {
+    "name": "Timestamp Converter",
+    "slug": "timestamp-converter",
+    "tag": "Dev",
+    "desc": "Convert Unix timestamps to readable dates.",
+    "description": "Convert Unix timestamps to readable dates."
+  },
+  {
+    "name": "URL Encoder Decoder",
+    "slug": "url-encoder",
+    "tag": "Dev",
+    "desc": "Encode and decode URLs online.",
+    "description": "Encode and decode URLs online."
   }
 ]
