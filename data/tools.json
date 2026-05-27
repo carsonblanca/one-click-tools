@@ -54,5 +54,47 @@
     "tag": "Dev",
     "desc": "Encode and decode URLs online.",
     "description": "Encode and decode URLs online."
+  },
+  {
+    "name": "PNG to WEBP",
+    "slug": "png-to-webp",
+    "tag": "Image",
+    "desc": "Convert PNG images to WEBP online.",
+    "description": "Convert PNG images to WEBP online."
+  },
+  {
+    "name": "PNG to JPG",
+    "slug": "png-to-jpg",
+    "tag": "Image",
+    "desc": "Convert PNG images to JPG online.",
+    "description": "Convert PNG images to JPG online."
+  },
+  {
+    "name": "JPG to PNG",
+    "slug": "jpg-to-png",
+    "tag": "Image",
+    "desc": "Convert JPG images to PNG online.",
+    "description": "Convert JPG images to PNG online."
+  },
+  {
+    "name": "WEBP to PNG",
+    "slug": "webp-to-png",
+    "tag": "Image",
+    "desc": "Convert WEBP images to PNG online.",
+    "description": "Convert WEBP images to PNG online."
+  },
+  {
+    "name": "Image Resizer",
+    "slug": "image-resizer",
+    "tag": "Image",
+    "desc": "Resize images online by width and height.",
+    "description": "Resize images online by width and height."
+  },
+  {
+    "name": "Image Compressor",
+    "slug": "image-compressor",
+    "tag": "Image",
+    "desc": "Compress images online and reduce file size.",
+    "description": "Compress images online and reduce file size."
   }
 ]
