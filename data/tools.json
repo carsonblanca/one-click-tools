@@ -36,6 +36,15 @@
     "description": "Generate random UUID instantly."
   },
   {
+    "name": "Password Generator",
+    "slug": "password-generator",
+    "tag": "Security",
+    "category": "Security",
+    "categorySlug": "security",
+    "desc": "Generate secure random passwords online.",
+    "description": "Generate secure random passwords online."
+  },
+  {
     "name": "Word Counter",
     "slug": "word-counter",
     "tag": "Text",
