@@ -5,7 +5,13 @@ import JsonFormatterTool from "../../../components/tools/JsonFormatterTool";
 import CalculatorTool from "../../../components/tools/CalculatorTool";
 import UUIDTool from "../../../components/tools/UUIDTool";
 import PasswordGeneratorTool from "../../../components/tools/PasswordGeneratorTool";
+import MarkdownPreviewerTool from "../../../components/tools/MarkdownPreviewerTool";
+import HtmlFormatterTool from "../../../components/tools/HtmlFormatterTool";
+import CssFormatterTool from "../../../components/tools/CssFormatterTool";
+import JavascriptFormatterTool from "../../../components/tools/JavascriptFormatterTool";
+import RegexTesterTool from "../../../components/tools/RegexTesterTool";
 import WordCounterTool from "../../../components/tools/WordCounterTool";
+import LoremIpsumGeneratorTool from "../../../components/tools/LoremIpsumGeneratorTool";
 import CaseConverterTool from "../../../components/tools/CaseConverterTool";
 import TimestampConverterTool from "../../../components/tools/TimestampConverterTool";
 import UrlEncoderTool from "../../../components/tools/UrlEncoderTool";
@@ -38,8 +44,32 @@ export default function ToolClient({ slug }: { slug: string }) {
     return <PasswordGeneratorTool />;
   }
 
+  if (slug === "markdown-previewer") {
+    return <MarkdownPreviewerTool />;
+  }
+
+  if (slug === "html-formatter") {
+    return <HtmlFormatterTool />;
+  }
+
+  if (slug === "css-formatter") {
+    return <CssFormatterTool />;
+  }
+
+  if (slug === "javascript-formatter") {
+    return <JavascriptFormatterTool />;
+  }
+
+  if (slug === "regex-tester") {
+    return <RegexTesterTool />;
+  }
+
   if (slug === "word-counter") {
     return <WordCounterTool />;
+  }
+
+  if (slug === "lorem-ipsum-generator") {
+    return <LoremIpsumGeneratorTool />;
   }
 
   if (slug === "case-converter") {

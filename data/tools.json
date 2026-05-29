@@ -45,6 +45,51 @@
     "description": "Generate secure random passwords online."
   },
   {
+    "name": "Markdown Previewer",
+    "slug": "markdown-previewer",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Preview basic Markdown online.",
+    "description": "Preview basic Markdown online with headings, links, lists and inline styles."
+  },
+  {
+    "name": "HTML Formatter",
+    "slug": "html-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify HTML online.",
+    "description": "Format and minify HTML online in your browser."
+  },
+  {
+    "name": "CSS Formatter",
+    "slug": "css-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify CSS online.",
+    "description": "Format and minify CSS online in your browser."
+  },
+  {
+    "name": "JavaScript Formatter",
+    "slug": "javascript-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify JavaScript online.",
+    "description": "Format and minify JavaScript online without executing code."
+  },
+  {
+    "name": "Regex Tester",
+    "slug": "regex-tester",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Test regular expressions online.",
+    "description": "Test regular expressions online with global, case insensitive and multiline options."
+  },
+  {
     "name": "Word Counter",
     "slug": "word-counter",
     "tag": "Text",
@@ -52,6 +97,15 @@
     "categorySlug": "text",
     "desc": "Count words, characters and paragraphs online.",
     "description": "Count words, characters and paragraphs online."
+  },
+  {
+    "name": "Lorem Ipsum Generator",
+    "slug": "lorem-ipsum-generator",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Generate lorem ipsum placeholder text.",
+    "description": "Generate lorem ipsum placeholder text in your browser."
   },
   {
     "name": "Case Converter",
