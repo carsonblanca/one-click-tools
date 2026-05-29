@@ -4,6 +4,9 @@ import Base64Tool from "../../../components/tools/Base64Tool";
 import JsonFormatterTool from "../../../components/tools/JsonFormatterTool";
 import CalculatorTool from "../../../components/tools/CalculatorTool";
 import UUIDTool from "../../../components/tools/UUIDTool";
+import HashGeneratorTool from "../../../components/tools/HashGeneratorTool";
+import JwtDecoderTool from "../../../components/tools/JwtDecoderTool";
+import ColorConverterTool from "../../../components/tools/ColorConverterTool";
 import WordCounterTool from "../../../components/tools/WordCounterTool";
 import CaseConverterTool from "../../../components/tools/CaseConverterTool";
 import TimestampConverterTool from "../../../components/tools/TimestampConverterTool";
@@ -31,6 +34,18 @@ export default function ToolClient({ slug }: { slug: string }) {
 
   if (slug === "uuid-generator") {
     return <UUIDTool />;
+  }
+
+  if (slug === "hash-generator") {
+    return <HashGeneratorTool />;
+  }
+
+  if (slug === "jwt-decoder") {
+    return <JwtDecoderTool />;
+  }
+
+  if (slug === "color-converter") {
+    return <ColorConverterTool />;
   }
 
   if (slug === "word-counter") {
