@@ -160,5 +160,59 @@
     "categorySlug": "image",
     "desc": "Compress images online and reduce file size.",
     "description": "Compress images online and reduce file size."
+  },
+  {
+    "name": "Markdown Previewer",
+    "slug": "markdown-previewer",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Preview Markdown text online.",
+    "description": "Preview Markdown text online."
+  },
+  {
+    "name": "HTML Formatter",
+    "slug": "html-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify HTML online.",
+    "description": "Format and minify HTML online."
+  },
+  {
+    "name": "CSS Formatter",
+    "slug": "css-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify CSS online.",
+    "description": "Format and minify CSS online."
+  },
+  {
+    "name": "JavaScript Formatter",
+    "slug": "javascript-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify JavaScript online.",
+    "description": "Format and minify JavaScript online without executing code."
+  },
+  {
+    "name": "Regex Tester",
+    "slug": "regex-tester",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Test regular expressions online.",
+    "description": "Test regular expressions online."
+  },
+  {
+    "name": "Lorem Ipsum Generator",
+    "slug": "lorem-ipsum-generator",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Generate lorem ipsum placeholder text.",
+    "description": "Generate lorem ipsum placeholder text online."
   }
 ]
