@@ -45,49 +45,31 @@
     "description": "Generate secure random passwords online."
   },
   {
-    "name": "Markdown Previewer",
-    "slug": "markdown-previewer",
-    "tag": "Developer",
-    "category": "Developer",
-    "categorySlug": "developer",
-    "desc": "Preview basic Markdown online.",
-    "description": "Preview basic Markdown online with headings, links, lists and inline styles."
+    "name": "Hash Generator",
+    "slug": "hash-generator",
+    "tag": "Security",
+    "category": "Security",
+    "categorySlug": "security",
+    "desc": "Generate SHA-256 hashes online.",
+    "description": "Generate SHA-256 hashes online."
   },
   {
-    "name": "HTML Formatter",
-    "slug": "html-formatter",
+    "name": "JWT Decoder",
+    "slug": "jwt-decoder",
     "tag": "Developer",
     "category": "Developer",
     "categorySlug": "developer",
-    "desc": "Format and minify HTML online.",
-    "description": "Format and minify HTML online in your browser."
+    "desc": "Decode JWT headers and payloads online.",
+    "description": "Decode JWT headers and payloads online without validating signatures."
   },
   {
-    "name": "CSS Formatter",
-    "slug": "css-formatter",
-    "tag": "Developer",
-    "category": "Developer",
-    "categorySlug": "developer",
-    "desc": "Format and minify CSS online.",
-    "description": "Format and minify CSS online in your browser."
-  },
-  {
-    "name": "JavaScript Formatter",
-    "slug": "javascript-formatter",
-    "tag": "Developer",
-    "category": "Developer",
-    "categorySlug": "developer",
-    "desc": "Format and minify JavaScript online.",
-    "description": "Format and minify JavaScript online without executing code."
-  },
-  {
-    "name": "Regex Tester",
-    "slug": "regex-tester",
-    "tag": "Developer",
-    "category": "Developer",
-    "categorySlug": "developer",
-    "desc": "Test regular expressions online.",
-    "description": "Test regular expressions online with global, case insensitive and multiline options."
+    "name": "Color Converter",
+    "slug": "color-converter",
+    "tag": "Color",
+    "category": "Color",
+    "categorySlug": "color",
+    "desc": "Convert HEX colors to RGB and HSL.",
+    "description": "Convert HEX colors to RGB and HSL online."
   },
   {
     "name": "Word Counter",
@@ -97,15 +79,6 @@
     "categorySlug": "text",
     "desc": "Count words, characters and paragraphs online.",
     "description": "Count words, characters and paragraphs online."
-  },
-  {
-    "name": "Lorem Ipsum Generator",
-    "slug": "lorem-ipsum-generator",
-    "tag": "Text",
-    "category": "Text",
-    "categorySlug": "text",
-    "desc": "Generate lorem ipsum placeholder text.",
-    "description": "Generate lorem ipsum placeholder text in your browser."
   },
   {
     "name": "Case Converter",
@@ -187,5 +160,59 @@
     "categorySlug": "image",
     "desc": "Compress images online and reduce file size.",
     "description": "Compress images online and reduce file size."
+  },
+  {
+    "name": "Markdown Previewer",
+    "slug": "markdown-previewer",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Preview Markdown text online.",
+    "description": "Preview Markdown text online."
+  },
+  {
+    "name": "HTML Formatter",
+    "slug": "html-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify HTML online.",
+    "description": "Format and minify HTML online."
+  },
+  {
+    "name": "CSS Formatter",
+    "slug": "css-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify CSS online.",
+    "description": "Format and minify CSS online."
+  },
+  {
+    "name": "JavaScript Formatter",
+    "slug": "javascript-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify JavaScript online.",
+    "description": "Format and minify JavaScript online without executing code."
+  },
+  {
+    "name": "Regex Tester",
+    "slug": "regex-tester",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Test regular expressions online.",
+    "description": "Test regular expressions online."
+  },
+  {
+    "name": "Lorem Ipsum Generator",
+    "slug": "lorem-ipsum-generator",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Generate lorem ipsum placeholder text.",
+    "description": "Generate lorem ipsum placeholder text online."
   }
 ]
