@@ -45,6 +45,33 @@
     "description": "Generate secure random passwords online."
   },
   {
+    "name": "Hash Generator",
+    "slug": "hash-generator",
+    "tag": "Security",
+    "category": "Security",
+    "categorySlug": "security",
+    "desc": "Generate SHA-256 hashes online.",
+    "description": "Generate SHA-256 hashes online."
+  },
+  {
+    "name": "JWT Decoder",
+    "slug": "jwt-decoder",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Decode JWT headers and payloads online.",
+    "description": "Decode JWT headers and payloads online without validating signatures."
+  },
+  {
+    "name": "Color Converter",
+    "slug": "color-converter",
+    "tag": "Color",
+    "category": "Color",
+    "categorySlug": "color",
+    "desc": "Convert HEX colors to RGB and HSL.",
+    "description": "Convert HEX colors to RGB and HSL online."
+  },
+  {
     "name": "Word Counter",
     "slug": "word-counter",
     "tag": "Text",
