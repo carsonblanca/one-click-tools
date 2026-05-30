@@ -28,6 +28,12 @@ import CssFormatterTool from "../../../components/tools/CssFormatterTool";
 import JavascriptFormatterTool from "../../../components/tools/JavascriptFormatterTool";
 import RegexTesterTool from "../../../components/tools/RegexTesterTool";
 import LoremIpsumGeneratorTool from "../../../components/tools/LoremIpsumGeneratorTool";
+import UrlParserTool from "../../../components/tools/UrlParserTool";
+import QueryStringParserTool from "../../../components/tools/QueryStringParserTool";
+import HtmlEntityEncoderDecoderTool from "../../../components/tools/HtmlEntityEncoderDecoderTool";
+import RandomStringGeneratorTool from "../../../components/tools/RandomStringGeneratorTool";
+import TextToBinaryConverterTool from "../../../components/tools/TextToBinaryConverterTool";
+import BinaryToTextConverterTool from "../../../components/tools/BinaryToTextConverterTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
@@ -58,6 +64,18 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "javascript-formatter") return <JavascriptFormatterTool />;
   if (slug === "regex-tester") return <RegexTesterTool />;
   if (slug === "lorem-ipsum-generator") return <LoremIpsumGeneratorTool />;
+
+  if (slug === "url-parser") return <UrlParserTool />;
+
+  if (slug === "query-string-parser") return <QueryStringParserTool />;
+
+  if (slug === "html-entity-encoder-decoder") return <HtmlEntityEncoderDecoderTool />;
+
+  if (slug === "random-string-generator") return <RandomStringGeneratorTool />;
+
+  if (slug === "text-to-binary-converter") return <TextToBinaryConverterTool />;
+
+  if (slug === "binary-to-text-converter") return <BinaryToTextConverterTool />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">

@@ -214,5 +214,59 @@
     "categorySlug": "text",
     "desc": "Generate lorem ipsum placeholder text.",
     "description": "Generate lorem ipsum placeholder text online."
+  },
+  {
+    "name": "URL Parser",
+    "slug": "url-parser",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Parse URLs into protocol, host, path, query, and hash.",
+    "description": "Parse URLs into protocol, hostname, port, pathname, search parameters, hash, and origin online."
+  },
+  {
+    "name": "Query String Parser",
+    "slug": "query-string-parser",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Parse query strings into readable key value pairs.",
+    "description": "Parse URL query strings into decoded key value pairs online."
+  },
+  {
+    "name": "HTML Entity Encoder Decoder",
+    "slug": "html-entity-encoder-decoder",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Encode and decode HTML entities online.",
+    "description": "Encode and decode HTML entities such as ampersands, brackets, quotes, and symbols online."
+  },
+  {
+    "name": "Random String Generator",
+    "slug": "random-string-generator",
+    "tag": "Security",
+    "category": "Security",
+    "categorySlug": "security",
+    "desc": "Generate random strings online.",
+    "description": "Generate random strings with uppercase, lowercase, numbers, and symbols online."
+  },
+  {
+    "name": "Text to Binary Converter",
+    "slug": "text-to-binary-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert text to binary online.",
+    "description": "Convert UTF-8 text to binary representation online."
+  },
+  {
+    "name": "Binary to Text Converter",
+    "slug": "binary-to-text-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert binary to text online.",
+    "description": "Convert binary values back to UTF-8 text online."
   }
 ]
