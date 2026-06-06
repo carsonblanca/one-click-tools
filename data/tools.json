@@ -18,6 +18,24 @@
     "description": "Format and beautify JSON online."
   },
   {
+    "name": "JSON Validator",
+    "slug": "json-validator",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Validate JSON and show formatted output.",
+    "description": "Validate pasted JSON, show a valid or invalid state, and display formatted JSON when valid."
+  },
+  {
+    "name": "JSON Minifier",
+    "slug": "json-minifier",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Validate and minify JSON online.",
+    "description": "Validate pasted JSON and minify it into compact JSON in your browser."
+  },
+  {
     "name": "Calculator",
     "slug": "calculator",
     "tag": "Utility",
@@ -241,6 +259,42 @@
     "categorySlug": "developer",
     "desc": "Format and minify CSS online.",
     "description": "Format and minify CSS online."
+  },
+  {
+    "name": "XML Formatter",
+    "slug": "xml-formatter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Format and minify XML online.",
+    "description": "Format XML indentation, minify XML, and show clear errors for invalid XML in your browser."
+  },
+  {
+    "name": "XML to JSON Converter",
+    "slug": "xml-to-json-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert simple XML to JSON online.",
+    "description": "Convert XML nodes and attributes to JSON using browser DOMParser without network requests."
+  },
+  {
+    "name": "HTML Minifier",
+    "slug": "html-minifier",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Minify HTML while preserving quoted attributes.",
+    "description": "Remove HTML comments, extra spaces, and unnecessary line breaks without breaking quoted attributes."
+  },
+  {
+    "name": "CSS Minifier",
+    "slug": "css-minifier",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Minify CSS while preserving strings.",
+    "description": "Remove CSS comments, extra spaces, and line breaks while preserving content inside strings."
   },
   {
     "name": "JavaScript Formatter",
