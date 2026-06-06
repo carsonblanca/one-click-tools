@@ -27,6 +27,15 @@
     "description": "Simple online calculator."
   },
   {
+    "name": "QR Code Generator",
+    "slug": "qr-code-generator",
+    "tag": "Utility",
+    "category": "Utility",
+    "categorySlug": "utility",
+    "desc": "Generate a QR-like visual code preview online.",
+    "description": "Generate a simple QR-like visual code preview and download it as a PNG."
+  },
+  {
     "name": "UUID Generator",
     "slug": "uuid-generator",
     "tag": "Developer",
@@ -232,6 +241,51 @@
     "categorySlug": "developer",
     "desc": "Parse query strings into readable key value pairs.",
     "description": "Parse URL query strings into decoded key value pairs online."
+  },
+  {
+    "name": "CSV to JSON Converter",
+    "slug": "csv-to-json-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert CSV rows to a JSON array online.",
+    "description": "Convert CSV with a header row into a JSON array of objects in your browser."
+  },
+  {
+    "name": "JSON to CSV Converter",
+    "slug": "json-to-csv-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert a JSON array of objects to CSV online.",
+    "description": "Convert a JSON array of objects into CSV with escaped commas, quotes, and newlines."
+  },
+  {
+    "name": "YAML to JSON Converter",
+    "slug": "yaml-to-json-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert simple YAML to JSON online.",
+    "description": "Convert simple YAML key/value pairs, nested objects, and arrays into JSON in your browser."
+  },
+  {
+    "name": "JSON to YAML Converter",
+    "slug": "json-to-yaml-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert JSON to simple YAML online.",
+    "description": "Convert JSON objects and arrays into simple YAML in your browser."
+  },
+  {
+    "name": "Number Base Converter",
+    "slug": "number-base-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert numbers between binary, octal, decimal, and hexadecimal.",
+    "description": "Convert integer values between binary, octal, decimal, and hexadecimal bases."
   },
   {
     "name": "HTML Entity Encoder Decoder",
