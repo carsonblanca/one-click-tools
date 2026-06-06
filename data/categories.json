@@ -25,6 +25,11 @@
     "description": "SEO tools for metadata, slugs and search optimization."
   },
   {
+    "name": "Marketing",
+    "slug": "marketing",
+    "description": "Campaign tracking and marketing URL tools."
+  },
+  {
     "name": "Color",
     "slug": "color",
     "description": "Color conversion and design tools."
