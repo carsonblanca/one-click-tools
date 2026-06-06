@@ -36,6 +36,24 @@
     "description": "Generate a simple QR-like visual code preview and download it as a PNG."
   },
   {
+    "name": "File Size Converter",
+    "slug": "file-size-converter",
+    "tag": "Utility",
+    "category": "Utility",
+    "categorySlug": "utility",
+    "desc": "Convert file sizes between common units.",
+    "description": "Convert file sizes across B, KB, MB, GB, and TB with decimal and binary unit outputs."
+  },
+  {
+    "name": "File Name Cleaner",
+    "slug": "file-name-cleaner",
+    "tag": "Utility",
+    "category": "Utility",
+    "categorySlug": "utility",
+    "desc": "Clean one or many file names online.",
+    "description": "Lowercase, trim, remove special characters, replace spaces, and preserve extensions for file names."
+  },
+  {
     "name": "UUID Generator",
     "slug": "uuid-generator",
     "tag": "Developer",
@@ -171,6 +189,33 @@
     "description": "Compress images online and reduce file size."
   },
   {
+    "name": "Image Cropper",
+    "slug": "image-cropper",
+    "tag": "Image",
+    "category": "Image",
+    "categorySlug": "image",
+    "desc": "Crop local images in your browser.",
+    "description": "Upload a local image, enter crop coordinates, preview the crop, and download the result without uploading the image."
+  },
+  {
+    "name": "Image Rotate Flip",
+    "slug": "image-rotate-flip",
+    "tag": "Image",
+    "category": "Image",
+    "categorySlug": "image",
+    "desc": "Rotate and flip local images with canvas.",
+    "description": "Upload a local image, rotate it 90, 180, or 270 degrees, flip it horizontally or vertically, and download the result."
+  },
+  {
+    "name": "Image Metadata Viewer",
+    "slug": "image-metadata-viewer",
+    "tag": "Image",
+    "category": "Image",
+    "categorySlug": "image",
+    "desc": "View basic local image metadata.",
+    "description": "Show file name, type, size, width, height, and aspect ratio for a local image without uploading it."
+  },
+  {
     "name": "Markdown Previewer",
     "slug": "markdown-previewer",
     "tag": "Developer",
@@ -295,6 +340,15 @@
     "categorySlug": "developer",
     "desc": "Search common HTTP status codes and meanings.",
     "description": "Browse common HTTP status codes grouped by 1xx, 2xx, 3xx, 4xx, and 5xx with typical usage notes."
+  },
+  {
+    "name": "MIME Type Lookup",
+    "slug": "mime-type-lookup",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Look up common MIME types by extension.",
+    "description": "Search common MIME types for images, documents, audio, video, archives, and web files without network requests."
   },
   {
     "name": "CSV to JSON Converter",
