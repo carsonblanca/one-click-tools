@@ -21,6 +21,9 @@ import JpgToPngTool from "../../../components/tools/JpgToPngTool";
 import WebpToPngTool from "../../../components/tools/WebpToPngTool";
 import ImageResizerTool from "../../../components/tools/ImageResizerTool";
 import ImageCompressorTool from "../../../components/tools/ImageCompressorTool";
+import ImageCropperTool from "../../../components/tools/ImageCropperTool";
+import ImageRotateFlipTool from "../../../components/tools/ImageRotateFlipTool";
+import ImageMetadataViewerTool from "../../../components/tools/ImageMetadataViewerTool";
 
 import MarkdownPreviewerTool from "../../../components/tools/MarkdownPreviewerTool";
 import HtmlFormatterTool from "../../../components/tools/HtmlFormatterTool";
@@ -36,6 +39,7 @@ import RobotsTxtGeneratorTool from "../../../components/tools/RobotsTxtGenerator
 import UtmUrlBuilderTool from "../../../components/tools/UtmUrlBuilderTool";
 import CanonicalUrlCheckerTool from "../../../components/tools/CanonicalUrlCheckerTool";
 import HttpStatusCodeReferenceTool from "../../../components/tools/HttpStatusCodeReferenceTool";
+import MimeTypeLookupTool from "../../../components/tools/MimeTypeLookupTool";
 import HtmlEntityEncoderDecoderTool from "../../../components/tools/HtmlEntityEncoderDecoderTool";
 import RandomStringGeneratorTool from "../../../components/tools/RandomStringGeneratorTool";
 import TextToBinaryConverterTool from "../../../components/tools/TextToBinaryConverterTool";
@@ -51,6 +55,8 @@ import SortLinesTool from "../../../components/tools/SortLinesTool";
 import TextReverserTool from "../../../components/tools/TextReverserTool";
 import WhitespaceCleanerTool from "../../../components/tools/WhitespaceCleanerTool";
 import TextDiffCheckerTool from "../../../components/tools/TextDiffCheckerTool";
+import FileSizeConverterTool from "../../../components/tools/FileSizeConverterTool";
+import FileNameCleanerTool from "../../../components/tools/FileNameCleanerTool";
 import QrCodeGeneratorTool from "../../../components/tools/QrCodeGeneratorTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
@@ -76,6 +82,9 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "webp-to-png") return <WebpToPngTool />;
   if (slug === "image-resizer") return <ImageResizerTool />;
   if (slug === "image-compressor") return <ImageCompressorTool />;
+  if (slug === "image-cropper") return <ImageCropperTool />;
+  if (slug === "image-rotate-flip") return <ImageRotateFlipTool />;
+  if (slug === "image-metadata-viewer") return <ImageMetadataViewerTool />;
 
   if (slug === "markdown-previewer") return <MarkdownPreviewerTool />;
   if (slug === "html-formatter") return <HtmlFormatterTool />;
@@ -99,6 +108,8 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "canonical-url-checker") return <CanonicalUrlCheckerTool />;
 
   if (slug === "http-status-code-reference") return <HttpStatusCodeReferenceTool />;
+
+  if (slug === "mime-type-lookup") return <MimeTypeLookupTool />;
 
   if (slug === "html-entity-encoder-decoder") return <HtmlEntityEncoderDecoderTool />;
 
@@ -129,6 +140,10 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "whitespace-cleaner") return <WhitespaceCleanerTool />;
 
   if (slug === "text-diff-checker") return <TextDiffCheckerTool />;
+
+  if (slug === "file-size-converter") return <FileSizeConverterTool />;
+
+  if (slug === "file-name-cleaner") return <FileNameCleanerTool />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
