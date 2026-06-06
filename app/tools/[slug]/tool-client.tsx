@@ -2,6 +2,8 @@
 
 import Base64Tool from "../../../components/tools/Base64Tool";
 import JsonFormatterTool from "../../../components/tools/JsonFormatterTool";
+import JsonValidatorTool from "../../../components/tools/JsonValidatorTool";
+import JsonMinifierTool from "../../../components/tools/JsonMinifierTool";
 import CalculatorTool from "../../../components/tools/CalculatorTool";
 import UUIDTool from "../../../components/tools/UUIDTool";
 
@@ -28,6 +30,10 @@ import ImageMetadataViewerTool from "../../../components/tools/ImageMetadataView
 import MarkdownPreviewerTool from "../../../components/tools/MarkdownPreviewerTool";
 import HtmlFormatterTool from "../../../components/tools/HtmlFormatterTool";
 import CssFormatterTool from "../../../components/tools/CssFormatterTool";
+import XmlFormatterTool from "../../../components/tools/XmlFormatterTool";
+import XmlToJsonConverterTool from "../../../components/tools/XmlToJsonConverterTool";
+import HtmlMinifierTool from "../../../components/tools/HtmlMinifierTool";
+import CssMinifierTool from "../../../components/tools/CssMinifierTool";
 import JavascriptFormatterTool from "../../../components/tools/JavascriptFormatterTool";
 import RegexTesterTool from "../../../components/tools/RegexTesterTool";
 import LoremIpsumGeneratorTool from "../../../components/tools/LoremIpsumGeneratorTool";
@@ -62,6 +68,8 @@ import QrCodeGeneratorTool from "../../../components/tools/QrCodeGeneratorTool";
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
   if (slug === "json-formatter") return <JsonFormatterTool />;
+  if (slug === "json-validator") return <JsonValidatorTool />;
+  if (slug === "json-minifier") return <JsonMinifierTool />;
   if (slug === "calculator") return <CalculatorTool />;
   if (slug === "uuid-generator") return <UUIDTool />;
   if (slug === "qr-code-generator") return <QrCodeGeneratorTool />;
@@ -89,6 +97,10 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "markdown-previewer") return <MarkdownPreviewerTool />;
   if (slug === "html-formatter") return <HtmlFormatterTool />;
   if (slug === "css-formatter") return <CssFormatterTool />;
+  if (slug === "xml-formatter") return <XmlFormatterTool />;
+  if (slug === "xml-to-json-converter") return <XmlToJsonConverterTool />;
+  if (slug === "html-minifier") return <HtmlMinifierTool />;
+  if (slug === "css-minifier") return <CssMinifierTool />;
   if (slug === "javascript-formatter") return <JavascriptFormatterTool />;
   if (slug === "regex-tester") return <RegexTesterTool />;
   if (slug === "lorem-ipsum-generator") return <LoremIpsumGeneratorTool />;
