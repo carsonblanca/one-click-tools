@@ -34,18 +34,25 @@ import HtmlEntityEncoderDecoderTool from "../../../components/tools/HtmlEntityEn
 import RandomStringGeneratorTool from "../../../components/tools/RandomStringGeneratorTool";
 import TextToBinaryConverterTool from "../../../components/tools/TextToBinaryConverterTool";
 import BinaryToTextConverterTool from "../../../components/tools/BinaryToTextConverterTool";
+import CsvToJsonConverterTool from "../../../components/tools/CsvToJsonConverterTool";
+import JsonToCsvConverterTool from "../../../components/tools/JsonToCsvConverterTool";
+import YamlToJsonConverterTool from "../../../components/tools/YamlToJsonConverterTool";
+import JsonToYamlConverterTool from "../../../components/tools/JsonToYamlConverterTool";
+import NumberBaseConverterTool from "../../../components/tools/NumberBaseConverterTool";
 import SlugGeneratorTool from "../../../components/tools/SlugGeneratorTool";
 import RemoveDuplicateLinesTool from "../../../components/tools/RemoveDuplicateLinesTool";
 import SortLinesTool from "../../../components/tools/SortLinesTool";
 import TextReverserTool from "../../../components/tools/TextReverserTool";
 import WhitespaceCleanerTool from "../../../components/tools/WhitespaceCleanerTool";
 import TextDiffCheckerTool from "../../../components/tools/TextDiffCheckerTool";
+import QrCodeGeneratorTool from "../../../components/tools/QrCodeGeneratorTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
   if (slug === "json-formatter") return <JsonFormatterTool />;
   if (slug === "calculator") return <CalculatorTool />;
   if (slug === "uuid-generator") return <UUIDTool />;
+  if (slug === "qr-code-generator") return <QrCodeGeneratorTool />;
 
   if (slug === "password-generator") return <PasswordGeneratorTool />;
   if (slug === "hash-generator") return <HashGeneratorTool />;
@@ -82,6 +89,16 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "text-to-binary-converter") return <TextToBinaryConverterTool />;
 
   if (slug === "binary-to-text-converter") return <BinaryToTextConverterTool />;
+
+  if (slug === "csv-to-json-converter") return <CsvToJsonConverterTool />;
+
+  if (slug === "json-to-csv-converter") return <JsonToCsvConverterTool />;
+
+  if (slug === "yaml-to-json-converter") return <YamlToJsonConverterTool />;
+
+  if (slug === "json-to-yaml-converter") return <JsonToYamlConverterTool />;
+
+  if (slug === "number-base-converter") return <NumberBaseConverterTool />;
 
   if (slug === "slug-generator") return <SlugGeneratorTool />;
 
