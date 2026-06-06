@@ -30,6 +30,12 @@ import RegexTesterTool from "../../../components/tools/RegexTesterTool";
 import LoremIpsumGeneratorTool from "../../../components/tools/LoremIpsumGeneratorTool";
 import UrlParserTool from "../../../components/tools/UrlParserTool";
 import QueryStringParserTool from "../../../components/tools/QueryStringParserTool";
+import MetaTagGeneratorTool from "../../../components/tools/MetaTagGeneratorTool";
+import OpenGraphTagGeneratorTool from "../../../components/tools/OpenGraphTagGeneratorTool";
+import RobotsTxtGeneratorTool from "../../../components/tools/RobotsTxtGeneratorTool";
+import UtmUrlBuilderTool from "../../../components/tools/UtmUrlBuilderTool";
+import CanonicalUrlCheckerTool from "../../../components/tools/CanonicalUrlCheckerTool";
+import HttpStatusCodeReferenceTool from "../../../components/tools/HttpStatusCodeReferenceTool";
 import HtmlEntityEncoderDecoderTool from "../../../components/tools/HtmlEntityEncoderDecoderTool";
 import RandomStringGeneratorTool from "../../../components/tools/RandomStringGeneratorTool";
 import TextToBinaryConverterTool from "../../../components/tools/TextToBinaryConverterTool";
@@ -81,6 +87,18 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "url-parser") return <UrlParserTool />;
 
   if (slug === "query-string-parser") return <QueryStringParserTool />;
+
+  if (slug === "meta-tag-generator") return <MetaTagGeneratorTool />;
+
+  if (slug === "open-graph-tag-generator") return <OpenGraphTagGeneratorTool />;
+
+  if (slug === "robots-txt-generator") return <RobotsTxtGeneratorTool />;
+
+  if (slug === "utm-url-builder") return <UtmUrlBuilderTool />;
+
+  if (slug === "canonical-url-checker") return <CanonicalUrlCheckerTool />;
+
+  if (slug === "http-status-code-reference") return <HttpStatusCodeReferenceTool />;
 
   if (slug === "html-entity-encoder-decoder") return <HtmlEntityEncoderDecoderTool />;
 

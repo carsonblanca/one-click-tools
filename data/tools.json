@@ -243,6 +243,60 @@
     "description": "Parse URL query strings into decoded key value pairs online."
   },
   {
+    "name": "Meta Tag Generator",
+    "slug": "meta-tag-generator",
+    "tag": "SEO",
+    "category": "SEO",
+    "categorySlug": "seo",
+    "desc": "Generate HTML meta tags for SEO pages.",
+    "description": "Generate page title, description, keywords, author, robots, and canonical meta tags in your browser."
+  },
+  {
+    "name": "Open Graph Tag Generator",
+    "slug": "open-graph-tag-generator",
+    "tag": "SEO",
+    "category": "SEO",
+    "categorySlug": "seo",
+    "desc": "Generate Open Graph and Twitter card tags.",
+    "description": "Generate Open Graph and Twitter card meta tags for social sharing previews."
+  },
+  {
+    "name": "Robots.txt Generator",
+    "slug": "robots-txt-generator",
+    "tag": "SEO",
+    "category": "SEO",
+    "categorySlug": "seo",
+    "desc": "Generate robots.txt rules online.",
+    "description": "Generate allow all, block all, or custom user-agent robots.txt rules with an optional sitemap URL."
+  },
+  {
+    "name": "UTM URL Builder",
+    "slug": "utm-url-builder",
+    "tag": "Marketing",
+    "category": "Marketing",
+    "categorySlug": "marketing",
+    "desc": "Build campaign URLs with UTM parameters.",
+    "description": "Add UTM source, medium, campaign, term, and content parameters to URLs in your browser."
+  },
+  {
+    "name": "Canonical URL Checker",
+    "slug": "canonical-url-checker",
+    "tag": "SEO",
+    "category": "SEO",
+    "categorySlug": "seo",
+    "desc": "Compare current and canonical URLs locally.",
+    "description": "Normalize and compare protocol, hostname, pathname, trailing slash, and query strings without fetching external URLs."
+  },
+  {
+    "name": "HTTP Status Code Reference",
+    "slug": "http-status-code-reference",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Search common HTTP status codes and meanings.",
+    "description": "Browse common HTTP status codes grouped by 1xx, 2xx, 3xx, 4xx, and 5xx with typical usage notes."
+  },
+  {
     "name": "CSV to JSON Converter",
     "slug": "csv-to-json-converter",
     "tag": "Developer",
