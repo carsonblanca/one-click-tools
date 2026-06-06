@@ -268,5 +268,59 @@
     "categorySlug": "developer",
     "desc": "Convert binary to text online.",
     "description": "Convert binary values back to UTF-8 text online."
+  },
+  {
+    "name": "Slug Generator",
+    "slug": "slug-generator",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Generate URL-friendly slugs from text.",
+    "description": "Generate lowercase URL-friendly slugs from text online."
+  },
+  {
+    "name": "Remove Duplicate Lines",
+    "slug": "remove-duplicate-lines",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Remove duplicate lines from text.",
+    "description": "Remove duplicate lines from multiline text while preserving the first occurrence."
+  },
+  {
+    "name": "Sort Lines",
+    "slug": "sort-lines",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Sort lines alphabetically online.",
+    "description": "Sort multiline text alphabetically from A to Z or Z to A online."
+  },
+  {
+    "name": "Text Reverser",
+    "slug": "text-reverser",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Reverse text, words, or lines online.",
+    "description": "Reverse characters, word order, or line order in text online."
+  },
+  {
+    "name": "Whitespace Cleaner",
+    "slug": "whitespace-cleaner",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Clean extra spaces and empty lines from text.",
+    "description": "Trim whitespace, collapse spaces, remove empty lines, and normalize line endings online."
+  },
+  {
+    "name": "Text Diff Checker",
+    "slug": "text-diff-checker",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Compare two blocks of text line by line.",
+    "description": "Compare original and changed text line by line and show added, removed, and unchanged lines."
   }
 ]

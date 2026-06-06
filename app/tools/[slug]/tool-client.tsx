@@ -34,6 +34,12 @@ import HtmlEntityEncoderDecoderTool from "../../../components/tools/HtmlEntityEn
 import RandomStringGeneratorTool from "../../../components/tools/RandomStringGeneratorTool";
 import TextToBinaryConverterTool from "../../../components/tools/TextToBinaryConverterTool";
 import BinaryToTextConverterTool from "../../../components/tools/BinaryToTextConverterTool";
+import SlugGeneratorTool from "../../../components/tools/SlugGeneratorTool";
+import RemoveDuplicateLinesTool from "../../../components/tools/RemoveDuplicateLinesTool";
+import SortLinesTool from "../../../components/tools/SortLinesTool";
+import TextReverserTool from "../../../components/tools/TextReverserTool";
+import WhitespaceCleanerTool from "../../../components/tools/WhitespaceCleanerTool";
+import TextDiffCheckerTool from "../../../components/tools/TextDiffCheckerTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
@@ -76,6 +82,18 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "text-to-binary-converter") return <TextToBinaryConverterTool />;
 
   if (slug === "binary-to-text-converter") return <BinaryToTextConverterTool />;
+
+  if (slug === "slug-generator") return <SlugGeneratorTool />;
+
+  if (slug === "remove-duplicate-lines") return <RemoveDuplicateLinesTool />;
+
+  if (slug === "sort-lines") return <SortLinesTool />;
+
+  if (slug === "text-reverser") return <TextReverserTool />;
+
+  if (slug === "whitespace-cleaner") return <WhitespaceCleanerTool />;
+
+  if (slug === "text-diff-checker") return <TextDiffCheckerTool />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
