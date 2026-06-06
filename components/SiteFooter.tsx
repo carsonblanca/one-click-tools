@@ -17,7 +17,23 @@ export default function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-3 px-6 md:flex-row md:justify-between">
         <div>© 2026 OneClick Tools</div>
 
-        <div className="flex gap-5">
+        <div className="flex flex-wrap justify-center gap-5">
+          <Link href="/about" className="hover:opacity-70">
+            About
+          </Link>
+
+          <Link href="/privacy" className="hover:opacity-70">
+            Privacy
+          </Link>
+
+          <Link href="/terms" className="hover:opacity-70">
+            Terms
+          </Link>
+
+          <Link href="/contact" className="hover:opacity-70">
+            Contact
+          </Link>
+
           <Link href="/site-map" className="hover:opacity-70">
             Site Map
           </Link>
