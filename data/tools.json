@@ -45,6 +45,15 @@
     "description": "Simple online calculator."
   },
   {
+    "name": "Percentage Calculator",
+    "slug": "percentage-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Calculate percentages, ratios, and percent changes.",
+    "description": "Run common percentage calculations including X percent of Y, X as a percent of Y, and percentage increase or decrease."
+  },
+  {
     "name": "QR Code Generator",
     "slug": "qr-code-generator",
     "tag": "Utility",
@@ -70,6 +79,15 @@
     "categorySlug": "utility",
     "desc": "Clean one or many file names online.",
     "description": "Lowercase, trim, remove special characters, replace spaces, and preserve extensions for file names."
+  },
+  {
+    "name": "Unit Converter",
+    "slug": "unit-converter",
+    "tag": "Utility",
+    "category": "Utility",
+    "categorySlug": "utility",
+    "desc": "Convert length, weight, temperature, and data size units.",
+    "description": "Convert common length, weight, temperature, and data size values in your browser."
   },
   {
     "name": "UUID Generator",
@@ -142,6 +160,42 @@
     "categorySlug": "date-time",
     "desc": "Convert Unix timestamps to readable dates.",
     "description": "Convert Unix timestamps to readable dates."
+  },
+  {
+    "name": "Age Calculator",
+    "slug": "age-calculator",
+    "tag": "Date Time",
+    "category": "Date Time",
+    "categorySlug": "date-time",
+    "desc": "Calculate age from a birth date.",
+    "description": "Calculate age in years, months, and days, plus the countdown to the next birthday."
+  },
+  {
+    "name": "Date Difference Calculator",
+    "slug": "date-difference-calculator",
+    "tag": "Date Time",
+    "category": "Date Time",
+    "categorySlug": "date-time",
+    "desc": "Calculate the difference between two dates.",
+    "description": "Calculate the difference between two dates in days, weeks, months, and years, with reversed dates handled gracefully."
+  },
+  {
+    "name": "Time Zone Converter",
+    "slug": "time-zone-converter",
+    "tag": "Date Time",
+    "category": "Date Time",
+    "categorySlug": "date-time",
+    "desc": "Convert date and time between common time zones.",
+    "description": "Convert a date and time between built-in time zones using browser Intl APIs."
+  },
+  {
+    "name": "Unix Timestamp Batch Converter",
+    "slug": "unix-timestamp-batch-converter",
+    "tag": "Date Time",
+    "category": "Date Time",
+    "categorySlug": "date-time",
+    "desc": "Convert multiple Unix timestamps at once.",
+    "description": "Paste Unix timestamps line by line and convert seconds or milliseconds to local and UTC time."
   },
   {
     "name": "URL Encoder Decoder",

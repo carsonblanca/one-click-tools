@@ -15,6 +15,12 @@ import ColorConverterTool from "../../../components/tools/ColorConverterTool";
 import WordCounterTool from "../../../components/tools/WordCounterTool";
 import CaseConverterTool from "../../../components/tools/CaseConverterTool";
 import TimestampConverterTool from "../../../components/tools/TimestampConverterTool";
+import AgeCalculatorTool from "../../../components/tools/AgeCalculatorTool";
+import DateDifferenceCalculatorTool from "../../../components/tools/DateDifferenceCalculatorTool";
+import TimeZoneConverterTool from "../../../components/tools/TimeZoneConverterTool";
+import UnixTimestampBatchConverterTool from "../../../components/tools/UnixTimestampBatchConverterTool";
+import PercentageCalculatorTool from "../../../components/tools/PercentageCalculatorTool";
+import UnitConverterTool from "../../../components/tools/UnitConverterTool";
 import UrlEncoderTool from "../../../components/tools/UrlEncoderTool";
 
 import PngToWebpTool from "../../../components/tools/PngToWebpTool";
@@ -82,6 +88,12 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "word-counter") return <WordCounterTool />;
   if (slug === "case-converter") return <CaseConverterTool />;
   if (slug === "timestamp-converter") return <TimestampConverterTool />;
+  if (slug === "age-calculator") return <AgeCalculatorTool />;
+  if (slug === "date-difference-calculator") return <DateDifferenceCalculatorTool />;
+  if (slug === "time-zone-converter") return <TimeZoneConverterTool />;
+  if (slug === "unix-timestamp-batch-converter") return <UnixTimestampBatchConverterTool />;
+  if (slug === "percentage-calculator") return <PercentageCalculatorTool />;
+  if (slug === "unit-converter") return <UnitConverterTool />;
   if (slug === "url-encoder") return <UrlEncoderTool />;
 
   if (slug === "png-to-webp") return <PngToWebpTool />;
