@@ -20,6 +20,11 @@
     "description": "Simple everyday online utilities."
   },
   {
+    "name": "Calculator",
+    "slug": "calculator",
+    "description": "Calculators for percentages, numbers and everyday math."
+  },
+  {
     "name": "SEO",
     "slug": "seo",
     "description": "SEO tools for metadata, slugs and search optimization."
