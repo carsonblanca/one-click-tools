@@ -6,12 +6,13 @@ from __future__ import annotations
 import json
 import os
 import re
+import smtplib
+import ssl
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +48,14 @@ REGISTRATION_PATTERN = re.compile(r'slug === "([^"]+)"')
 IMPORT_PATTERN = re.compile(
     r'import\s+\w+\s+from\s+"../../../components/tools/([^"]+)"'
 )
+EMAIL_ENV_KEYS = [
+    "REPORT_EMAIL_TO",
+    "REPORT_EMAIL_FROM",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASS",
+]
 
 
 @dataclass
@@ -379,9 +388,27 @@ Generated at: {generated_at.isoformat()}
 """
 
 
-def send_feishu_summary(webhook_url: str, report_path: Path, build_ok: bool, issues: list[Issue], tools_count: int) -> None:
+def get_email_config() -> dict[str, str] | None:
+    values = {key: os.environ.get(key, "").strip() for key in EMAIL_ENV_KEYS}
+    missing = [key for key, value in values.items() if not value]
+
+    if missing:
+        print("SMTP email variables are incomplete; email notification skipped.")
+        return None
+
+    return values
+
+
+def build_email_body(
+    *,
+    report_path: Path,
+    report_text: str,
+    build_ok: bool,
+    issues: list[Issue],
+    tools_count: int,
+) -> str:
     risk = highest_risk(issues)
-    text = (
+    summary = (
         "OneClick Tools daily health report\n"
         f"Report: {report_path.name}\n"
         f"Build: {'Passed' if build_ok else 'Failed'}\n"
@@ -389,25 +416,65 @@ def send_feishu_summary(webhook_url: str, report_path: Path, build_ok: bool, iss
         f"Tools: {tools_count}\n"
         f"Issues: {len(issues)}"
     )
-    body = json.dumps({
-        "msg_type": "text",
-        "content": {"text": text},
-    }).encode("utf-8")
-    request = urllib.request.Request(
-        webhook_url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+
+    return f"""{summary}
+
+Full Markdown report
+====================
+
+{report_text}
+"""
+
+
+def send_email_report(
+    config: dict[str, str],
+    report_path: Path,
+    report_text: str,
+    build_ok: bool,
+    issues: list[Issue],
+    tools_count: int,
+) -> None:
+    try:
+        smtp_port = int(config["SMTP_PORT"])
+    except ValueError:
+        print("SMTP_PORT is invalid; email notification skipped.")
+        return
+
+    message = EmailMessage()
+    message["Subject"] = f"OneClick Tools Daily Report - {report_path.stem}"
+    message["From"] = config["REPORT_EMAIL_FROM"]
+    message["To"] = config["REPORT_EMAIL_TO"]
+    message.set_content(
+        build_email_body(
+            report_path=report_path,
+            report_text=report_text,
+            build_ok=build_ok,
+            issues=issues,
+            tools_count=tools_count,
+        )
     )
 
+    context = ssl.create_default_context()
+
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            if response.status >= 400:
-                print(f"Feishu notification returned HTTP {response.status}.")
-            else:
-                print("Feishu notification sent.")
-    except (urllib.error.URLError, TimeoutError) as error:
-        print(f"Feishu notification skipped after send error: {error}")
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(
+                config["SMTP_HOST"],
+                smtp_port,
+                context=context,
+                timeout=30,
+            ) as server:
+                server.login(config["SMTP_USER"], config["SMTP_PASS"])
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(config["SMTP_HOST"], smtp_port, timeout=30) as server:
+                server.starttls(context=context)
+                server.login(config["SMTP_USER"], config["SMTP_PASS"])
+                server.send_message(message)
+
+        print("Email notification sent.")
+    except (OSError, smtplib.SMTPException, TimeoutError) as error:
+        print(f"Email notification skipped after send error: {error.__class__.__name__}.")
 
 
 def main() -> int:
@@ -447,12 +514,17 @@ def main() -> int:
     print(f"Build status: {'passed' if build_ok else 'failed'}")
     print(f"Issues found: {len(issues)}")
 
-    webhook_url = os.environ.get("FEISHU_WEBHOOK_URL")
+    email_config = get_email_config()
 
-    if webhook_url:
-        send_feishu_summary(webhook_url, report_path, build_ok, issues, tools_summary["tool_count"])
-    else:
-        print("FEISHU_WEBHOOK_URL is not set; Feishu notification skipped.")
+    if email_config:
+        send_email_report(
+            email_config,
+            report_path,
+            report,
+            build_ok,
+            issues,
+            tools_summary["tool_count"],
+        )
 
     return 0
 
