@@ -20,6 +20,11 @@
     "description": "Simple everyday online utilities."
   },
   {
+    "name": "Converter",
+    "slug": "converter",
+    "description": "Conversion tools for numbers, formats and everyday values."
+  },
+  {
     "name": "Calculator",
     "slug": "calculator",
     "description": "Calculators for percentages, numbers and everyday math."

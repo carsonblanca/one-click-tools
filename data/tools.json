@@ -144,6 +144,60 @@
     "description": "Convert common length, weight, temperature, and data size values in your browser."
   },
   {
+    "name": "Roman Numeral Converter",
+    "slug": "roman-numeral-converter",
+    "tag": "Converter",
+    "category": "Converter",
+    "categorySlug": "converter",
+    "desc": "Convert numbers and Roman numerals.",
+    "description": "Convert whole numbers from 1 to 3999 into Roman numerals, or validate and convert Roman numerals back to numbers."
+  },
+  {
+    "name": "Number to Words Converter",
+    "slug": "number-to-words-converter",
+    "tag": "Converter",
+    "category": "Converter",
+    "categorySlug": "converter",
+    "desc": "Convert numbers into English words.",
+    "description": "Convert positive, negative, and decimal numbers into readable English words in your browser."
+  },
+  {
+    "name": "Word Frequency Counter",
+    "slug": "word-frequency-counter",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Count word frequency and text statistics.",
+    "description": "Analyze pasted text for total words, unique words, characters, sentences, and a sorted word frequency table."
+  },
+  {
+    "name": "Reading Time Calculator",
+    "slug": "reading-time-calculator",
+    "tag": "Text",
+    "category": "Text",
+    "categorySlug": "text",
+    "desc": "Estimate reading time from text.",
+    "description": "Calculate word count and estimated reading time with a configurable words-per-minute value."
+  },
+  {
+    "name": "Case Style Converter",
+    "slug": "case-style-converter",
+    "tag": "Developer",
+    "category": "Developer",
+    "categorySlug": "developer",
+    "desc": "Convert text into common code case styles.",
+    "description": "Convert text or identifiers to camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, Title Case, and sentence case."
+  },
+  {
+    "name": "List Randomizer",
+    "slug": "list-randomizer",
+    "tag": "Utility",
+    "category": "Utility",
+    "categorySlug": "utility",
+    "desc": "Shuffle list items randomly.",
+    "description": "Randomize list items one per line, with options to remove empty lines and duplicate entries."
+  },
+  {
     "name": "UUID Generator",
     "slug": "uuid-generator",
     "tag": "Developer",

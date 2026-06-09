@@ -27,6 +27,12 @@ import RoiCalculatorTool from "../../../components/tools/RoiCalculatorTool";
 import ProfitMarginCalculatorTool from "../../../components/tools/ProfitMarginCalculatorTool";
 import DiscountCalculatorTool from "../../../components/tools/DiscountCalculatorTool";
 import UnitConverterTool from "../../../components/tools/UnitConverterTool";
+import RomanNumeralConverterTool from "../../../components/tools/RomanNumeralConverterTool";
+import NumberToWordsConverterTool from "../../../components/tools/NumberToWordsConverterTool";
+import WordFrequencyCounterTool from "../../../components/tools/WordFrequencyCounterTool";
+import ReadingTimeCalculatorTool from "../../../components/tools/ReadingTimeCalculatorTool";
+import CaseStyleConverterTool from "../../../components/tools/CaseStyleConverterTool";
+import ListRandomizerTool from "../../../components/tools/ListRandomizerTool";
 import UrlEncoderTool from "../../../components/tools/UrlEncoderTool";
 
 import PngToWebpTool from "../../../components/tools/PngToWebpTool";
@@ -106,6 +112,12 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "profit-margin-calculator") return <ProfitMarginCalculatorTool />;
   if (slug === "discount-calculator") return <DiscountCalculatorTool />;
   if (slug === "unit-converter") return <UnitConverterTool />;
+  if (slug === "roman-numeral-converter") return <RomanNumeralConverterTool />;
+  if (slug === "number-to-words-converter") return <NumberToWordsConverterTool />;
+  if (slug === "word-frequency-counter") return <WordFrequencyCounterTool />;
+  if (slug === "reading-time-calculator") return <ReadingTimeCalculatorTool />;
+  if (slug === "case-style-converter") return <CaseStyleConverterTool />;
+  if (slug === "list-randomizer") return <ListRandomizerTool />;
   if (slug === "url-encoder") return <UrlEncoderTool />;
 
   if (slug === "png-to-webp") return <PngToWebpTool />;
