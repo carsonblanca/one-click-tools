@@ -20,6 +20,12 @@ import DateDifferenceCalculatorTool from "../../../components/tools/DateDifferen
 import TimeZoneConverterTool from "../../../components/tools/TimeZoneConverterTool";
 import UnixTimestampBatchConverterTool from "../../../components/tools/UnixTimestampBatchConverterTool";
 import PercentageCalculatorTool from "../../../components/tools/PercentageCalculatorTool";
+import LoanCalculatorTool from "../../../components/tools/LoanCalculatorTool";
+import MortgageCalculatorTool from "../../../components/tools/MortgageCalculatorTool";
+import CompoundInterestCalculatorTool from "../../../components/tools/CompoundInterestCalculatorTool";
+import RoiCalculatorTool from "../../../components/tools/RoiCalculatorTool";
+import ProfitMarginCalculatorTool from "../../../components/tools/ProfitMarginCalculatorTool";
+import DiscountCalculatorTool from "../../../components/tools/DiscountCalculatorTool";
 import UnitConverterTool from "../../../components/tools/UnitConverterTool";
 import UrlEncoderTool from "../../../components/tools/UrlEncoderTool";
 
@@ -93,6 +99,12 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "time-zone-converter") return <TimeZoneConverterTool />;
   if (slug === "unix-timestamp-batch-converter") return <UnixTimestampBatchConverterTool />;
   if (slug === "percentage-calculator") return <PercentageCalculatorTool />;
+  if (slug === "loan-calculator") return <LoanCalculatorTool />;
+  if (slug === "mortgage-calculator") return <MortgageCalculatorTool />;
+  if (slug === "compound-interest-calculator") return <CompoundInterestCalculatorTool />;
+  if (slug === "roi-calculator") return <RoiCalculatorTool />;
+  if (slug === "profit-margin-calculator") return <ProfitMarginCalculatorTool />;
+  if (slug === "discount-calculator") return <DiscountCalculatorTool />;
   if (slug === "unit-converter") return <UnitConverterTool />;
   if (slug === "url-encoder") return <UrlEncoderTool />;
 

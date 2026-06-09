@@ -54,6 +54,60 @@
     "description": "Run common percentage calculations including X percent of Y, X as a percent of Y, and percentage increase or decrease."
   },
   {
+    "name": "Loan Calculator",
+    "slug": "loan-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Estimate monthly loan payments and total interest.",
+    "description": "Calculate estimated monthly payment, total payment, and total interest from loan amount, annual interest rate, and term."
+  },
+  {
+    "name": "Mortgage Calculator",
+    "slug": "mortgage-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Estimate monthly mortgage payments.",
+    "description": "Estimate principal and interest, optional monthly taxes and insurance, and total monthly mortgage payment."
+  },
+  {
+    "name": "Compound Interest Calculator",
+    "slug": "compound-interest-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Estimate compound growth over time.",
+    "description": "Calculate final balance, total contributions, and estimated interest earned from principal, contributions, rate, years, and compounding frequency."
+  },
+  {
+    "name": "ROI Calculator",
+    "slug": "roi-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Calculate investment gain or loss and ROI percentage.",
+    "description": "Calculate gain or loss and return on investment percentage from an initial investment and final value."
+  },
+  {
+    "name": "Profit Margin Calculator",
+    "slug": "profit-margin-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Calculate gross profit, margin, and markup.",
+    "description": "Calculate gross profit, profit margin percentage, and markup percentage from cost and selling price."
+  },
+  {
+    "name": "Discount Calculator",
+    "slug": "discount-calculator",
+    "tag": "Calculator",
+    "category": "Calculator",
+    "categorySlug": "calculator",
+    "desc": "Calculate sale discounts, tax, and final price.",
+    "description": "Calculate discount amount, price after discount, optional tax amount, and final price from original price and discount percentage."
+  },
+  {
     "name": "QR Code Generator",
     "slug": "qr-code-generator",
     "tag": "Utility",
