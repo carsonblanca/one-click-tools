@@ -21,6 +21,14 @@ try:
 except Exception:  # pragma: no cover - older Python fallback
     ZoneInfo = None  # type: ignore[assignment]
 
+try:
+    from security_check import run_security_check
+except Exception as error:  # pragma: no cover - keeps reports resilient
+    run_security_check = None  # type: ignore[assignment]
+    SECURITY_CHECK_IMPORT_ERROR = error.__class__.__name__
+else:
+    SECURITY_CHECK_IMPORT_ERROR = ""
+
 
 REQUIRED_TOOL_FIELDS = [
     "name",
@@ -275,6 +283,56 @@ def markdown_list(items: list[str], empty: str = "None") -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
+def fallback_security_summary(message: str) -> dict[str, Any]:
+    return {
+        "status": "High risk",
+        "risk_counts": {
+            "high": 1,
+            "medium": 0,
+            "low": 0,
+        },
+        "lockfiles": {
+            "status": "Unknown",
+            "other_lockfiles": [],
+        },
+        "workflow": {
+            "permissions_configured": False,
+            "sensitive_literals": [],
+        },
+        "sensitive_string_scan": {
+            "status": "Not run",
+            "matches_count": 0,
+        },
+        "upload_tools": {
+            "count": 0,
+            "files": [],
+        },
+        "issues": [
+            {
+                "level": "High",
+                "message": message,
+            },
+        ],
+        "recommended_actions": [
+            "Fix scripts/security_check.py so the daily report can include security checks.",
+        ],
+    }
+
+
+def collect_security_summary(root: Path) -> dict[str, Any]:
+    if run_security_check is None:
+        return fallback_security_summary(
+            f"Security check could not be imported: {SECURITY_CHECK_IMPORT_ERROR or 'Unknown error'}."
+        )
+
+    try:
+        return run_security_check(root)
+    except Exception as error:  # pragma: no cover - keeps reports resilient
+        return fallback_security_summary(
+            f"Security check failed while running: {error.__class__.__name__}."
+        )
+
+
 def build_report(
     *,
     generated_at: datetime,
@@ -282,6 +340,7 @@ def build_report(
     registry_summary: dict[str, Any],
     route_summary: dict[str, bool],
     sitemap_summary: dict[str, Any],
+    security_summary: dict[str, Any],
     build_ok: bool,
     build_output: str,
     issues: list[Issue],
@@ -292,6 +351,13 @@ def build_report(
     ]
     build_tail = "\n".join(build_output.strip().splitlines()[-30:])
     next_actions = []
+    security_counts = security_summary.get("risk_counts", {})
+    security_scan = security_summary.get("sensitive_string_scan", {})
+    security_workflow = security_summary.get("workflow", {})
+    security_lockfiles = security_summary.get("lockfiles", {})
+    security_upload_tools = security_summary.get("upload_tools", {})
+    security_frontend_xss = security_summary.get("frontend_xss", {})
+    security_actions = security_summary.get("recommended_actions", [])
 
     if not build_ok:
         next_actions.append("Investigate and fix the webpack production build failure.")
@@ -303,6 +369,8 @@ def build_report(
         next_actions.append("Fill missing required tool metadata fields.")
     if route_summary and not all(route_summary.values()):
         next_actions.append("Restore missing required legal, sitemap, robots, SEO, or footer files.")
+    if security_counts.get("high", 0) or security_counts.get("medium", 0):
+        next_actions.append("Review the Security Summary and address High or Medium security findings.")
     if not next_actions:
         next_actions.append("No urgent action required. Continue monitoring daily report output.")
 
@@ -377,6 +445,22 @@ Generated at: {generated_at.isoformat()}
 - Duplicate slugs: {", ".join(tools_summary["duplicate_slugs"]) or "None"}
 - Invalid slugs: {", ".join(tools_summary["invalid_slugs"]) or "None"}
 - Missing required metadata fields: {len(tools_summary["missing_fields"])}
+
+## Security Summary
+
+- Security status: **{security_summary.get("status", "Unknown")}**
+- High risks count: {security_counts.get("high", 0)}
+- Medium risks count: {security_counts.get("medium", 0)}
+- Low risks count: {security_counts.get("low", 0)}
+- Sensitive string scan result: {security_scan.get("status", "Unknown")} ({security_scan.get("matches_count", 0)} match(es))
+- Workflow permissions status: {"Configured" if security_workflow.get("permissions_configured") else "Missing or unknown"}
+- Lockfile status: {security_lockfiles.get("status", "Unknown")}
+- Upload tool count: {security_upload_tools.get("count", 0)}
+- Frontend XSS review files: {security_frontend_xss.get("raw_html_render_count", 0)}
+
+### Recommended security actions
+
+{markdown_list(security_actions)}
 
 ## Issues and risk levels
 
@@ -490,6 +574,14 @@ def main() -> int:
     registry_summary = check_registry(root, tools, issues)
     route_summary = check_routes(root, issues)
     sitemap_summary = check_sitemap(root, tools, issues)
+    security_summary = collect_security_summary(root)
+
+    for security_issue in security_summary.get("issues", []):
+        level = security_issue.get("level")
+        message = security_issue.get("message")
+        if level in {"High", "Medium"} and message:
+            issues.append(Issue(level, f"Security: {message}"))
+
     build_ok, build_output = run_build(root)
 
     if not build_ok:
@@ -504,6 +596,7 @@ def main() -> int:
         registry_summary=registry_summary,
         route_summary=route_summary,
         sitemap_summary=sitemap_summary,
+        security_summary=security_summary,
         build_ok=build_ok,
         build_output=build_output,
         issues=issues,
