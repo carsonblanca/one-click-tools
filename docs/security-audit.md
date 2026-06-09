@@ -39,7 +39,7 @@ Image and file utilities should continue to run locally in the browser. They sho
 
 ## Frontend XSS
 
-Tools that accept HTML, XML, JSON, CSV, YAML, URLs, or Markdown-like content should display output as text unless a preview is intentionally sandboxed. Avoid `dangerouslySetInnerHTML` for user-provided content. If previews are added later, isolate them and document the behavior clearly.
+Tools that accept HTML, XML, JSON, CSV, YAML, URLs, or Markdown-like content should display output as text unless a preview is intentionally sandboxed. Avoid `dangerouslySetInnerHTML` for user-provided content. The Markdown preview tool now renders a limited set of Markdown as React nodes and only allows `http://`, `https://`, and `mailto:` links.
 
 ## Dependencies and Supply Chain
 
@@ -56,6 +56,7 @@ Utility sites can attract automated scraping and low-quality crawler traffic. Th
 - The daily report workflow has explicit permissions.
 - SMTP notification secrets are injected from GitHub Secrets.
 - A security check script now scans for baseline workflow, lockfile, secret, upload-tool, and support-page risks.
+- The Markdown preview tool avoids raw HTML injection and limits supported Markdown to safe basic formatting.
 
 ## Recommendations
 
