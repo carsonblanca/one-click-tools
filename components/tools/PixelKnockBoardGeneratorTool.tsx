@@ -38,6 +38,9 @@ type PrinterModel = {
   nameZh: string;
   width: number;
   depth: number;
+  pending?: boolean;
+  note?: string;
+  noteZh?: string;
 };
 
 type PrinterPreset = {
@@ -96,6 +99,9 @@ type PrinterReadmeInfo = {
   brandNameZh: string;
   modelName: string;
   modelNameZh: string;
+  modelPending: boolean;
+  modelNote: string;
+  modelNoteZh: string;
   bedWidth: number;
   bedDepth: number;
   bedFit: BedFitSummary | null;
@@ -133,6 +139,11 @@ const defaultParams: Params = {
   removeWhiteBackground: true,
 };
 
+const unconfirmedPresetNote =
+  "Size not confirmed in this preset. Please adjust bed width and depth according to your slicer.";
+const unconfirmedPresetNoteZh =
+  "该预设尺寸暂未确认，请根据切片软件实际显示手动调整热床宽度和深度。";
+
 const printerPresets: PrinterPreset[] = [
   {
     brand: "Bambu Lab",
@@ -141,8 +152,77 @@ const printerPresets: PrinterPreset[] = [
       { id: "bambu-h2d-single", name: "H2D single nozzle", nameZh: "H2D 单喷嘴", width: 325, depth: 320 },
       { id: "bambu-h2d-dual", name: "H2D dual nozzle", nameZh: "H2D 双喷嘴", width: 300, depth: 320 },
       { id: "bambu-h2d-max", name: "H2D max area", nameZh: "H2D 最大区域", width: 350, depth: 320 },
+      {
+        id: "bambu-h2s",
+        name: "H2S",
+        nameZh: "H2S",
+        width: 340,
+        depth: 320,
+        note: "Build volume reference: 340 x 320 mm. Check your slicer for the actual usable area.",
+        noteZh: "构建尺寸参考：340 x 320 mm，实际可用区域请以切片软件为准。",
+      },
+      {
+        id: "bambu-h2c",
+        name: "H2C",
+        nameZh: "H2C",
+        width: 350,
+        depth: 320,
+        pending: true,
+        note: unconfirmedPresetNote,
+        noteZh: unconfirmedPresetNoteZh,
+      },
+      {
+        id: "bambu-x2d",
+        name: "X2D",
+        nameZh: "X2D",
+        width: 325,
+        depth: 320,
+        pending: true,
+        note: unconfirmedPresetNote,
+        noteZh: unconfirmedPresetNoteZh,
+      },
       { id: "bambu-x1-p1-a1", name: "X1 / P1 / A1 series", nameZh: "X1 / P1 / A1 系列", width: 256, depth: 256 },
+      {
+        id: "bambu-a2l",
+        name: "A2L",
+        nameZh: "A2L",
+        width: 256,
+        depth: 256,
+        pending: true,
+        note: unconfirmedPresetNote,
+        noteZh: unconfirmedPresetNoteZh,
+      },
       { id: "bambu-a1-mini", name: "A1 mini", nameZh: "A1 mini", width: 180, depth: 180 },
+    ],
+  },
+  {
+    brand: "Snapmaker",
+    brandZh: "快造 Snapmaker",
+    models: [
+      {
+        id: "snapmaker-u1",
+        name: "U1",
+        nameZh: "U1 / 快造 U1",
+        width: 270,
+        depth: 270,
+        note: "Build volume reference: 270 x 270 mm. Check your slicer for the actual usable area.",
+        noteZh: "构建尺寸参考：270 x 270 mm，实际可用区域请以切片软件为准。",
+      },
+    ],
+  },
+  {
+    brand: "Flashforge",
+    brandZh: "闪铸 Flashforge",
+    models: [
+      {
+        id: "flashforge-creator-5",
+        name: "Creator 5 / C5",
+        nameZh: "Creator 5 / C5",
+        width: 256,
+        depth: 256,
+        note: "Build volume reference: 256 x 256 mm. Check your slicer for the actual usable area.",
+        noteZh: "构建尺寸参考：256 x 256 mm，实际可用区域请以切片软件为准。",
+      },
     ],
   },
   {
@@ -249,6 +329,8 @@ const copy = {
       "Suggestion: Rotate the grid before printing, or reduce grid count / cell size.",
     bedSuggestionReduce:
       "Suggestion: Reduce grid count / cell size, or choose a printer with a larger bed.",
+    presetPendingWarning:
+      "This preset size is not confirmed. Please check the actual bed size in your slicer and adjust bed width and depth manually.",
     bedUsableAreaNote:
       "The usable area may be smaller because of slicer limits, nozzle mode, purge/wipe towers, or protected zones. Always check the final layout in your slicer.",
     colorBlockAreas: "Color block areas",
@@ -378,6 +460,8 @@ const copy = {
     bedSuggestionFits: "建议：当前方向可以放下，请在切片软件中再次确认。",
     bedSuggestionRotate: "建议：打印时旋转模型，或减少网格数 / 单格尺寸。",
     bedSuggestionReduce: "建议：减少网格数 / 单格尺寸，或选择更大热床的打印机。",
+    presetPendingWarning:
+      "该型号尺寸暂未确认，请以切片软件实际热床显示为准，并手动调整热床宽度和深度。",
     bedUsableAreaNote:
       "不同切片软件、喷头模式、擦料塔和边界保护可能会减少实际可用区域，请以切片软件最终显示为准。",
     colorBlockAreas: "分色方块占用",
@@ -1622,6 +1706,10 @@ function buildReadme(
     `Block fit clearance: ${params.blockClearanceMm} mm`,
     "",
     `Selected printer brand / model: ${printerInfo.brandName} / ${printerInfo.modelName}`,
+    ...(printerInfo.modelPending
+      ? ["Preset size status: Size not confirmed. Please check the actual bed size in your slicer."]
+      : []),
+    ...(printerInfo.modelNote && !printerInfo.modelPending ? [`Preset note: ${printerInfo.modelNote}`] : []),
     `Selected bed size: ${printerInfo.bedWidth.toFixed(1)} x ${printerInfo.bedDepth.toFixed(1)} mm`,
     `Frame size: ${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
     `Fits as placed: ${englishFitAsPlaced}`,
@@ -1651,6 +1739,10 @@ function buildReadme(
     `方块松紧公差：${params.blockClearanceMm} mm`,
     "",
     `当前选择的打印机品牌 / 型号：${printerInfo.brandNameZh} / ${printerInfo.modelNameZh}`,
+    ...(printerInfo.modelPending
+      ? ["预设尺寸状态：尺寸暂未确认，请以切片软件实际热床显示为准。"]
+      : []),
+    ...(printerInfo.modelNoteZh && !printerInfo.modelPending ? [`型号说明：${printerInfo.modelNoteZh}`] : []),
     `当前热床尺寸：${printerInfo.bedWidth.toFixed(1)} x ${printerInfo.bedDepth.toFixed(1)} mm`,
     `外框尺寸：${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
     `当前方向是否放得下：${chineseFitAsPlaced}`,
@@ -1710,6 +1802,11 @@ export default function PixelKnockBoardGeneratorTool() {
   };
   const selectedPrinterBrand = getPrinterBrand(printerBrand);
   const selectedPrinterModel = getPrinterModel(printerBrand, printerModelId);
+  const selectedPrinterNote =
+    (language === "zh" ? selectedPrinterModel.noteZh : selectedPrinterModel.note) || "";
+  const printerPresetMessage = selectedPrinterModel.pending
+    ? String(t.presetPendingWarning)
+    : selectedPrinterNote;
   const parsedBedWidth = parseNumber(bedWidth, selectedPrinterModel.width, -100000, 100000);
   const parsedBedDepth = parseNumber(bedDepth, selectedPrinterModel.depth, -100000, 100000);
   const bedFit = estimateBedFit(grid, params, parsedBedWidth, parsedBedDepth);
@@ -1725,6 +1822,9 @@ export default function PixelKnockBoardGeneratorTool() {
     brandNameZh: selectedPrinterBrand.brandZh,
     modelName: selectedPrinterModel.name,
     modelNameZh: selectedPrinterModel.nameZh,
+    modelPending: Boolean(selectedPrinterModel.pending),
+    modelNote: selectedPrinterModel.note || "",
+    modelNoteZh: selectedPrinterModel.noteZh || "",
     bedWidth: parsedBedWidth,
     bedDepth: parsedBedDepth,
     bedFit,
@@ -1742,6 +1842,7 @@ export default function PixelKnockBoardGeneratorTool() {
     printerPreset: printerModelId,
     printerBrand: selectedPrinterBrand.brand,
     printerModel: selectedPrinterModel.name,
+    printerPresetPending: Boolean(selectedPrinterModel.pending),
     bedWidth: parsedBedWidth,
     bedDepth: parsedBedDepth,
     colorSimplification: params.colorSimplification,
@@ -2258,6 +2359,21 @@ export default function PixelKnockBoardGeneratorTool() {
               <ToolInput value={bedDepth} onChange={setBedDepth} type="number" />
             </div>
           </div>
+          {printerPresetMessage ? (
+            <div
+              className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${
+                selectedPrinterModel.pending
+                  ? isDark
+                    ? "border-amber-300/30 bg-amber-400/10 text-amber-100"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
+                  : isDark
+                    ? "border-white/10 bg-white/[0.04] text-white/65"
+                    : "border-[#E5DED0] bg-[#F8F4EA] text-[#6B665D]"
+              }`}
+            >
+              {printerPresetMessage}
+            </div>
+          ) : null}
           <p className={isDark ? "text-sm leading-6 text-white/50" : "text-sm leading-6 text-[#6B665D]"}>
             {t.bedUsableAreaNote}
           </p>
