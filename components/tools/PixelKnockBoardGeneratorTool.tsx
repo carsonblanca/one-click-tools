@@ -26,6 +26,10 @@ type ColorSummary = {
 
 type Language = "en" | "zh";
 
+type CropMode = "tight" | "center" | "original";
+
+type PreviewMode = "compare" | "original" | "pixel";
+
 type PixelGrid = {
   width: number;
   height: number;
@@ -106,7 +110,20 @@ const copy = {
     alphaThreshold: "Alpha threshold",
     whiteThreshold: "White threshold",
     removeWhiteBackground: "Remove near-white background",
-    trimEmptyEdges: "Trim empty edges",
+    cropMode: "Crop mode",
+    cropModeTight: "Tight crop",
+    cropModeCenter: "Center on canvas",
+    cropModeOriginal: "Keep original framing",
+    paddingCells: "Padding cells",
+    paddingCellsHelp:
+      "Adds empty space around the subject for a more centered and finished layout.",
+    previewModeCompare: "Compare",
+    previewModeOriginal: "Original",
+    previewModePixel: "Pixel preview",
+    originalImage: "Original image",
+    pixelPreview: "Pixel preview",
+    previewCompareNote:
+      "The original image is shown next to the processed pixel preview. If extra grids or colors appear, use a solid background or adjust the white threshold, crop mode, and max colors.",
     showColorNumbers: "Show color numbers",
     generatePreview: "Generate preview",
     downloadPng: "Download PNG preview",
@@ -129,7 +146,8 @@ const copy = {
     cellCount: "Cells",
     percentage: "Percentage",
     cells: "cells",
-    emptyState: "Upload an image to generate a no-base pixel grid STL preview.",
+    emptyState:
+      "Upload an image and click “Generate preview” to compare the original image with the pixel preview.",
     errors: {
       uploadFirst: "Upload a PNG, JPG, or WEBP image first.",
       noVisiblePixels:
@@ -178,7 +196,20 @@ const copy = {
     alphaThreshold: "透明度阈值",
     whiteThreshold: "白底阈值",
     removeWhiteBackground: "去除近乎白色背景",
-    trimEmptyEdges: "裁剪空白边缘",
+    cropMode: "裁剪模式",
+    cropModeTight: "紧贴主体",
+    cropModeCenter: "居中画布",
+    cropModeOriginal: "保持原图构图",
+    paddingCells: "边距格数",
+    paddingCellsHelp:
+      "在主体周围保留空白边距，让图案更居中、更适合制作成品。",
+    previewModeCompare: "对比预览",
+    previewModeOriginal: "原图",
+    previewModePixel: "像素预览",
+    originalImage: "原图",
+    pixelPreview: "像素预览",
+    previewCompareNote:
+      "左侧为上传原图，右侧为处理后的敲敲乐像素预览。若出现多余网格或颜色，请优先使用纯色背景图片，或调整白底阈值、裁剪模式和最大颜色数。",
     showColorNumbers: "显示颗粒编号",
     generatePreview: "生成预览",
     downloadPng: "下载 PNG 预览",
@@ -201,7 +232,7 @@ const copy = {
     cellCount: "颗粒数",
     percentage: "占比",
     cells: "颗粒",
-    emptyState: "上传图片后生成无底板像素格栅 STL 预览。",
+    emptyState: "上传图片并点击“生成预览”后，这里会显示原图和像素预览对比。",
     errors: {
       uploadFirst: "请先上传 PNG、JPG 或 WEBP 图片。",
       noVisiblePixels: "没有检测到有效像素。请降低阈值，或关闭去除白色背景。",
@@ -428,7 +459,30 @@ function summarizeCells(cells: PixelCell[][]) {
   };
 }
 
-function trimGridToContent(grid: PixelGrid) {
+function buildGridFromCells(cells: PixelCell[][]): PixelGrid {
+  const summary = summarizeCells(cells);
+
+  return {
+    width: cells[0]?.length || 0,
+    height: cells.length,
+    cells,
+    activeCells: summary.activeCells,
+    colors: summary.colors,
+  };
+}
+
+function createEmptyCell(): PixelCell {
+  return {
+    empty: true,
+    color: null,
+  };
+}
+
+function createEmptyRow(width: number) {
+  return Array.from({ length: width }, createEmptyCell);
+}
+
+function findContentBounds(grid: PixelGrid) {
   let minX = grid.width;
   let maxX = -1;
   let minY = grid.height;
@@ -449,26 +503,86 @@ function trimGridToContent(grid: PixelGrid) {
     return null;
   }
 
-  const cells = grid.cells
-    .slice(minY, maxY + 1)
-    .map((row) => row.slice(minX, maxX + 1));
-  const summary = summarizeCells(cells);
-
   return {
-    width: maxX - minX + 1,
-    height: maxY - minY + 1,
-    cells,
-    activeCells: summary.activeCells,
-    colors: summary.colors,
+    minX,
+    maxX,
+    minY,
+    maxY,
   };
 }
 
-function prepareGridForOutput(grid: PixelGrid, shouldTrim: boolean) {
+function cropCellsToBounds(
+  grid: PixelGrid,
+  bounds: NonNullable<ReturnType<typeof findContentBounds>>,
+) {
+  return grid.cells
+    .slice(bounds.minY, bounds.maxY + 1)
+    .map((row) => row.slice(bounds.minX, bounds.maxX + 1));
+}
+
+function addPaddingToCells(cells: PixelCell[][], padding: number) {
+  const sourceWidth = cells[0]?.length || 0;
+
+  if (padding <= 0 || sourceWidth === 0) {
+    return cells;
+  }
+
+  const finalWidth = sourceWidth + padding * 2;
+  const horizontalPadding = Array.from({ length: padding }, createEmptyCell);
+  const paddedRows = cells.map((row) => [
+    ...horizontalPadding.map(() => createEmptyCell()),
+    ...row,
+    ...horizontalPadding.map(() => createEmptyCell()),
+  ]);
+
+  return [
+    ...Array.from({ length: padding }, () => createEmptyRow(finalWidth)),
+    ...paddedRows,
+    ...Array.from({ length: padding }, () => createEmptyRow(finalWidth)),
+  ];
+}
+
+function centerCellsInCanvas(cells: PixelCell[][], width: number, height: number) {
+  const sourceWidth = cells[0]?.length || 0;
+  const sourceHeight = cells.length;
+  const finalWidth = Math.max(width, sourceWidth);
+  const finalHeight = Math.max(height, sourceHeight);
+  const offsetX = Math.floor((finalWidth - sourceWidth) / 2);
+  const offsetY = Math.floor((finalHeight - sourceHeight) / 2);
+  const finalCells = Array.from({ length: finalHeight }, () => createEmptyRow(finalWidth));
+
+  cells.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      finalCells[rowIndex + offsetY][colIndex + offsetX] = cell;
+    });
+  });
+
+  return finalCells;
+}
+
+function prepareGridForOutput(grid: PixelGrid, cropMode: CropMode, paddingCells: number) {
   if (grid.activeCells === 0) {
     return null;
   }
 
-  return shouldTrim ? trimGridToContent(grid) : grid;
+  if (cropMode === "original") {
+    return grid;
+  }
+
+  const bounds = findContentBounds(grid);
+
+  if (!bounds) {
+    return null;
+  }
+
+  const croppedCells = cropCellsToBounds(grid, bounds);
+  const paddedCells = addPaddingToCells(croppedCells, paddingCells);
+
+  if (cropMode === "tight") {
+    return buildGridFromCells(paddedCells);
+  }
+
+  return buildGridFromCells(centerCellsInCanvas(paddedCells, grid.width, grid.height));
 }
 
 function drawPreview(
@@ -1035,6 +1149,7 @@ export default function PixelKnockBoardGeneratorTool() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>("en");
   const [fileName, setFileName] = useState("");
+  const [originalPreviewUrl, setOriginalPreviewUrl] = useState("");
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
   const [grid, setGrid] = useState<PixelGrid | null>(null);
   const [gridWidth, setGridWidth] = useState(String(defaultParams.gridWidth));
@@ -1047,7 +1162,9 @@ export default function PixelKnockBoardGeneratorTool() {
   const [alphaThreshold, setAlphaThreshold] = useState(String(defaultParams.alphaThreshold));
   const [whiteThreshold, setWhiteThreshold] = useState(String(defaultParams.whiteThreshold));
   const [removeWhiteBackground, setRemoveWhiteBackground] = useState(true);
-  const [trimEmptyEdges, setTrimEmptyEdges] = useState(true);
+  const [cropMode, setCropMode] = useState<CropMode>("center");
+  const [paddingCells, setPaddingCells] = useState("2");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("compare");
   const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
   const t = copy[language];
@@ -1074,12 +1191,37 @@ export default function PixelKnockBoardGeneratorTool() {
     lang: language,
     ...extra,
   });
+  const parsedPaddingCells = parseNumber(paddingCells, 2, 0, 8);
+
+  useEffect(() => {
+    return () => {
+      if (originalPreviewUrl) {
+        URL.revokeObjectURL(originalPreviewUrl);
+      }
+    };
+  }, [originalPreviewUrl]);
 
   useEffect(() => {
     if (grid && previewCanvasRef.current) {
       drawPreview(previewCanvasRef.current, grid, isDark, showColorNumbers);
     }
-  }, [grid, isDark, showColorNumbers]);
+  }, [grid, isDark, showColorNumbers, previewMode]);
+
+  const getPreviewCanvas = () => {
+    if (previewCanvasRef.current) {
+      return previewCanvasRef.current;
+    }
+
+    if (!grid) {
+      return null;
+    }
+
+    const canvas = document.createElement("canvas");
+
+    drawPreview(canvas, grid, isDark, showColorNumbers);
+
+    return canvas;
+  };
 
   const processCurrentImage = (image = imageElement) => {
     if (!image) {
@@ -1091,7 +1233,8 @@ export default function PixelKnockBoardGeneratorTool() {
     try {
       const nextGrid = prepareGridForOutput(
         processImageToGrid(image, params),
-        trimEmptyEdges,
+        cropMode,
+        parsedPaddingCells,
       );
 
       if (!nextGrid) {
@@ -1116,6 +1259,7 @@ export default function PixelKnockBoardGeneratorTool() {
       setImageElement(null);
       setGrid(null);
       setFileName("");
+      setOriginalPreviewUrl("");
       setError(t.errors.invalidFile);
       return;
     }
@@ -1123,8 +1267,9 @@ export default function PixelKnockBoardGeneratorTool() {
     const url = URL.createObjectURL(file);
     const image = new Image();
 
+    setOriginalPreviewUrl(url);
+
     image.onload = () => {
-      URL.revokeObjectURL(url);
       setFileName(file.name);
       setImageElement(image);
       setError("");
@@ -1132,7 +1277,8 @@ export default function PixelKnockBoardGeneratorTool() {
       try {
         const nextGrid = prepareGridForOutput(
           processImageToGrid(image, params),
-          trimEmptyEdges,
+          cropMode,
+          parsedPaddingCells,
         );
 
         if (!nextGrid) {
@@ -1149,7 +1295,7 @@ export default function PixelKnockBoardGeneratorTool() {
       }
     };
     image.onerror = () => {
-      URL.revokeObjectURL(url);
+      setOriginalPreviewUrl("");
       setImageElement(null);
       setGrid(null);
       setError(t.errors.couldNotLoad);
@@ -1163,18 +1309,22 @@ export default function PixelKnockBoardGeneratorTool() {
     }
 
     setFileName("");
+    setOriginalPreviewUrl("");
     setImageElement(null);
     setGrid(null);
+    setPreviewMode("compare");
     setError("");
   };
 
   const downloadPreview = () => {
-    if (!previewCanvasRef.current || !grid) {
+    const previewCanvas = getPreviewCanvas();
+
+    if (!previewCanvas || !grid) {
       setError(t.errors.previewFirst);
       return;
     }
 
-    previewCanvasRef.current.toBlob((blob) => {
+    previewCanvas.toBlob((blob) => {
       if (!blob) {
         setError(t.errors.couldNotCreatePng);
         return;
@@ -1220,7 +1370,9 @@ export default function PixelKnockBoardGeneratorTool() {
   };
 
   const downloadProjectZip = async () => {
-    if (!grid || grid.activeCells === 0 || grid.colors.length === 0 || !previewCanvasRef.current) {
+    const previewCanvas = getPreviewCanvas();
+
+    if (!grid || grid.activeCells === 0 || grid.colors.length === 0 || !previewCanvas) {
       setError(t.errors.stlFirst);
       return;
     }
@@ -1233,7 +1385,7 @@ export default function PixelKnockBoardGeneratorTool() {
     }
 
     try {
-      const pngBytes = await canvasToPngBytes(previewCanvasRef.current);
+      const pngBytes = await canvasToPngBytes(previewCanvas);
       const { obj, mtl } = generateObjMtl(grid, params);
       const separatedBlocks = generateSeparatedBlocksObjMtl(grid, params);
       const files = {
@@ -1353,6 +1505,36 @@ export default function PixelKnockBoardGeneratorTool() {
           <ToolLabel>{t.maxColors} (2-16)</ToolLabel>
           <ToolInput value={maxColors} onChange={setMaxColors} type="number" />
         </div>
+        <div className="min-w-0 sm:col-span-2 lg:col-span-2">
+          <ToolLabel>{t.cropMode}</ToolLabel>
+          <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 [&_button]:min-h-12 [&_button]:w-full">
+            <ToolButton
+              onClick={() => setCropMode("tight")}
+              variant={cropMode === "tight" ? "primary" : "secondary"}
+            >
+              {t.cropModeTight}
+            </ToolButton>
+            <ToolButton
+              onClick={() => setCropMode("center")}
+              variant={cropMode === "center" ? "primary" : "secondary"}
+            >
+              {t.cropModeCenter}
+            </ToolButton>
+            <ToolButton
+              onClick={() => setCropMode("original")}
+              variant={cropMode === "original" ? "primary" : "secondary"}
+            >
+              {t.cropModeOriginal}
+            </ToolButton>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.paddingCells} (0-8)</ToolLabel>
+          <ToolInput value={paddingCells} onChange={setPaddingCells} type="number" />
+          <p className={isDark ? "mt-2 text-sm leading-6 text-white/50" : "mt-2 text-sm leading-6 text-[#6B665D]"}>
+            {t.paddingCellsHelp}
+          </p>
+        </div>
         <div className="min-w-0">
           <ToolLabel>{t.cellSize}</ToolLabel>
           <ToolInput value={cellSizeMm} onChange={setCellSizeMm} type="number" />
@@ -1403,9 +1585,6 @@ export default function PixelKnockBoardGeneratorTool() {
       <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
         <ToolCheckbox checked={removeWhiteBackground} onChange={setRemoveWhiteBackground}>
           {t.removeWhiteBackground}
-        </ToolCheckbox>
-        <ToolCheckbox checked={trimEmptyEdges} onChange={setTrimEmptyEdges}>
-          {t.trimEmptyEdges}
         </ToolCheckbox>
         <ToolCheckbox
           checked={showColorNumbers}
@@ -1460,13 +1639,73 @@ export default function PixelKnockBoardGeneratorTool() {
           </div>
 
           <ToolResultBox>
-            <div className="flex w-full max-w-full justify-center overflow-hidden">
-              <canvas
-                ref={previewCanvasRef}
-                className={`block h-auto max-h-[70vh] max-w-full object-contain rounded-2xl border [image-rendering:pixelated] ${
-                  isDark ? "border-white/10" : "border-[#E5DED0]"
-                }`}
-              />
+            <div className="grid w-full max-w-full gap-4">
+              <div className="flex w-full max-w-full flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <p className={isDark ? "max-w-3xl text-sm leading-6 text-white/55" : "max-w-3xl text-sm leading-6 text-[#6B665D]"}>
+                  {t.previewCompareNote}
+                </p>
+                <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto [&_button]:min-h-10 [&_button]:w-full">
+                  <ToolButton
+                    onClick={() => setPreviewMode("compare")}
+                    variant={previewMode === "compare" ? "primary" : "secondary"}
+                  >
+                    {t.previewModeCompare}
+                  </ToolButton>
+                  <ToolButton
+                    onClick={() => setPreviewMode("original")}
+                    variant={previewMode === "original" ? "primary" : "secondary"}
+                  >
+                    {t.previewModeOriginal}
+                  </ToolButton>
+                  <ToolButton
+                    onClick={() => setPreviewMode("pixel")}
+                    variant={previewMode === "pixel" ? "primary" : "secondary"}
+                  >
+                    {t.previewModePixel}
+                  </ToolButton>
+                </div>
+              </div>
+
+              <div className={`grid w-full max-w-full grid-cols-1 gap-4 ${previewMode === "compare" ? "lg:grid-cols-2" : ""}`}>
+                {previewMode !== "pixel" ? (
+                  <div
+                    className={`min-w-0 rounded-2xl border p-4 ${
+                      isDark ? "border-white/10 bg-white/[0.03]" : "border-[#E5DED0] bg-[#FFFDF7]"
+                    }`}
+                  >
+                    <h3 className="mb-3 text-lg font-semibold">{t.originalImage}</h3>
+                    {originalPreviewUrl ? (
+                      <img
+                        src={originalPreviewUrl}
+                        alt={t.originalImage}
+                        className="mx-auto block h-auto max-h-[70vh] max-w-full object-contain"
+                      />
+                    ) : (
+                      <p className={isDark ? "text-sm text-white/50" : "text-sm text-[#6B665D]"}>
+                        {t.noFile}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                {previewMode !== "original" ? (
+                  <div
+                    className={`min-w-0 rounded-2xl border p-4 ${
+                      isDark ? "border-white/10 bg-white/[0.03]" : "border-[#E5DED0] bg-[#FFFDF7]"
+                    }`}
+                  >
+                    <h3 className="mb-3 text-lg font-semibold">{t.pixelPreview}</h3>
+                    <div className="flex w-full max-w-full justify-center overflow-hidden">
+                      <canvas
+                        ref={previewCanvasRef}
+                        className={`block h-auto max-h-[70vh] max-w-full object-contain rounded-2xl border [image-rendering:pixelated] ${
+                          isDark ? "border-white/10" : "border-[#E5DED0]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </ToolResultBox>
 

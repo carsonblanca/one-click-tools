@@ -411,14 +411,14 @@
       "en": [
         "Upload a PNG, JPG, or WEBP image.",
         "Adjust grid count, max colors, cell size, wall thickness, and wall height.",
-        "Remove near-white background, trim empty edges, and generate a preview.",
+        "Choose a crop mode, set padding cells, remove near-white background, and generate a preview.",
         "Review required blocks, color groups, and overall frame size.",
         "Download the STL grid, PNG preview, CSV color list, or the complete project ZIP."
       ],
       "zh": [
         "上传 PNG、JPG 或 WEBP 图片。",
         "调整网格数、最大颜色数、单格尺寸、墙厚和墙高。",
-        "勾选去除白底、裁剪空白边缘，生成预览图。",
+        "选择裁剪模式和边距格数，勾选去除白底后生成预览图。",
         "查看所需颗粒数、颜色组和外框总尺寸。",
         "下载网格 STL、PNG 预览图、颜色清单 CSV，或下载完整项目 ZIP。"
       ]
