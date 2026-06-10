@@ -3,6 +3,16 @@
 import ToolCard from "./ToolCard";
 import { useTheme } from "./ThemeProvider";
 
+type LocalizedText = string | {
+  en?: string;
+  zh?: string;
+};
+
+type LocalizedList = string[] | {
+  en?: string[];
+  zh?: string[];
+};
+
 type Tool = {
   name: string;
   slug: string;
@@ -11,6 +21,8 @@ type Tool = {
   categorySlug?: string;
   desc: string;
   description: string;
+  whatIsThis?: LocalizedText;
+  howTo?: LocalizedList;
 };
 
 type UseCaseGroup = {
@@ -133,6 +145,40 @@ const faqs = [
   },
 ];
 
+function getTextBlocks(content?: LocalizedText) {
+  if (!content) {
+    return null;
+  }
+
+  if (typeof content === "string") {
+    return [{ label: "", values: [content] }];
+  }
+
+  const blocks = [
+    content.en ? { label: "English", values: [content.en] } : null,
+    content.zh ? { label: "中文", values: [content.zh] } : null,
+  ].filter((item): item is { label: string; values: string[] } => Boolean(item));
+
+  return blocks.length > 0 ? blocks : null;
+}
+
+function getListBlocks(content?: LocalizedList) {
+  if (!content) {
+    return null;
+  }
+
+  if (Array.isArray(content)) {
+    return [{ label: "", values: content }];
+  }
+
+  const blocks = [
+    content.en ? { label: "English", values: content.en } : null,
+    content.zh ? { label: "中文", values: content.zh } : null,
+  ].filter((item): item is { label: string; values: string[] } => Boolean(item));
+
+  return blocks.length > 0 ? blocks : null;
+}
+
 function getToolCategory(tool: Tool) {
   return tool.category || tool.tag || "Utility";
 }
@@ -156,6 +202,8 @@ export default function ToolSeoContent({
   const category = getToolCategory(tool);
   const description = tool.description || tool.desc;
   const useCases = getUseCases(category);
+  const whatIsThisBlocks = getTextBlocks(tool.whatIsThis);
+  const howToBlocks = getListBlocks(tool.howTo);
 
   const cardClass = isDark
     ? "border-white/10 bg-white/[0.03]"
@@ -168,34 +216,84 @@ export default function ToolSeoContent({
       <section>
         <h2 className="text-3xl font-semibold">What is this tool?</h2>
 
-        <p className={`mt-5 leading-8 ${mutedTextClass}`}>
-          {tool.name} is a browser-friendly {category.toLowerCase()} tool for{" "}
-          {description.charAt(0).toLowerCase() + description.slice(1)} It is
-          built for quick, focused work without requiring a login.
-        </p>
+        {whatIsThisBlocks ? (
+          <div className="mt-5 grid gap-5">
+            {whatIsThisBlocks.map((block) => (
+              <div key={block.label || block.values[0]} className={`rounded-2xl border p-6 ${cardClass}`}>
+                {block.label ? (
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em]">
+                    {block.label}
+                  </h3>
+                ) : null}
+
+                {block.values.map((value) => (
+                  <p key={value} className={`leading-8 ${mutedTextClass}`}>
+                    {value}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className={`mt-5 leading-8 ${mutedTextClass}`}>
+            {tool.name} is a browser-friendly {category.toLowerCase()} tool for{" "}
+            {description.charAt(0).toLowerCase() + description.slice(1)} It is
+            built for quick, focused work without requiring a login.
+          </p>
+        )}
       </section>
 
       <section>
         <h2 className="text-3xl font-semibold">How to use it</h2>
 
-        <ol className="mt-6 grid gap-4">
-          {howToSteps.map((step, index) => (
-            <li
-              key={step}
-              className={`flex gap-4 rounded-2xl border p-5 ${cardClass}`}
-            >
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                  isDark ? "bg-lime-300 text-black" : "bg-[#2563EB] text-white"
-                }`}
-              >
-                {index + 1}
-              </span>
+        {howToBlocks ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            {howToBlocks.map((block) => (
+              <div key={block.label || block.values.join("|")} className={`rounded-2xl border p-5 ${cardClass}`}>
+                {block.label ? (
+                  <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em]">
+                    {block.label}
+                  </h3>
+                ) : null}
 
-              <span className={`leading-7 ${mutedTextClass}`}>{step}</span>
-            </li>
-          ))}
-        </ol>
+                <ol className="grid gap-4">
+                  {block.values.map((step, index) => (
+                    <li key={step} className="flex gap-4">
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                          isDark ? "bg-lime-300 text-black" : "bg-[#2563EB] text-white"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+
+                      <span className={`leading-7 ${mutedTextClass}`}>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ol className="mt-6 grid gap-4">
+            {howToSteps.map((step, index) => (
+              <li
+                key={step}
+                className={`flex gap-4 rounded-2xl border p-5 ${cardClass}`}
+              >
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                    isDark ? "bg-lime-300 text-black" : "bg-[#2563EB] text-white"
+                  }`}
+                >
+                  {index + 1}
+                </span>
+
+                <span className={`leading-7 ${mutedTextClass}`}>{step}</span>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <section>

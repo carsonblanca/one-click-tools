@@ -1,6 +1,8 @@
 "use client";
 
+import { strToU8, zipSync } from "fflate";
 import { useEffect, useRef, useState } from "react";
+import { trackEvent } from "../analytics";
 import { useTheme } from "../ThemeProvider";
 import {
   ToolButton,
@@ -50,6 +52,8 @@ type Params = {
   cellSizeMm: number;
   wallThicknessMm: number;
   wallHeightMm: number;
+  blockHeightMm: number;
+  blockClearanceMm: number;
   alphaThreshold: number;
   whiteThreshold: number;
   removeWhiteBackground: boolean;
@@ -61,6 +65,8 @@ const defaultParams: Params = {
   cellSizeMm: 10,
   wallThicknessMm: 1,
   wallHeightMm: 3,
+  blockHeightMm: 3,
+  blockClearanceMm: 0.4,
   alphaThreshold: 32,
   whiteThreshold: 245,
   removeWhiteBackground: true,
@@ -78,6 +84,8 @@ const copy = {
       "This tool generates a no-base pixel grid STL. Each active pixel is enclosed by printable walls, making it suitable for colorful craft blocks and hands-on pixel art projects.",
     uploadLabel: "Upload PNG / JPG / WEBP",
     localProcessingNote: "Images are processed locally in your browser.",
+    uploadTip:
+      "Tip: Use a solid-color or transparent background. Complex backgrounds, shadows, gradients, or noisy images may cause extra grids or incorrect color groups.",
     chooseFile: "Choose file",
     noFile: "No file selected",
     loadedLocally: "Loaded locally",
@@ -86,6 +94,15 @@ const copy = {
     cellSize: "Cell size (mm)",
     wallThickness: "Wall thickness (mm)",
     wallHeight: "Wall height (mm)",
+    blockHeight: "Block height (mm)",
+    blockClearance: "Block fit clearance (mm)",
+    blockClearanceHelp:
+      "Controls the fit between blocks and the grid. Larger values make blocks looser, smaller values make them tighter.",
+    blockClearanceRecommend:
+      "Recommended: 0.4mm. If blocks are too tight, increase to 0.5-0.6mm. If they are too loose, decrease to 0.2-0.3mm.",
+    clearanceTight: "Tight 0.2",
+    clearanceStandard: "Standard 0.4",
+    clearanceLoose: "Loose 0.6",
     alphaThreshold: "Alpha threshold",
     whiteThreshold: "White threshold",
     removeWhiteBackground: "Remove near-white background",
@@ -95,7 +112,12 @@ const copy = {
     downloadPng: "Download PNG preview",
     downloadStl: "Download STL grid",
     downloadCsv: "Download color list CSV",
+    downloadZip: "Download project ZIP",
     clear: "Clear",
+    zipIncludesNote:
+      "The project ZIP includes the printable STL grid, OBJ + MTL color preview, separated color block OBJ + MTL, PNG preview, CSV color list, and README.",
+    objColorNote:
+      "The color preview OBJ shows the assembled result. The separated color blocks OBJ places blocks by color group for easier printing or preparation.",
     gridSize: "Grid size",
     totalCells: "Total cells",
     activeCells: "Active cells",
@@ -118,48 +140,67 @@ const copy = {
       previewFirst: "Generate a preview before downloading PNG.",
       couldNotCreatePng: "Could not create PNG preview.",
       stlFirst: "Generate a non-empty pixel grid before downloading STL.",
+      blockSizeInvalid:
+        "Block size must be greater than 0. Reduce wall thickness or block clearance.",
+      couldNotCreateZip: "Could not create the project ZIP.",
     },
   },
   zh: {
     language: "语言",
     english: "English",
     chinese: "中文",
-    title: "像素敲敲格栅生成器",
+    title: "敲敲乐网格生成器",
     subtitle:
-      "上传图片，一键生成可 3D 打印的无底板像素格栅 STL，每个有效像素由 1mm 墙体围合。",
+      "上传图片，一键生成适合 3D 打印的敲敲乐网格 STL 文件，并自动统计所需颗粒颜色和数量。所有图片处理都在浏览器本地完成，不会上传服务器。",
     description:
-      "该工具生成的是无底板像素格栅 STL。每个有效像素格由可打印墙体围合，适合搭配彩色方块粒进行儿童手工拼搭和像素画创作。",
+      "该工具会根据图片生成无底板敲敲乐网格。每个需要填充的格子都会由 1mm 墙体围合，适合搭配彩色颗粒进行手工拼搭。",
     uploadLabel: "上传 PNG / JPG / WEBP",
     localProcessingNote: "图片仅在浏览器本地处理，不会上传服务器。",
+    uploadTip:
+      "建议上传纯色背景或透明背景图片。复杂背景、阴影、渐变和杂色可能导致识别错误，生成多余网格或颜色颗粒。",
     chooseFile: "选择文件",
     noFile: "未选择文件",
     loadedLocally: "已在浏览器本地读取",
     gridWidth: "网格宽度",
     maxColors: "最大颜色数",
-    cellSize: "细胞尺寸（毫米）",
+    cellSize: "单格尺寸（毫米）",
     wallThickness: "墙厚（毫米）",
     wallHeight: "墙高（毫米）",
-    alphaThreshold: "Alpha 阈值",
-    whiteThreshold: "白色阈值",
+    blockHeight: "方块高度（毫米）",
+    blockClearance: "方块松紧公差（毫米）",
+    blockClearanceHelp:
+      "用于控制方块和网格之间的松紧。数值越大越容易放入，数值越小越紧。",
+    blockClearanceRecommend:
+      "推荐值：0.4mm。若方块塞不进去，请增大到 0.5-0.6mm；若太松，请减小到 0.2-0.3mm。",
+    clearanceTight: "紧配 0.2",
+    clearanceStandard: "标准 0.4",
+    clearanceLoose: "宽松 0.6",
+    alphaThreshold: "透明度阈值",
+    whiteThreshold: "白底阈值",
     removeWhiteBackground: "去除近乎白色背景",
     trimEmptyEdges: "裁剪空白边缘",
-    showColorNumbers: "显示颜色编号",
+    showColorNumbers: "显示颗粒编号",
     generatePreview: "生成预览",
     downloadPng: "下载 PNG 预览",
-    downloadStl: "下载 STL 格栅",
+    downloadStl: "下载网格 STL",
     downloadCsv: "下载颜色清单 CSV",
+    downloadZip: "下载完整项目 ZIP",
     clear: "清空",
-    gridSize: "网格大小",
-    totalCells: "总方格数",
-    activeCells: "有效细胞",
-    emptyCells: "空白方格",
-    modelSize: "模型尺寸",
+    zipIncludesNote:
+      "完整项目 ZIP 包含用于打印的网格 STL、用于查看成品效果的彩色预览 OBJ + MTL、按颜色分组的分色方块 OBJ + MTL、PNG 预览图、颜色清单 CSV 和 README 说明。",
+    objColorNote:
+      "彩色预览 OBJ 用于查看效果；分色方块 OBJ 会把不同颜色的方块分开放置，方便按颜色打印或准备颗粒。",
+    gridSize: "网格数",
+    totalCells: "总格数",
+    activeCells: "所需颗粒数",
+    emptyCells: "空白格数",
+    modelSize: "外框总尺寸",
     colorList: "颜色分组",
     hex: "HEX",
     rgb: "RGB",
-    cellCount: "方格数量",
+    cellCount: "颗粒数",
     percentage: "占比",
-    cells: "个细胞",
+    cells: "颗粒",
     emptyState: "上传图片后生成无底板像素格栅 STL 预览。",
     errors: {
       uploadFirst: "请先上传 PNG、JPG 或 WEBP 图片。",
@@ -170,6 +211,8 @@ const copy = {
       previewFirst: "请先生成预览，再下载 PNG。",
       couldNotCreatePng: "无法创建 PNG 预览。",
       stlFirst: "请先生成非空像素格栅，再下载 STL。",
+      blockSizeInvalid: "方块尺寸必须大于 0。请减小墙厚或方块松紧公差。",
+      couldNotCreateZip: "无法创建完整项目 ZIP。",
     },
   },
 } satisfies Record<Language, Record<string, unknown>>;
@@ -677,6 +720,202 @@ function generateStl(grid: PixelGrid, params: Params) {
   ].join("\n");
 }
 
+function formatObjNumber(value: number) {
+  return value.toFixed(4).replace(/\.?0+$/, "") || "0";
+}
+
+function objVertex(point: [number, number, number]) {
+  return `v ${formatObjNumber(point[0])} ${formatObjNumber(point[1])} ${formatObjNumber(point[2])}`;
+}
+
+function appendObjBox(
+  lines: string[],
+  vertexIndex: number,
+  groupName: string,
+  materialName: string,
+  x: number,
+  y: number,
+  z: number,
+  width: number,
+  depth: number,
+  height: number,
+) {
+  const x0 = x;
+  const x1 = x + width;
+  const y0 = y;
+  const y1 = y + depth;
+  const z0 = z;
+  const z1 = z + height;
+  const base = vertexIndex;
+  const points: Array<[number, number, number]> = [
+    [x0, y0, z0],
+    [x1, y0, z0],
+    [x1, y1, z0],
+    [x0, y1, z0],
+    [x0, y0, z1],
+    [x1, y0, z1],
+    [x1, y1, z1],
+    [x0, y1, z1],
+  ];
+
+  lines.push(`g ${groupName}`, `usemtl ${materialName}`, ...points.map(objVertex));
+  lines.push(
+    `f ${base} ${base + 1} ${base + 2} ${base + 3}`,
+    `f ${base + 4} ${base + 7} ${base + 6} ${base + 5}`,
+    `f ${base} ${base + 4} ${base + 5} ${base + 1}`,
+    `f ${base + 1} ${base + 5} ${base + 6} ${base + 2}`,
+    `f ${base + 2} ${base + 6} ${base + 7} ${base + 3}`,
+    `f ${base + 3} ${base + 7} ${base + 4} ${base}`,
+  );
+
+  return vertexIndex + points.length;
+}
+
+function buildMtl(grid: PixelGrid) {
+  const lines = [
+    "# Pixel Knock Grid Generator color preview materials",
+    "newmtl grid_wall",
+    "Kd 0.68 0.68 0.68",
+    "Ka 0.08 0.08 0.08",
+    "d 1",
+  ];
+
+  grid.colors.forEach((item, index) => {
+    const { red, green, blue } = parseHex(item.color);
+
+    lines.push(
+      "",
+      `newmtl color_${index + 1}`,
+      `Kd ${(red / 255).toFixed(4)} ${(green / 255).toFixed(4)} ${(blue / 255).toFixed(4)}`,
+      "Ka 0.08 0.08 0.08",
+      "d 1",
+    );
+  });
+
+  return lines.join("\n");
+}
+
+function buildSeparatedBlocksMtl(grid: PixelGrid) {
+  const lines = ["# Pixel Knock Grid Generator separated block materials"];
+
+  grid.colors.forEach((item, index) => {
+    const { red, green, blue } = parseHex(item.color);
+    const normalized = [
+      (red / 255).toFixed(4),
+      (green / 255).toFixed(4),
+      (blue / 255).toFixed(4),
+    ].join(" ");
+
+    lines.push(
+      "",
+      `newmtl color_${index + 1}`,
+      `Kd ${normalized}`,
+      `Ka ${normalized}`,
+      "d 1.0",
+    );
+  });
+
+  return lines.join("\n");
+}
+
+function generateObjMtl(grid: PixelGrid, params: Params) {
+  const blockSizeMm = params.cellSizeMm - params.wallThicknessMm - params.blockClearanceMm;
+  const colorIndexes = getColorIndexMap(grid);
+  const lines = [
+    "# Pixel Knock Grid Generator color preview",
+    "mtllib pixel-knock-color-preview.mtl",
+    "o pixel_knock_color_preview",
+  ];
+  let vertexIndex = 1;
+
+  buildWallRects(grid, params.cellSizeMm, params.wallThicknessMm).forEach((wall, index) => {
+    vertexIndex = appendObjBox(
+      lines,
+      vertexIndex,
+      `grid_wall_${index + 1}`,
+      "grid_wall",
+      wall.x,
+      wall.y,
+      0,
+      wall.width,
+      wall.depth,
+      params.wallHeightMm,
+    );
+  });
+
+  grid.cells.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (cell.empty || !cell.color) return;
+
+      const colorIndex = colorIndexes.get(cell.color) || 1;
+      const offset = (params.cellSizeMm - blockSizeMm) / 2;
+
+      vertexIndex = appendObjBox(
+        lines,
+        vertexIndex,
+        `color_${colorIndex}_cell_${colIndex + 1}_${rowIndex + 1}`,
+        `color_${colorIndex}`,
+        colIndex * params.cellSizeMm + offset,
+        rowIndex * params.cellSizeMm + offset,
+        0,
+        blockSizeMm,
+        blockSizeMm,
+        params.blockHeightMm,
+      );
+    });
+  });
+
+  return {
+    obj: lines.join("\n"),
+    mtl: buildMtl(grid),
+    blockSizeMm,
+  };
+}
+
+function generateSeparatedBlocksObjMtl(grid: PixelGrid, params: Params) {
+  const blockSizeMm = params.cellSizeMm - params.wallThicknessMm - params.blockClearanceMm;
+  const groupGapMm = params.cellSizeMm * 3;
+  const lines = [
+    "# Pixel Knock Grid Generator separated color blocks",
+    "mtllib pixel-knock-color-blocks-separated.mtl",
+  ];
+  let vertexIndex = 1;
+  let groupOffsetY = 0;
+
+  grid.colors.forEach((item, colorIndex) => {
+    const columns = clamp(Math.ceil(Math.sqrt(item.count)), 1, 12);
+    const rows = Math.ceil(item.count / columns);
+
+    lines.push(`o color_${colorIndex + 1}_blocks`, `usemtl color_${colorIndex + 1}`);
+
+    for (let index = 0; index < item.count; index += 1) {
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+
+      vertexIndex = appendObjBox(
+        lines,
+        vertexIndex,
+        `color_${colorIndex + 1}_block_${index + 1}`,
+        `color_${colorIndex + 1}`,
+        col * params.cellSizeMm,
+        groupOffsetY + row * params.cellSizeMm,
+        0,
+        blockSizeMm,
+        blockSizeMm,
+        params.blockHeightMm,
+      );
+    }
+
+    groupOffsetY += rows * params.cellSizeMm + groupGapMm;
+  });
+
+  return {
+    obj: lines.join("\n"),
+    mtl: buildSeparatedBlocksMtl(grid),
+    blockSizeMm,
+  };
+}
+
 function buildColorCsv(grid: PixelGrid) {
   const lines = ["index,hex,r,g,b,cells,percentage"];
 
@@ -711,6 +950,85 @@ function downloadTextFile(content: string, fileName: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
+function downloadBinaryFile(content: Uint8Array, fileName: string, mimeType: string) {
+  const arrayBuffer = new ArrayBuffer(content.byteLength);
+
+  new Uint8Array(arrayBuffer).set(content);
+
+  const blob = new Blob([arrayBuffer], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function canvasToPngBytes(canvas: HTMLCanvasElement) {
+  return new Promise<Uint8Array>((resolve, reject) => {
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        reject(new Error("Could not create PNG."));
+        return;
+      }
+
+      resolve(new Uint8Array(await blob.arrayBuffer()));
+    }, "image/png");
+  });
+}
+
+function buildReadme(grid: PixelGrid, params: Params, blockSizeMm: number) {
+  const modelWidth = grid.width * params.cellSizeMm;
+  const modelHeight = grid.height * params.cellSizeMm;
+
+  return [
+    "Pixel Knock Grid Generator Project",
+    "",
+    "English",
+    "-------",
+    "pixel-knock-grid.stl: use this file to 3D print the grid frame.",
+    "pixel-knock-color-preview.obj: shows the assembled color preview with the grid and blocks together.",
+    "pixel-knock-color-preview.mtl: material colors for the assembled OBJ preview.",
+    "pixel-knock-color-blocks-separated.obj: contains only blocks, separated by color group for easier printing or preparation.",
+    "pixel-knock-color-blocks-separated.mtl: material colors for the separated block OBJ.",
+    "pixel-knock-color-list.csv: color list with required block counts.",
+    "pixel-knock-preview.png: pixel preview image.",
+    "STL files do not reliably store color information.",
+    "For production, print pixel-knock-grid.stl first, then prepare blocks by color using the CSV or separated OBJ.",
+    "",
+    `Grid size: ${grid.width} x ${grid.height}`,
+    `Model size: ${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
+    `Cell size: ${params.cellSizeMm} mm`,
+    `Wall thickness: ${params.wallThicknessMm} mm`,
+    `Wall height: ${params.wallHeightMm} mm`,
+    `Block size: ${blockSizeMm.toFixed(2)} mm`,
+    `Block height: ${params.blockHeightMm} mm`,
+    `Block fit clearance: ${params.blockClearanceMm} mm`,
+    "",
+    "Chinese / 中文",
+    "------------",
+    "pixel-knock-grid.stl：用于 3D 打印敲敲乐网格外框。",
+    "pixel-knock-color-preview.obj：用于查看格栅和颜色方块组合后的成品预览。",
+    "pixel-knock-color-preview.mtl：成品预览 OBJ 的材质颜色。",
+    "pixel-knock-color-blocks-separated.obj：只包含方块，并按颜色分组分开放置，方便根据颜色分别打印或备料。",
+    "pixel-knock-color-blocks-separated.mtl：分色方块 OBJ 的材质颜色。",
+    "pixel-knock-color-list.csv：颜色清单，包含每种颜色所需颗粒数。",
+    "pixel-knock-preview.png：像素预览图。",
+    "STL 文件通常不可靠保存颜色信息，请根据颜色清单准备对应颜色颗粒。",
+    "如果你要实际制作，建议先打印 pixel-knock-grid.stl，再根据 CSV 或分色 OBJ 准备对应颜色颗粒。",
+    "",
+    `网格数：${grid.width} x ${grid.height}`,
+    `外框总尺寸：${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
+    `单格尺寸：${params.cellSizeMm} mm`,
+    `墙厚：${params.wallThicknessMm} mm`,
+    `墙高：${params.wallHeightMm} mm`,
+    `方块尺寸：${blockSizeMm.toFixed(2)} mm`,
+    `方块高度：${params.blockHeightMm} mm`,
+    `方块松紧公差：${params.blockClearanceMm} mm`,
+  ].join("\n");
+}
+
 export default function PixelKnockBoardGeneratorTool() {
   const { isDark } = useTheme();
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -724,6 +1042,8 @@ export default function PixelKnockBoardGeneratorTool() {
   const [cellSizeMm, setCellSizeMm] = useState(String(defaultParams.cellSizeMm));
   const [wallThicknessMm, setWallThicknessMm] = useState(String(defaultParams.wallThicknessMm));
   const [wallHeightMm, setWallHeightMm] = useState(String(defaultParams.wallHeightMm));
+  const [blockHeightMm, setBlockHeightMm] = useState(String(defaultParams.blockHeightMm));
+  const [blockClearanceMm, setBlockClearanceMm] = useState(String(defaultParams.blockClearanceMm));
   const [alphaThreshold, setAlphaThreshold] = useState(String(defaultParams.alphaThreshold));
   const [whiteThreshold, setWhiteThreshold] = useState(String(defaultParams.whiteThreshold));
   const [removeWhiteBackground, setRemoveWhiteBackground] = useState(true);
@@ -738,10 +1058,22 @@ export default function PixelKnockBoardGeneratorTool() {
     cellSizeMm: parseNumber(cellSizeMm, defaultParams.cellSizeMm, 1, 100),
     wallThicknessMm: parseNumber(wallThicknessMm, defaultParams.wallThicknessMm, 0.2, 20),
     wallHeightMm: parseNumber(wallHeightMm, defaultParams.wallHeightMm, 0.2, 100),
+    blockHeightMm: parseNumber(blockHeightMm, defaultParams.blockHeightMm, 0.2, 100),
+    blockClearanceMm: parseNumber(blockClearanceMm, defaultParams.blockClearanceMm, 0, 20),
     alphaThreshold: parseNumber(alphaThreshold, defaultParams.alphaThreshold, 0, 255),
     whiteThreshold: parseNumber(whiteThreshold, defaultParams.whiteThreshold, 0, 255),
     removeWhiteBackground,
   };
+
+  const getAnalyticsParams = (targetGrid = grid, extra: Record<string, string | number | boolean | undefined> = {}) => ({
+    tool: "pixel-knock-board-generator",
+    gridWidth: targetGrid?.width,
+    gridHeight: targetGrid?.height,
+    colorCount: targetGrid?.colors.length,
+    activeBlocks: targetGrid?.activeCells,
+    lang: language,
+    ...extra,
+  });
 
   useEffect(() => {
     if (grid && previewCanvasRef.current) {
@@ -770,6 +1102,7 @@ export default function PixelKnockBoardGeneratorTool() {
 
       setGrid(nextGrid);
       setError("");
+      trackEvent("generate_preview", getAnalyticsParams(nextGrid));
     } catch {
       setGrid(null);
       setError(t.errors.couldNotProcess);
@@ -809,6 +1142,7 @@ export default function PixelKnockBoardGeneratorTool() {
         }
 
         setGrid(nextGrid);
+        trackEvent("upload_image", getAnalyticsParams(nextGrid));
       } catch {
         setGrid(null);
         setError(t.errors.couldNotProcess);
@@ -853,6 +1187,7 @@ export default function PixelKnockBoardGeneratorTool() {
       link.download = "pixel-knock-preview.png";
       link.click();
       URL.revokeObjectURL(url);
+      trackEvent("download_png_preview", getAnalyticsParams());
     }, "image/png");
   };
 
@@ -867,6 +1202,7 @@ export default function PixelKnockBoardGeneratorTool() {
       "pixel-knock-grid.stl",
       "model/stl",
     );
+    trackEvent("download_stl_grid", getAnalyticsParams());
   };
 
   const downloadCsv = () => {
@@ -880,6 +1216,48 @@ export default function PixelKnockBoardGeneratorTool() {
       "pixel-knock-color-list.csv",
       "text/csv;charset=utf-8",
     );
+    trackEvent("download_color_csv", getAnalyticsParams());
+  };
+
+  const downloadProjectZip = async () => {
+    if (!grid || grid.activeCells === 0 || grid.colors.length === 0 || !previewCanvasRef.current) {
+      setError(t.errors.stlFirst);
+      return;
+    }
+
+    const blockSizeMm = params.cellSizeMm - params.wallThicknessMm - params.blockClearanceMm;
+
+    if (blockSizeMm <= 0) {
+      setError(t.errors.blockSizeInvalid);
+      return;
+    }
+
+    try {
+      const pngBytes = await canvasToPngBytes(previewCanvasRef.current);
+      const { obj, mtl } = generateObjMtl(grid, params);
+      const separatedBlocks = generateSeparatedBlocksObjMtl(grid, params);
+      const files = {
+        "pixel-knock-grid.stl": strToU8(generateStl(grid, params)),
+        "pixel-knock-color-preview.obj": strToU8(obj),
+        "pixel-knock-color-preview.mtl": strToU8(mtl),
+        "pixel-knock-color-blocks-separated.obj": strToU8(separatedBlocks.obj),
+        "pixel-knock-color-blocks-separated.mtl": strToU8(separatedBlocks.mtl),
+        "pixel-knock-color-list.csv": strToU8(buildColorCsv(grid)),
+        "pixel-knock-preview.png": pngBytes,
+        "README.txt": strToU8(buildReadme(grid, params, blockSizeMm)),
+      };
+      const zipBytes = zipSync(files, { level: 6 });
+
+      downloadBinaryFile(
+        zipBytes,
+        `pixel-knock-${grid.width}x${grid.height}-project.zip`,
+        "application/zip",
+      );
+      setError("");
+      trackEvent("download_project_zip", getAnalyticsParams());
+    } catch {
+      setError(t.errors.couldNotCreateZip);
+    }
   };
 
   const totalCells = grid ? grid.width * grid.height : 0;
@@ -902,13 +1280,19 @@ export default function PixelKnockBoardGeneratorTool() {
           <ToolLabel>{t.language}</ToolLabel>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
             <ToolButton
-              onClick={() => setLanguage("en")}
+              onClick={() => {
+                setLanguage("en");
+                trackEvent("switch_language", getAnalyticsParams(grid, { lang: "en" }));
+              }}
               variant={language === "en" ? "primary" : "secondary"}
             >
               {t.english}
             </ToolButton>
             <ToolButton
-              onClick={() => setLanguage("zh")}
+              onClick={() => {
+                setLanguage("zh");
+                trackEvent("switch_language", getAnalyticsParams(grid, { lang: "zh" }));
+              }}
               variant={language === "zh" ? "primary" : "secondary"}
             >
               {t.chinese}
@@ -949,6 +1333,15 @@ export default function PixelKnockBoardGeneratorTool() {
         <p className={isDark ? "mt-2 text-sm text-white/45" : "mt-2 text-sm text-[#8A8173]"}>
           {t.localProcessingNote}
         </p>
+        <div
+          className={`mt-3 w-full max-w-full rounded-2xl border p-4 text-sm leading-6 ${
+            isDark
+              ? "border-red-400/30 bg-red-500/10 text-red-100"
+              : "border-red-300 bg-red-50 text-red-800"
+          }`}
+        >
+          {t.uploadTip}
+        </div>
       </div>
 
       <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -973,6 +1366,31 @@ export default function PixelKnockBoardGeneratorTool() {
           <ToolInput value={wallHeightMm} onChange={setWallHeightMm} type="number" />
         </div>
         <div className="min-w-0">
+          <ToolLabel>{t.blockHeight}</ToolLabel>
+          <ToolInput value={blockHeightMm} onChange={setBlockHeightMm} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.blockClearance}</ToolLabel>
+          <ToolInput value={blockClearanceMm} onChange={setBlockClearanceMm} type="number" />
+          <p className={isDark ? "mt-2 text-sm leading-6 text-white/50" : "mt-2 text-sm leading-6 text-[#6B665D]"}>
+            {t.blockClearanceHelp}
+          </p>
+          <p className={isDark ? "mt-1 text-sm leading-6 text-white/45" : "mt-1 text-sm leading-6 text-[#8A8173]"}>
+            {t.blockClearanceRecommend}
+          </p>
+          <div className="mt-3 grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 [&_button]:min-h-10 [&_button]:w-full">
+            <ToolButton onClick={() => setBlockClearanceMm("0.2")} variant="secondary">
+              {t.clearanceTight}
+            </ToolButton>
+            <ToolButton onClick={() => setBlockClearanceMm("0.4")} variant="secondary">
+              {t.clearanceStandard}
+            </ToolButton>
+            <ToolButton onClick={() => setBlockClearanceMm("0.6")} variant="secondary">
+              {t.clearanceLoose}
+            </ToolButton>
+          </div>
+        </div>
+        <div className="min-w-0">
           <ToolLabel>{t.alphaThreshold}</ToolLabel>
           <ToolInput value={alphaThreshold} onChange={setAlphaThreshold} type="number" />
         </div>
@@ -989,13 +1407,25 @@ export default function PixelKnockBoardGeneratorTool() {
         <ToolCheckbox checked={trimEmptyEdges} onChange={setTrimEmptyEdges}>
           {t.trimEmptyEdges}
         </ToolCheckbox>
-        <ToolCheckbox checked={showColorNumbers} onChange={setShowColorNumbers}>
+        <ToolCheckbox
+          checked={showColorNumbers}
+          onChange={(checked) => {
+            setShowColorNumbers(checked);
+            trackEvent(
+              "toggle_show_color_numbers",
+              getAnalyticsParams(grid, { enabled: checked }),
+            );
+          }}
+        >
           {t.showColorNumbers}
         </ToolCheckbox>
       </div>
 
       <div className="mt-4 flex w-full max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
         <ToolButton onClick={() => processCurrentImage()}>{t.generatePreview}</ToolButton>
+        <ToolButton onClick={downloadProjectZip}>
+          {t.downloadZip}
+        </ToolButton>
         <ToolButton onClick={downloadPreview} variant="secondary">
           {t.downloadPng}
         </ToolButton>
@@ -1009,6 +1439,13 @@ export default function PixelKnockBoardGeneratorTool() {
           {t.clear}
         </ToolButton>
       </div>
+
+      <ToolResultBox muted>
+        <div className="grid gap-2">
+          <p>{t.zipIncludesNote}</p>
+          <p>{t.objColorNote}</p>
+        </div>
+      </ToolResultBox>
 
       {error ? <ToolResultBox>{error}</ToolResultBox> : null}
 
