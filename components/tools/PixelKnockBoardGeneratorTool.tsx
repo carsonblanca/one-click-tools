@@ -30,6 +30,22 @@ type CropMode = "tight" | "center" | "original";
 
 type PreviewMode = "compare" | "original" | "pixel";
 
+type ColorSimplification = "strong" | "standard" | "detailed";
+
+type PrinterModel = {
+  id: string;
+  name: string;
+  nameZh: string;
+  width: number;
+  depth: number;
+};
+
+type PrinterPreset = {
+  brand: string;
+  brandZh: string;
+  models: PrinterModel[];
+};
+
 type PixelGrid = {
   width: number;
   height: number;
@@ -50,9 +66,48 @@ type GridEdge = {
   y: number;
 };
 
+type WeightedColor = {
+  red: number;
+  green: number;
+  blue: number;
+  count: number;
+};
+
+type ColorBlockArea = {
+  index: number;
+  color: string;
+  count: number;
+  width: number;
+  depth: number;
+  area: number;
+};
+
+type BedFitSummary = {
+  bedWidth: number;
+  bedDepth: number;
+  frameWidth: number;
+  frameDepth: number;
+  fitsAsPlaced: boolean;
+  fitsRotated: boolean;
+};
+
+type PrinterReadmeInfo = {
+  brandName: string;
+  brandNameZh: string;
+  modelName: string;
+  modelNameZh: string;
+  bedWidth: number;
+  bedDepth: number;
+  bedFit: BedFitSummary | null;
+  colorBlockPlates: number;
+  totalPlates: number;
+};
+
 type Params = {
   gridWidth: number;
   maxColors: number;
+  colorSimplification: ColorSimplification;
+  mergeSimilarColors: number;
   cellSizeMm: number;
   wallThicknessMm: number;
   wallHeightMm: number;
@@ -65,7 +120,9 @@ type Params = {
 
 const defaultParams: Params = {
   gridWidth: 24,
-  maxColors: 8,
+  maxColors: 6,
+  colorSimplification: "standard",
+  mergeSimilarColors: 35,
   cellSizeMm: 10,
   wallThicknessMm: 1,
   wallHeightMm: 3,
@@ -75,6 +132,46 @@ const defaultParams: Params = {
   whiteThreshold: 245,
   removeWhiteBackground: true,
 };
+
+const printerPresets: PrinterPreset[] = [
+  {
+    brand: "Bambu Lab",
+    brandZh: "拓竹 Bambu Lab",
+    models: [
+      { id: "bambu-h2d-single", name: "H2D single nozzle", nameZh: "H2D 单喷嘴", width: 325, depth: 320 },
+      { id: "bambu-h2d-dual", name: "H2D dual nozzle", nameZh: "H2D 双喷嘴", width: 300, depth: 320 },
+      { id: "bambu-h2d-max", name: "H2D max area", nameZh: "H2D 最大区域", width: 350, depth: 320 },
+      { id: "bambu-x1-p1-a1", name: "X1 / P1 / A1 series", nameZh: "X1 / P1 / A1 系列", width: 256, depth: 256 },
+      { id: "bambu-a1-mini", name: "A1 mini", nameZh: "A1 mini", width: 180, depth: 180 },
+    ],
+  },
+  {
+    brand: "Creality",
+    brandZh: "创想三维 Creality",
+    models: [
+      { id: "creality-k1", name: "K1 / K1C", nameZh: "K1 / K1C", width: 220, depth: 220 },
+      { id: "creality-k1-max", name: "K1 Max", nameZh: "K1 Max", width: 300, depth: 300 },
+      { id: "creality-ender3", name: "Ender-3 series", nameZh: "Ender-3 系列常见尺寸", width: 220, depth: 220 },
+      { id: "creality-ender3-max", name: "Ender-3 Max / large bed", nameZh: "Ender-3 Max / 大尺寸平台", width: 300, depth: 300 },
+    ],
+  },
+  {
+    brand: "Prusa",
+    brandZh: "Prusa",
+    models: [
+      { id: "prusa-mk4", name: "Original Prusa MK4 / MK4S", nameZh: "Original Prusa MK4 / MK4S", width: 250, depth: 210 },
+      { id: "prusa-core-one", name: "Prusa CORE One", nameZh: "Prusa CORE One", width: 250, depth: 220 },
+      { id: "prusa-xl", name: "Prusa XL", nameZh: "Prusa XL", width: 360, depth: 360 },
+    ],
+  },
+  {
+    brand: "Custom",
+    brandZh: "自定义",
+    models: [
+      { id: "custom", name: "Custom size", nameZh: "自定义尺寸", width: 300, depth: 300 },
+    ],
+  },
+];
 
 const copy = {
   en: {
@@ -95,6 +192,22 @@ const copy = {
     loadedLocally: "Loaded locally",
     gridWidth: "Grid width",
     maxColors: "Max colors",
+    maxColorsHelp:
+      "For real printing, 4-8 colors are recommended. Increase this if you want more detail.",
+    colorSimplification: "Color simplification",
+    simplificationStrong: "Strong",
+    simplificationStandard: "Standard",
+    simplificationDetailed: "Detailed",
+    simplificationStrongHelp: "Fewer colors, best for real printing.",
+    simplificationStandardHelp: "Balanced color reduction, recommended.",
+    simplificationDetailedHelp: "Closer to the original image, may create more color groups.",
+    mergeSimilarColors: "Merge similar colors",
+    mergeSimilarColorsHelp:
+      "Merges close colors to reduce gradients and similar shades. Higher values create fewer, more printable colors.",
+    colorReductionNote:
+      "Similar colors are merged to reduce extra groups caused by shadows, gradients, and highlights. For real-world making, 4-8 colors are recommended.",
+    lowColorWarning:
+      "The current color count is low, so the pattern will be simplified. Increase max colors or choose Detailed if details are lost.",
     cellSize: "Cell size (mm)",
     wallThickness: "Wall thickness (mm)",
     wallHeight: "Wall height (mm)",
@@ -117,6 +230,35 @@ const copy = {
     paddingCells: "Padding cells",
     paddingCellsHelp:
       "Adds empty space around the subject for a more centered and finished layout.",
+    printerBrand: "Printer brand",
+    printerModel: "Printer model",
+    bedWidth: "Bed width (mm)",
+    bedDepth: "Bed depth (mm)",
+    bedFit: "Bed fit",
+    frameSize: "Frame size",
+    selectedBed: "Selected bed",
+    fitsAsPlaced: "Fits as placed",
+    fitsIfRotated: "Fits if rotated",
+    bedFits: "Fits",
+    bedFitsRotated: "Fits if rotated",
+    bedDoesNotFit: "Does not fit",
+    yes: "Yes",
+    no: "No",
+    bedSuggestionFits: "Suggestion: The grid frame fits the selected bed as placed.",
+    bedSuggestionRotate:
+      "Suggestion: Rotate the grid before printing, or reduce grid count / cell size.",
+    bedSuggestionReduce:
+      "Suggestion: Reduce grid count / cell size, or choose a printer with a larger bed.",
+    bedUsableAreaNote:
+      "The usable area may be smaller because of slicer limits, nozzle mode, purge/wipe towers, or protected zones. Always check the final layout in your slicer.",
+    colorBlockAreas: "Color block areas",
+    estimatedArea: "Estimated area",
+    estimatedPlates: "Estimated plates",
+    gridFramePlate: "Grid frame",
+    colorBlocksPlate: "Color blocks",
+    plateCountDetail: "Grid frame: 1 plate, color blocks: about {count} plates.",
+    plateEstimateNote:
+      "This is a browser-side estimate. Final arrangement may differ in Bambu Studio, Cura, or your slicer.",
     previewModeCompare: "Compare",
     previewModeOriginal: "Original",
     previewModePixel: "Pixel preview",
@@ -160,6 +302,7 @@ const copy = {
       stlFirst: "Generate a non-empty pixel grid before downloading STL.",
       blockSizeInvalid:
         "Block size must be greater than 0. Reduce wall thickness or block clearance.",
+      bedSizeInvalid: "Bed width and depth must be greater than 0.",
       couldNotCreateZip: "Could not create the project ZIP.",
     },
   },
@@ -181,6 +324,21 @@ const copy = {
     loadedLocally: "已在浏览器本地读取",
     gridWidth: "网格宽度",
     maxColors: "最大颜色数",
+    maxColorsHelp: "实际打印时建议 4-8 色；如果想更接近原图，可以手动调高。",
+    colorSimplification: "颜色简化",
+    simplificationStrong: "强",
+    simplificationStandard: "标准",
+    simplificationDetailed: "细致",
+    simplificationStrongHelp: "颜色更少，最适合实际打印和准备颗粒。",
+    simplificationStandardHelp: "平衡还原和颜色数量，推荐使用。",
+    simplificationDetailedHelp: "更接近原图，但可能产生更多颜色组。",
+    mergeSimilarColors: "合并相似颜色",
+    mergeSimilarColorsHelp:
+      "用于合并接近的颜色，减少渐变和相似色。数值越大，颜色越少，更适合实际打印。",
+    colorReductionNote:
+      "颜色会自动合并相近色，减少阴影、渐变和高光造成的过多颜色分组。实际制作时建议控制在 4-8 色。",
+    lowColorWarning:
+      "当前颜色数较少，图案会更简化。如果细节丢失，可以提高最大颜色数或选择“细致”模式。",
     cellSize: "单格尺寸（毫米）",
     wallThickness: "墙厚（毫米）",
     wallHeight: "墙高（毫米）",
@@ -203,6 +361,33 @@ const copy = {
     paddingCells: "边距格数",
     paddingCellsHelp:
       "在主体周围保留空白边距，让图案更居中、更适合制作成品。",
+    printerBrand: "打印机品牌",
+    printerModel: "打印机型号",
+    bedWidth: "热床宽度（毫米）",
+    bedDepth: "热床深度（毫米）",
+    bedFit: "热床占用",
+    frameSize: "外框尺寸",
+    selectedBed: "当前热床",
+    fitsAsPlaced: "当前方向",
+    fitsIfRotated: "旋转 90°",
+    bedFits: "可以放下",
+    bedFitsRotated: "旋转后可放下",
+    bedDoesNotFit: "放不下",
+    yes: "可以放下",
+    no: "放不下",
+    bedSuggestionFits: "建议：当前方向可以放下，请在切片软件中再次确认。",
+    bedSuggestionRotate: "建议：打印时旋转模型，或减少网格数 / 单格尺寸。",
+    bedSuggestionReduce: "建议：减少网格数 / 单格尺寸，或选择更大热床的打印机。",
+    bedUsableAreaNote:
+      "不同切片软件、喷头模式、擦料塔和边界保护可能会减少实际可用区域，请以切片软件最终显示为准。",
+    colorBlockAreas: "分色方块占用",
+    estimatedArea: "预计面积",
+    estimatedPlates: "预计打印盘数",
+    gridFramePlate: "网格外框",
+    colorBlocksPlate: "分色方块",
+    plateCountDetail: "其中网格外框 1 盘，分色方块约 {count} 盘。",
+    plateEstimateNote:
+      "该结果为网页估算，实际排盘以 Bambu Studio / Cura 等切片软件为准。",
     previewModeCompare: "对比预览",
     previewModeOriginal: "原图",
     previewModePixel: "像素预览",
@@ -243,6 +428,7 @@ const copy = {
       couldNotCreatePng: "无法创建 PNG 预览。",
       stlFirst: "请先生成非空像素格栅，再下载 STL。",
       blockSizeInvalid: "方块尺寸必须大于 0。请减小墙厚或方块松紧公差。",
+      bedSizeInvalid: "热床宽度和深度必须大于 0。",
       couldNotCreateZip: "无法创建完整项目 ZIP。",
     },
   },
@@ -291,16 +477,217 @@ function getColorIndexMap(grid: PixelGrid) {
   return new Map(grid.colors.map((item, index) => [item.color, index + 1]));
 }
 
+function colorDistance(first: { red: number; green: number; blue: number }, second: { red: number; green: number; blue: number }) {
+  return Math.sqrt(
+    (first.red - second.red) ** 2 +
+      (first.green - second.green) ** 2 +
+      (first.blue - second.blue) ** 2,
+  );
+}
+
+function colorBrightness(color: { red: number; green: number; blue: number }) {
+  return color.red * 0.299 + color.green * 0.587 + color.blue * 0.114;
+}
+
+function colorHue(color: { red: number; green: number; blue: number }) {
+  const red = color.red / 255;
+  const green = color.green / 255;
+  const blue = color.blue / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const delta = max - min;
+
+  if (delta === 0) {
+    return 0;
+  }
+
+  if (max === red) {
+    return ((green - blue) / delta + (green < blue ? 6 : 0)) * 60;
+  }
+
+  if (max === green) {
+    return ((blue - red) / delta + 2) * 60;
+  }
+
+  return ((red - green) / delta + 4) * 60;
+}
+
+function compareWeightedColors(first: WeightedColor, second: WeightedColor) {
+  const countDifference = second.count - first.count;
+
+  if (countDifference !== 0) {
+    return countDifference;
+  }
+
+  return colorHue(first) - colorHue(second) || colorBrightness(first) - colorBrightness(second);
+}
+
+function compareColorSummaries(first: ColorSummary, second: ColorSummary) {
+  const countDifference = second.count - first.count;
+
+  if (countDifference !== 0) {
+    return countDifference;
+  }
+
+  const firstColor = parseHex(first.color);
+  const secondColor = parseHex(second.color);
+
+  return colorHue(firstColor) - colorHue(secondColor) || colorBrightness(firstColor) - colorBrightness(secondColor);
+}
+
+function getSimplificationBaseThreshold(mode: ColorSimplification) {
+  if (mode === "strong") return 55;
+  if (mode === "detailed") return 20;
+  return 35;
+}
+
+function getSimplificationBucketSize(mode: ColorSimplification) {
+  if (mode === "strong") return 48;
+  if (mode === "detailed") return 24;
+  return 32;
+}
+
+function getMergeThreshold(params: Params) {
+  return getSimplificationBaseThreshold(params.colorSimplification) + params.mergeSimilarColors * 0.5;
+}
+
+function isKeyColor(color: WeightedColor) {
+  const brightness = colorBrightness(color);
+  const redDominant = color.red > 120 && color.red > color.green * 1.45 && color.red > color.blue * 1.45;
+  const veryDark = brightness < 45;
+  const veryLight = brightness > 235;
+
+  return veryDark || veryLight || redDominant;
+}
+
+function mergeWeightedColor(target: WeightedColor, source: WeightedColor) {
+  const totalCount = target.count + source.count;
+
+  return {
+    red: (target.red * target.count + source.red * source.count) / totalCount,
+    green: (target.green * target.count + source.green * source.count) / totalCount,
+    blue: (target.blue * target.count + source.blue * source.count) / totalCount,
+    count: totalCount,
+  };
+}
+
+function buildColorCandidates(
+  samples: Array<{ red: number; green: number; blue: number }>,
+  params: Params,
+) {
+  const bucketSize = getSimplificationBucketSize(params.colorSimplification);
+  const buckets = new Map<string, WeightedColor>();
+
+  samples.forEach((sample) => {
+    const key = [
+      Math.round(sample.red / bucketSize) * bucketSize,
+      Math.round(sample.green / bucketSize) * bucketSize,
+      Math.round(sample.blue / bucketSize) * bucketSize,
+    ]
+      .map((value) => clamp(value, 0, 255))
+      .join(",");
+    const current = buckets.get(key) || { red: 0, green: 0, blue: 0, count: 0 };
+
+    current.red += sample.red;
+    current.green += sample.green;
+    current.blue += sample.blue;
+    current.count += 1;
+    buckets.set(key, current);
+  });
+
+  return Array.from(buckets.values())
+    .map((bucket) => ({
+      red: bucket.red / bucket.count,
+      green: bucket.green / bucket.count,
+      blue: bucket.blue / bucket.count,
+      count: bucket.count,
+    }))
+    .sort(compareWeightedColors);
+}
+
+function mergeSimilarColorCandidates(candidates: WeightedColor[], params: Params) {
+  const threshold = getMergeThreshold(params);
+  const groups: WeightedColor[] = [];
+
+  candidates.forEach((candidate) => {
+    let nearestIndex = -1;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    groups.forEach((group, index) => {
+      const distance = colorDistance(candidate, group);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    const protectedCandidate = candidate.count >= 3 && isKeyColor(candidate);
+    const protectedTarget =
+      nearestIndex >= 0 && groups[nearestIndex].count >= 3 && isKeyColor(groups[nearestIndex]);
+    const mergeLimit = protectedCandidate || protectedTarget ? threshold * 0.7 : threshold;
+
+    if (nearestIndex >= 0 && nearestDistance <= mergeLimit) {
+      groups[nearestIndex] = mergeWeightedColor(groups[nearestIndex], candidate);
+      return;
+    }
+
+    groups.push(candidate);
+  });
+
+  return groups;
+}
+
+function mergeClosestColorPair(groups: WeightedColor[]) {
+  if (groups.length <= 1) {
+    return groups;
+  }
+
+  let firstIndex = 0;
+  let secondIndex = 1;
+  let nearestDistance = colorDistance(groups[0], groups[1]);
+
+  for (let first = 0; first < groups.length; first += 1) {
+    for (let second = first + 1; second < groups.length; second += 1) {
+      const distance = colorDistance(groups[first], groups[second]);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        firstIndex = first;
+        secondIndex = second;
+      }
+    }
+  }
+
+  const merged = mergeWeightedColor(groups[firstIndex], groups[secondIndex]);
+
+  return groups
+    .filter((_, index) => index !== firstIndex && index !== secondIndex)
+    .concat(merged);
+}
+
+function buildPalette(
+  samples: Array<{ red: number; green: number; blue: number }>,
+  params: Params,
+) {
+  let groups = mergeSimilarColorCandidates(buildColorCandidates(samples, params), params);
+
+  while (groups.length > params.maxColors) {
+    groups = mergeClosestColorPair(groups);
+  }
+
+  return groups
+    .sort(compareWeightedColors)
+    .map((group) => toHex(group.red, group.green, group.blue));
+}
+
 function nearestColor(red: number, green: number, blue: number, palette: string[]) {
   let bestColor = palette[0] || "#000000";
   let bestDistance = Number.POSITIVE_INFINITY;
 
   palette.forEach((color) => {
     const current = parseHex(color);
-    const distance =
-      (red - current.red) ** 2 +
-      (green - current.green) ** 2 +
-      (blue - current.blue) ** 2;
+    const distance = colorDistance({ red, green, blue }, current);
 
     if (distance < bestDistance) {
       bestDistance = distance;
@@ -328,39 +715,6 @@ function isBlankPixel(
     green >= params.whiteThreshold &&
     blue >= params.whiteThreshold
   );
-}
-
-function buildPalette(samples: Array<{ red: number; green: number; blue: number }>, maxColors: number) {
-  const buckets = new Map<
-    string,
-    { red: number; green: number; blue: number; count: number }
-  >();
-
-  samples.forEach((sample) => {
-    const key = [
-      Math.round(sample.red / 32) * 32,
-      Math.round(sample.green / 32) * 32,
-      Math.round(sample.blue / 32) * 32,
-    ].join(",");
-    const current = buckets.get(key) || { red: 0, green: 0, blue: 0, count: 0 };
-
-    current.red += sample.red;
-    current.green += sample.green;
-    current.blue += sample.blue;
-    current.count += 1;
-    buckets.set(key, current);
-  });
-
-  return Array.from(buckets.values())
-    .sort((first, second) => second.count - first.count)
-    .slice(0, maxColors)
-    .map((bucket) =>
-      toHex(
-        bucket.red / bucket.count,
-        bucket.green / bucket.count,
-        bucket.blue / bucket.count,
-      ),
-    );
 }
 
 function processImageToGrid(image: HTMLImageElement, params: Params): PixelGrid {
@@ -397,7 +751,7 @@ function processImageToGrid(image: HTMLImageElement, params: Params): PixelGrid 
     }
   }
 
-  const palette = buildPalette(samples, params.maxColors);
+  const palette = buildPalette(samples, params);
   const colorCounts = new Map<string, number>();
   const cells: PixelCell[][] = [];
 
@@ -422,7 +776,7 @@ function processImageToGrid(image: HTMLImageElement, params: Params): PixelGrid 
 
   const colors = Array.from(colorCounts.entries())
     .map(([color, count]) => ({ color, count }))
-    .sort((first, second) => second.count - first.count);
+    .sort(compareColorSummaries);
 
   return {
     width,
@@ -451,7 +805,7 @@ function summarizeCells(cells: PixelCell[][]) {
 
   const colors = Array.from(colorCounts.entries())
     .map(([color, count]) => ({ color, count }))
-    .sort((first, second) => second.count - first.count);
+    .sort(compareColorSummaries);
 
   return {
     activeCells,
@@ -1030,6 +1384,136 @@ function generateSeparatedBlocksObjMtl(grid: PixelGrid, params: Params) {
   };
 }
 
+function getPrinterBrand(brand: string) {
+  return printerPresets.find((preset) => preset.brand === brand) || printerPresets[0];
+}
+
+function getPrinterModel(brand: string, modelId: string) {
+  const selectedBrand = getPrinterBrand(brand);
+
+  return selectedBrand.models.find((model) => model.id === modelId) || selectedBrand.models[0];
+}
+
+function getPrinterModelById(modelId: string) {
+  for (const preset of printerPresets) {
+    const model = preset.models.find((item) => item.id === modelId);
+
+    if (model) {
+      return {
+        brand: preset,
+        model,
+      };
+    }
+  }
+
+  return {
+    brand: printerPresets[0],
+    model: printerPresets[0].models[0],
+  };
+}
+
+function estimateBedFit(grid: PixelGrid | null, params: Params, bedWidth: number, bedDepth: number) {
+  if (!grid || bedWidth <= 0 || bedDepth <= 0) {
+    return null;
+  }
+
+  const frameWidth = grid.width * params.cellSizeMm;
+  const frameDepth = grid.height * params.cellSizeMm;
+
+  return {
+    bedWidth,
+    bedDepth,
+    frameWidth,
+    frameDepth,
+    fitsAsPlaced: frameWidth <= bedWidth && frameDepth <= bedDepth,
+    fitsRotated: frameDepth <= bedWidth && frameWidth <= bedDepth,
+  };
+}
+
+function estimateColorBlockAreas(grid: PixelGrid | null, params: Params) {
+  if (!grid || grid.colors.length === 0) {
+    return [];
+  }
+
+  const blockSizeMm = params.cellSizeMm - params.wallThicknessMm - params.blockClearanceMm;
+  const blockGapMm = 1;
+
+  if (blockSizeMm <= 0) {
+    return [];
+  }
+
+  return grid.colors.map((item, index) => {
+    const columns = Math.ceil(Math.sqrt(item.count));
+    const rows = Math.ceil(item.count / columns);
+    const width = columns * (blockSizeMm + blockGapMm);
+    const depth = rows * (blockSizeMm + blockGapMm);
+
+    return {
+      index: index + 1,
+      color: item.color,
+      count: item.count,
+      width,
+      depth,
+      area: width * depth,
+    };
+  });
+}
+
+function estimateColorBlockPlates(groups: ColorBlockArea[], bedWidth: number, bedDepth: number) {
+  if (groups.length === 0 || bedWidth <= 0 || bedDepth <= 0) {
+    return 0;
+  }
+
+  let plates = 0;
+  let cursorX = 0;
+  let cursorY = 0;
+  let rowDepth = 0;
+  let hasActivePlate = false;
+  const sortedGroups = [...groups].sort((first, second) => second.area - first.area);
+
+  const startPlate = () => {
+    plates += 1;
+    cursorX = 0;
+    cursorY = 0;
+    rowDepth = 0;
+    hasActivePlate = true;
+  };
+
+  sortedGroups.forEach((group) => {
+    if (group.width > bedWidth || group.depth > bedDepth) {
+      plates += 1;
+      hasActivePlate = false;
+      cursorX = 0;
+      cursorY = 0;
+      rowDepth = 0;
+      return;
+    }
+
+    if (!hasActivePlate) {
+      startPlate();
+    }
+
+    if (cursorX + group.width <= bedWidth && cursorY + group.depth <= bedDepth) {
+      cursorX += group.width;
+      rowDepth = Math.max(rowDepth, group.depth);
+      return;
+    }
+
+    if (cursorY + rowDepth + group.depth <= bedDepth) {
+      cursorX = group.width;
+      cursorY += rowDepth;
+      rowDepth = group.depth;
+      return;
+    }
+
+    startPlate();
+    cursorX = group.width;
+    rowDepth = group.depth;
+  });
+
+  return plates;
+}
+
 function buildColorCsv(grid: PixelGrid) {
   const lines = ["index,hex,r,g,b,cells,percentage"];
 
@@ -1092,9 +1576,26 @@ function canvasToPngBytes(canvas: HTMLCanvasElement) {
   });
 }
 
-function buildReadme(grid: PixelGrid, params: Params, blockSizeMm: number) {
+function buildReadme(
+  grid: PixelGrid,
+  params: Params,
+  blockSizeMm: number,
+  printerInfo: PrinterReadmeInfo,
+) {
   const modelWidth = grid.width * params.cellSizeMm;
   const modelHeight = grid.height * params.cellSizeMm;
+  const englishFitAsPlaced = printerInfo.bedFit
+    ? printerInfo.bedFit.fitsAsPlaced ? "Yes" : "No"
+    : "Not calculated";
+  const englishFitRotated = printerInfo.bedFit
+    ? printerInfo.bedFit.fitsRotated ? "Yes" : "No"
+    : "Not calculated";
+  const chineseFitAsPlaced = printerInfo.bedFit
+    ? printerInfo.bedFit.fitsAsPlaced ? "可以放下" : "放不下"
+    : "未计算";
+  const chineseFitRotated = printerInfo.bedFit
+    ? printerInfo.bedFit.fitsRotated ? "可以放下" : "放不下"
+    : "未计算";
 
   return [
     "Pixel Knock Grid Generator Project",
@@ -1120,6 +1621,14 @@ function buildReadme(grid: PixelGrid, params: Params, blockSizeMm: number) {
     `Block height: ${params.blockHeightMm} mm`,
     `Block fit clearance: ${params.blockClearanceMm} mm`,
     "",
+    `Selected printer brand / model: ${printerInfo.brandName} / ${printerInfo.modelName}`,
+    `Selected bed size: ${printerInfo.bedWidth.toFixed(1)} x ${printerInfo.bedDepth.toFixed(1)} mm`,
+    `Frame size: ${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
+    `Fits as placed: ${englishFitAsPlaced}`,
+    `Fits if rotated: ${englishFitRotated}`,
+    `Estimated plate count: ${printerInfo.totalPlates}`,
+    "Note: The usable area may be smaller because of slicer limits, nozzle mode, purge/wipe towers, or protected zones. Always check the final layout in your slicer.",
+    "",
     "Chinese / 中文",
     "------------",
     "pixel-knock-grid.stl：用于 3D 打印敲敲乐网格外框。",
@@ -1140,6 +1649,14 @@ function buildReadme(grid: PixelGrid, params: Params, blockSizeMm: number) {
     `方块尺寸：${blockSizeMm.toFixed(2)} mm`,
     `方块高度：${params.blockHeightMm} mm`,
     `方块松紧公差：${params.blockClearanceMm} mm`,
+    "",
+    `当前选择的打印机品牌 / 型号：${printerInfo.brandNameZh} / ${printerInfo.modelNameZh}`,
+    `当前热床尺寸：${printerInfo.bedWidth.toFixed(1)} x ${printerInfo.bedDepth.toFixed(1)} mm`,
+    `外框尺寸：${modelWidth.toFixed(1)} x ${modelHeight.toFixed(1)} mm`,
+    `当前方向是否放得下：${chineseFitAsPlaced}`,
+    `旋转 90° 后是否放得下：${chineseFitRotated}`,
+    `预计打印盘数：${printerInfo.totalPlates}`,
+    "提示：不同切片软件、喷头模式、擦料塔和边界保护可能会减少实际可用区域，请以切片软件最终显示为准。",
   ].join("\n");
 }
 
@@ -1154,6 +1671,10 @@ export default function PixelKnockBoardGeneratorTool() {
   const [grid, setGrid] = useState<PixelGrid | null>(null);
   const [gridWidth, setGridWidth] = useState(String(defaultParams.gridWidth));
   const [maxColors, setMaxColors] = useState(String(defaultParams.maxColors));
+  const [colorSimplification, setColorSimplification] = useState<ColorSimplification>(
+    defaultParams.colorSimplification,
+  );
+  const [mergeSimilarColors, setMergeSimilarColors] = useState(String(defaultParams.mergeSimilarColors));
   const [cellSizeMm, setCellSizeMm] = useState(String(defaultParams.cellSizeMm));
   const [wallThicknessMm, setWallThicknessMm] = useState(String(defaultParams.wallThicknessMm));
   const [wallHeightMm, setWallHeightMm] = useState(String(defaultParams.wallHeightMm));
@@ -1164,6 +1685,10 @@ export default function PixelKnockBoardGeneratorTool() {
   const [removeWhiteBackground, setRemoveWhiteBackground] = useState(true);
   const [cropMode, setCropMode] = useState<CropMode>("center");
   const [paddingCells, setPaddingCells] = useState("2");
+  const [printerBrand, setPrinterBrand] = useState(printerPresets[0].brand);
+  const [printerModelId, setPrinterModelId] = useState(printerPresets[0].models[0].id);
+  const [bedWidth, setBedWidth] = useState(String(printerPresets[0].models[0].width));
+  const [bedDepth, setBedDepth] = useState(String(printerPresets[0].models[0].depth));
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compare");
   const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
@@ -1172,6 +1697,8 @@ export default function PixelKnockBoardGeneratorTool() {
   const params: Params = {
     gridWidth: parseNumber(gridWidth, defaultParams.gridWidth, 8, 64),
     maxColors: parseNumber(maxColors, defaultParams.maxColors, 2, 16),
+    colorSimplification,
+    mergeSimilarColors: parseNumber(mergeSimilarColors, defaultParams.mergeSimilarColors, 0, 100),
     cellSizeMm: parseNumber(cellSizeMm, defaultParams.cellSizeMm, 1, 100),
     wallThicknessMm: parseNumber(wallThicknessMm, defaultParams.wallThicknessMm, 0.2, 20),
     wallHeightMm: parseNumber(wallHeightMm, defaultParams.wallHeightMm, 0.2, 100),
@@ -1181,6 +1708,29 @@ export default function PixelKnockBoardGeneratorTool() {
     whiteThreshold: parseNumber(whiteThreshold, defaultParams.whiteThreshold, 0, 255),
     removeWhiteBackground,
   };
+  const selectedPrinterBrand = getPrinterBrand(printerBrand);
+  const selectedPrinterModel = getPrinterModel(printerBrand, printerModelId);
+  const parsedBedWidth = parseNumber(bedWidth, selectedPrinterModel.width, -100000, 100000);
+  const parsedBedDepth = parseNumber(bedDepth, selectedPrinterModel.depth, -100000, 100000);
+  const bedFit = estimateBedFit(grid, params, parsedBedWidth, parsedBedDepth);
+  const colorBlockAreas = estimateColorBlockAreas(grid, params);
+  const colorBlockPlates = estimateColorBlockPlates(
+    colorBlockAreas,
+    parsedBedWidth,
+    parsedBedDepth,
+  );
+  const totalEstimatedPlates = grid && colorBlockPlates > 0 ? 1 + colorBlockPlates : 0;
+  const printerReadmeInfo: PrinterReadmeInfo = {
+    brandName: selectedPrinterBrand.brand,
+    brandNameZh: selectedPrinterBrand.brandZh,
+    modelName: selectedPrinterModel.name,
+    modelNameZh: selectedPrinterModel.nameZh,
+    bedWidth: parsedBedWidth,
+    bedDepth: parsedBedDepth,
+    bedFit,
+    colorBlockPlates,
+    totalPlates: totalEstimatedPlates,
+  };
 
   const getAnalyticsParams = (targetGrid = grid, extra: Record<string, string | number | boolean | undefined> = {}) => ({
     tool: "pixel-knock-board-generator",
@@ -1189,6 +1739,15 @@ export default function PixelKnockBoardGeneratorTool() {
     colorCount: targetGrid?.colors.length,
     activeBlocks: targetGrid?.activeCells,
     lang: language,
+    printerPreset: printerModelId,
+    printerBrand: selectedPrinterBrand.brand,
+    printerModel: selectedPrinterModel.name,
+    bedWidth: parsedBedWidth,
+    bedDepth: parsedBedDepth,
+    colorSimplification: params.colorSimplification,
+    mergeSimilarColors: params.mergeSimilarColors,
+    maxColors: params.maxColors,
+    finalColorCount: targetGrid?.colors.length,
     ...extra,
   });
   const parsedPaddingCells = parseNumber(paddingCells, 2, 0, 8);
@@ -1221,6 +1780,25 @@ export default function PixelKnockBoardGeneratorTool() {
     drawPreview(canvas, grid, isDark, showColorNumbers);
 
     return canvas;
+  };
+
+  const handlePrinterBrandChange = (brand: string) => {
+    const nextBrand = getPrinterBrand(brand);
+    const nextModel = nextBrand.models[0];
+
+    setPrinterBrand(nextBrand.brand);
+    setPrinterModelId(nextModel.id);
+    setBedWidth(String(nextModel.width));
+    setBedDepth(String(nextModel.depth));
+  };
+
+  const handlePrinterModelChange = (modelId: string) => {
+    const { brand, model } = getPrinterModelById(modelId);
+
+    setPrinterBrand(brand.brand);
+    setPrinterModelId(model.id);
+    setBedWidth(String(model.width));
+    setBedDepth(String(model.depth));
   };
 
   const processCurrentImage = (image = imageElement) => {
@@ -1384,6 +1962,11 @@ export default function PixelKnockBoardGeneratorTool() {
       return;
     }
 
+    if (parsedBedWidth <= 0 || parsedBedDepth <= 0) {
+      setError(t.errors.bedSizeInvalid);
+      return;
+    }
+
     try {
       const pngBytes = await canvasToPngBytes(previewCanvas);
       const { obj, mtl } = generateObjMtl(grid, params);
@@ -1396,7 +1979,7 @@ export default function PixelKnockBoardGeneratorTool() {
         "pixel-knock-color-blocks-separated.mtl": strToU8(separatedBlocks.mtl),
         "pixel-knock-color-list.csv": strToU8(buildColorCsv(grid)),
         "pixel-knock-preview.png": pngBytes,
-        "README.txt": strToU8(buildReadme(grid, params, blockSizeMm)),
+        "README.txt": strToU8(buildReadme(grid, params, blockSizeMm, printerReadmeInfo)),
       };
       const zipBytes = zipSync(files, { level: 6 });
 
@@ -1416,6 +1999,11 @@ export default function PixelKnockBoardGeneratorTool() {
   const emptyCells = grid ? totalCells - grid.activeCells : 0;
   const modelWidth = grid ? grid.width * params.cellSizeMm : 0;
   const modelHeight = grid ? grid.height * params.cellSizeMm : 0;
+  const selectClass = `w-full max-w-full rounded-2xl border px-4 py-4 outline-none transition ${
+    isDark
+      ? "border-white/10 bg-white/[0.04] text-white focus:border-lime-300/40"
+      : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B] focus:border-[#2563EB]/40"
+  }`;
 
   return (
     <ToolPanel>
@@ -1504,6 +2092,46 @@ export default function PixelKnockBoardGeneratorTool() {
         <div className="min-w-0">
           <ToolLabel>{t.maxColors} (2-16)</ToolLabel>
           <ToolInput value={maxColors} onChange={setMaxColors} type="number" />
+          <p className={isDark ? "mt-2 text-sm leading-6 text-white/50" : "mt-2 text-sm leading-6 text-[#6B665D]"}>
+            {t.maxColorsHelp}
+          </p>
+        </div>
+        <div className="min-w-0 sm:col-span-2 lg:col-span-2">
+          <ToolLabel>{t.colorSimplification}</ToolLabel>
+          <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 [&_button]:min-h-12 [&_button]:w-full">
+            <ToolButton
+              onClick={() => setColorSimplification("strong")}
+              variant={colorSimplification === "strong" ? "primary" : "secondary"}
+            >
+              {t.simplificationStrong}
+            </ToolButton>
+            <ToolButton
+              onClick={() => setColorSimplification("standard")}
+              variant={colorSimplification === "standard" ? "primary" : "secondary"}
+            >
+              {t.simplificationStandard}
+            </ToolButton>
+            <ToolButton
+              onClick={() => setColorSimplification("detailed")}
+              variant={colorSimplification === "detailed" ? "primary" : "secondary"}
+            >
+              {t.simplificationDetailed}
+            </ToolButton>
+          </div>
+          <p className={isDark ? "mt-2 text-sm leading-6 text-white/50" : "mt-2 text-sm leading-6 text-[#6B665D]"}>
+            {colorSimplification === "strong"
+              ? t.simplificationStrongHelp
+              : colorSimplification === "detailed"
+                ? t.simplificationDetailedHelp
+                : t.simplificationStandardHelp}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.mergeSimilarColors} (0-100)</ToolLabel>
+          <ToolInput value={mergeSimilarColors} onChange={setMergeSimilarColors} type="number" />
+          <p className={isDark ? "mt-2 text-sm leading-6 text-white/50" : "mt-2 text-sm leading-6 text-[#6B665D]"}>
+            {t.mergeSimilarColorsHelp}
+          </p>
         </div>
         <div className="min-w-0 sm:col-span-2 lg:col-span-2">
           <ToolLabel>{t.cropMode}</ToolLabel>
@@ -1582,6 +2210,60 @@ export default function PixelKnockBoardGeneratorTool() {
         </div>
       </div>
 
+      <ToolResultBox muted>
+        <div className="grid gap-2">
+          <p>{t.colorReductionNote}</p>
+          {params.maxColors <= 3 ? <p>{t.lowColorWarning}</p> : null}
+        </div>
+      </ToolResultBox>
+
+      <ToolResultBox>
+        <div className="grid gap-4">
+          <h3 className="text-lg font-semibold">{t.bedFit}</h3>
+          <div className="grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="min-w-0">
+              <ToolLabel>{t.printerBrand}</ToolLabel>
+              <select
+                value={printerBrand}
+                onChange={(event) => handlePrinterBrandChange(event.target.value)}
+                className={selectClass}
+              >
+                {printerPresets.map((preset) => (
+                  <option key={preset.brand} value={preset.brand}>
+                    {language === "zh" ? preset.brandZh : preset.brand}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-0">
+              <ToolLabel>{t.printerModel}</ToolLabel>
+              <select
+                value={printerModelId}
+                onChange={(event) => handlePrinterModelChange(event.target.value)}
+                className={selectClass}
+              >
+                {selectedPrinterBrand.models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {language === "zh" ? model.nameZh : model.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-0">
+              <ToolLabel>{t.bedWidth}</ToolLabel>
+              <ToolInput value={bedWidth} onChange={setBedWidth} type="number" />
+            </div>
+            <div className="min-w-0">
+              <ToolLabel>{t.bedDepth}</ToolLabel>
+              <ToolInput value={bedDepth} onChange={setBedDepth} type="number" />
+            </div>
+          </div>
+          <p className={isDark ? "text-sm leading-6 text-white/50" : "text-sm leading-6 text-[#6B665D]"}>
+            {t.bedUsableAreaNote}
+          </p>
+        </div>
+      </ToolResultBox>
+
       <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
         <ToolCheckbox checked={removeWhiteBackground} onChange={setRemoveWhiteBackground}>
           {t.removeWhiteBackground}
@@ -1637,6 +2319,124 @@ export default function PixelKnockBoardGeneratorTool() {
             <ToolStatCard label={t.emptyCells} value={emptyCells} />
             <ToolStatCard label={t.modelSize} value={`${modelWidth.toFixed(1)} × ${modelHeight.toFixed(1)} mm`} />
           </div>
+
+          <ToolResultBox>
+            <div className="grid gap-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">{t.bedFit}</h3>
+                  {bedFit ? (
+                    <p className={isDark ? "mt-2 text-sm text-white/50" : "mt-2 text-sm text-[#6B665D]"}>
+                      {t.frameSize}: {bedFit.frameWidth.toFixed(1)} × {bedFit.frameDepth.toFixed(1)} mm
+                      <br />
+                      {t.selectedBed}: {bedFit.bedWidth.toFixed(1)} × {bedFit.bedDepth.toFixed(1)} mm
+                    </p>
+                  ) : (
+                    <p className={isDark ? "mt-2 text-sm text-red-200" : "mt-2 text-sm text-red-700"}>
+                      {t.errors.bedSizeInvalid}
+                    </p>
+                  )}
+                </div>
+
+                {bedFit ? (
+                  <div
+                    className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                      bedFit.fitsAsPlaced
+                        ? isDark
+                          ? "border-emerald-300/30 bg-emerald-400/10 text-emerald-200"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : bedFit.fitsRotated
+                          ? isDark
+                            ? "border-amber-300/30 bg-amber-400/10 text-amber-200"
+                            : "border-amber-200 bg-amber-50 text-amber-700"
+                          : isDark
+                            ? "border-red-300/30 bg-red-400/10 text-red-200"
+                            : "border-red-200 bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {bedFit.fitsAsPlaced
+                      ? t.bedFits
+                      : bedFit.fitsRotated
+                        ? t.bedFitsRotated
+                        : t.bedDoesNotFit}
+                  </div>
+                ) : null}
+              </div>
+
+              {bedFit ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className={`rounded-2xl border p-4 ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
+                    <p className="text-sm font-semibold">{t.fitsAsPlaced}</p>
+                    <p className={bedFit.fitsAsPlaced ? "mt-2 text-emerald-500" : "mt-2 text-red-500"}>
+                      {bedFit.fitsAsPlaced ? t.yes : t.no}
+                    </p>
+                  </div>
+                  <div className={`rounded-2xl border p-4 ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
+                    <p className="text-sm font-semibold">{t.fitsIfRotated}</p>
+                    <p className={bedFit.fitsRotated ? "mt-2 text-emerald-500" : "mt-2 text-red-500"}>
+                      {bedFit.fitsRotated ? t.yes : t.no}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {bedFit ? (
+                <p className={isDark ? "text-sm leading-6 text-white/55" : "text-sm leading-6 text-[#6B665D]"}>
+                  {bedFit.fitsAsPlaced
+                    ? t.bedSuggestionFits
+                    : bedFit.fitsRotated
+                      ? t.bedSuggestionRotate
+                      : t.bedSuggestionReduce}
+                </p>
+              ) : null}
+
+              <p className={isDark ? "text-sm leading-6 text-white/45" : "text-sm leading-6 text-[#8A8173]"}>
+                {t.bedUsableAreaNote}
+              </p>
+
+              {bedFit ? (
+                <div className={`rounded-2xl border p-4 ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
+                  <h4 className="font-semibold">{t.estimatedPlates}: {totalEstimatedPlates}</h4>
+                  <p className={isDark ? "mt-2 text-sm text-white/55" : "mt-2 text-sm text-[#6B665D]"}>
+                    {String(t.plateCountDetail).replace("{count}", String(colorBlockPlates))}
+                  </p>
+                  <p className={isDark ? "mt-2 text-sm text-white/45" : "mt-2 text-sm text-[#8A8173]"}>
+                    {t.plateEstimateNote}
+                  </p>
+                </div>
+              ) : null}
+
+              {colorBlockAreas.length > 0 ? (
+                <div>
+                  <h4 className="font-semibold">{t.colorBlockAreas}</h4>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {colorBlockAreas.map((area) => (
+                      <div
+                        key={area.color}
+                        className={`min-w-0 rounded-2xl border p-4 ${
+                          isDark ? "border-white/10" : "border-[#E5DED0]"
+                        }`}
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="shrink-0 text-sm font-semibold">#{area.index}</span>
+                          <span
+                            className="h-7 w-7 shrink-0 rounded-md border border-current/10"
+                            style={{ backgroundColor: area.color }}
+                          />
+                          <span className="min-w-0 break-all font-mono text-sm">{area.color}</span>
+                        </div>
+                        <p className={isDark ? "mt-3 text-sm text-white/60" : "mt-3 text-sm text-[#6B665D]"}>
+                          {t.cellCount}: {area.count}
+                          <br />
+                          {t.estimatedArea}: {area.width.toFixed(0)} × {area.depth.toFixed(0)} mm
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </ToolResultBox>
 
           <ToolResultBox>
             <div className="grid w-full max-w-full gap-4">
