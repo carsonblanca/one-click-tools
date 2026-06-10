@@ -44,6 +44,7 @@ import ImageCompressorTool from "../../../components/tools/ImageCompressorTool";
 import ImageCropperTool from "../../../components/tools/ImageCropperTool";
 import ImageRotateFlipTool from "../../../components/tools/ImageRotateFlipTool";
 import ImageMetadataViewerTool from "../../../components/tools/ImageMetadataViewerTool";
+import PixelKnockBoardGeneratorTool from "../../../components/tools/PixelKnockBoardGeneratorTool";
 
 import MarkdownPreviewerTool from "../../../components/tools/MarkdownPreviewerTool";
 import HtmlFormatterTool from "../../../components/tools/HtmlFormatterTool";
@@ -129,6 +130,7 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "image-cropper") return <ImageCropperTool />;
   if (slug === "image-rotate-flip") return <ImageRotateFlipTool />;
   if (slug === "image-metadata-viewer") return <ImageMetadataViewerTool />;
+  if (slug === "pixel-knock-board-generator") return <PixelKnockBoardGeneratorTool />;
 
   if (slug === "markdown-previewer") return <MarkdownPreviewerTool />;
   if (slug === "html-formatter") return <HtmlFormatterTool />;

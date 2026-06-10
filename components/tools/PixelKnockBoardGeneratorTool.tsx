@@ -1,0 +1,955 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useTheme } from "../ThemeProvider";
+import {
+  ToolButton,
+  ToolCheckbox,
+  ToolInput,
+  ToolLabel,
+  ToolPanel,
+  ToolResultBox,
+  ToolStatCard,
+} from "../tool-ui/ToolUI";
+
+type PixelCell = {
+  empty: boolean;
+  color: string | null;
+};
+
+type ColorSummary = {
+  color: string;
+  count: number;
+};
+
+type Language = "en" | "zh";
+
+type PixelGrid = {
+  width: number;
+  height: number;
+  cells: PixelCell[][];
+  activeCells: number;
+  colors: ColorSummary[];
+};
+
+type WallRect = {
+  x: number;
+  y: number;
+  width: number;
+  depth: number;
+};
+
+type GridEdge = {
+  x: number;
+  y: number;
+};
+
+type Params = {
+  gridWidth: number;
+  maxColors: number;
+  cellSizeMm: number;
+  wallThicknessMm: number;
+  wallHeightMm: number;
+  alphaThreshold: number;
+  whiteThreshold: number;
+  removeWhiteBackground: boolean;
+};
+
+const defaultParams: Params = {
+  gridWidth: 24,
+  maxColors: 8,
+  cellSizeMm: 10,
+  wallThicknessMm: 1,
+  wallHeightMm: 3,
+  alphaThreshold: 32,
+  whiteThreshold: 245,
+  removeWhiteBackground: true,
+};
+
+const copy = {
+  en: {
+    language: "Language",
+    english: "English",
+    chinese: "中文",
+    title: "Pixel Knock Grid Generator",
+    subtitle:
+      "Turn an image into a 3D printable pixel grid STL. No base plate, just 1mm walls around each active pixel.",
+    description:
+      "This tool generates a no-base pixel grid STL. Each active pixel is enclosed by printable walls, making it suitable for colorful craft blocks and hands-on pixel art projects.",
+    uploadLabel: "Upload PNG / JPG / WEBP",
+    localProcessingNote: "Images are processed locally in your browser.",
+    chooseFile: "Choose file",
+    noFile: "No file selected",
+    loadedLocally: "Loaded locally",
+    gridWidth: "Grid width",
+    maxColors: "Max colors",
+    cellSize: "Cell size (mm)",
+    wallThickness: "Wall thickness (mm)",
+    wallHeight: "Wall height (mm)",
+    alphaThreshold: "Alpha threshold",
+    whiteThreshold: "White threshold",
+    removeWhiteBackground: "Remove near-white background",
+    trimEmptyEdges: "Trim empty edges",
+    generatePreview: "Generate preview",
+    downloadPng: "Download PNG preview",
+    downloadStl: "Download STL grid",
+    clear: "Clear",
+    gridSize: "Grid size",
+    activeCells: "Active cells",
+    modelSize: "Model size",
+    colorList: "Color list",
+    cells: "cells",
+    emptyState: "Upload an image to generate a no-base pixel grid STL preview.",
+    errors: {
+      uploadFirst: "Upload a PNG, JPG, or WEBP image first.",
+      noVisiblePixels:
+        "No visible pixels were detected. Lower the thresholds or disable white background removal.",
+      couldNotProcess: "Could not process the image.",
+      invalidFile: "Upload a PNG, JPG, or WEBP image.",
+      couldNotLoad: "Could not load the selected image.",
+      previewFirst: "Generate a preview before downloading PNG.",
+      couldNotCreatePng: "Could not create PNG preview.",
+      stlFirst: "Generate a non-empty pixel grid before downloading STL.",
+    },
+  },
+  zh: {
+    language: "语言",
+    english: "English",
+    chinese: "中文",
+    title: "像素敲敲格栅生成器",
+    subtitle:
+      "上传图片，一键生成可 3D 打印的无底板像素格栅 STL，每个有效像素由 1mm 墙体围合。",
+    description:
+      "该工具生成的是无底板像素格栅 STL。每个有效像素格由可打印墙体围合，适合搭配彩色方块粒进行儿童手工拼搭和像素画创作。",
+    uploadLabel: "上传 PNG / JPG / WEBP",
+    localProcessingNote: "图片仅在浏览器本地处理，不会上传服务器。",
+    chooseFile: "选择文件",
+    noFile: "未选择文件",
+    loadedLocally: "已在浏览器本地读取",
+    gridWidth: "网格宽度",
+    maxColors: "最大颜色数",
+    cellSize: "细胞尺寸（毫米）",
+    wallThickness: "墙厚（毫米）",
+    wallHeight: "墙高（毫米）",
+    alphaThreshold: "Alpha 阈值",
+    whiteThreshold: "白色阈值",
+    removeWhiteBackground: "去除近乎白色背景",
+    trimEmptyEdges: "裁剪空白边缘",
+    generatePreview: "生成预览",
+    downloadPng: "下载 PNG 预览",
+    downloadStl: "下载 STL 格栅",
+    clear: "清空",
+    gridSize: "网格大小",
+    activeCells: "有效细胞",
+    modelSize: "模型尺寸",
+    colorList: "颜色清单",
+    cells: "个细胞",
+    emptyState: "上传图片后生成无底板像素格栅 STL 预览。",
+    errors: {
+      uploadFirst: "请先上传 PNG、JPG 或 WEBP 图片。",
+      noVisiblePixels: "没有检测到有效像素。请降低阈值，或关闭去除白色背景。",
+      couldNotProcess: "无法处理该图片。",
+      invalidFile: "请上传 PNG、JPG 或 WEBP 图片。",
+      couldNotLoad: "无法读取所选图片。",
+      previewFirst: "请先生成预览，再下载 PNG。",
+      couldNotCreatePng: "无法创建 PNG 预览。",
+      stlFirst: "请先生成非空像素格栅，再下载 STL。",
+    },
+  },
+} satisfies Record<Language, Record<string, unknown>>;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function parseNumber(value: string, fallback: number, min: number, max: number) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return clamp(parsed, min, max);
+}
+
+function toHex(red: number, green: number, blue: number) {
+  return `#${[red, green, blue]
+    .map((value) => clamp(Math.round(value), 0, 255).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function parseHex(hex: string) {
+  return {
+    red: Number.parseInt(hex.slice(1, 3), 16),
+    green: Number.parseInt(hex.slice(3, 5), 16),
+    blue: Number.parseInt(hex.slice(5, 7), 16),
+  };
+}
+
+function nearestColor(red: number, green: number, blue: number, palette: string[]) {
+  let bestColor = palette[0] || "#000000";
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  palette.forEach((color) => {
+    const current = parseHex(color);
+    const distance =
+      (red - current.red) ** 2 +
+      (green - current.green) ** 2 +
+      (blue - current.blue) ** 2;
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestColor = color;
+    }
+  });
+
+  return bestColor;
+}
+
+function isBlankPixel(
+  red: number,
+  green: number,
+  blue: number,
+  alpha: number,
+  params: Params,
+) {
+  if (alpha < params.alphaThreshold) {
+    return true;
+  }
+
+  return (
+    params.removeWhiteBackground &&
+    red >= params.whiteThreshold &&
+    green >= params.whiteThreshold &&
+    blue >= params.whiteThreshold
+  );
+}
+
+function buildPalette(samples: Array<{ red: number; green: number; blue: number }>, maxColors: number) {
+  const buckets = new Map<
+    string,
+    { red: number; green: number; blue: number; count: number }
+  >();
+
+  samples.forEach((sample) => {
+    const key = [
+      Math.round(sample.red / 32) * 32,
+      Math.round(sample.green / 32) * 32,
+      Math.round(sample.blue / 32) * 32,
+    ].join(",");
+    const current = buckets.get(key) || { red: 0, green: 0, blue: 0, count: 0 };
+
+    current.red += sample.red;
+    current.green += sample.green;
+    current.blue += sample.blue;
+    current.count += 1;
+    buckets.set(key, current);
+  });
+
+  return Array.from(buckets.values())
+    .sort((first, second) => second.count - first.count)
+    .slice(0, maxColors)
+    .map((bucket) =>
+      toHex(
+        bucket.red / bucket.count,
+        bucket.green / bucket.count,
+        bucket.blue / bucket.count,
+      ),
+    );
+}
+
+function processImageToGrid(image: HTMLImageElement, params: Params): PixelGrid {
+  const width = params.gridWidth;
+  const height = clamp(Math.round((image.naturalHeight / image.naturalWidth) * width), 1, 128);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!context) {
+    throw new Error("Could not read the image with canvas.");
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  context.imageSmoothingEnabled = true;
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  const imageData = context.getImageData(0, 0, width, height);
+  const rawCells: Array<{ empty: boolean; red: number; green: number; blue: number }> = [];
+  const samples: Array<{ red: number; green: number; blue: number }> = [];
+
+  for (let index = 0; index < imageData.data.length; index += 4) {
+    const red = imageData.data[index];
+    const green = imageData.data[index + 1];
+    const blue = imageData.data[index + 2];
+    const alpha = imageData.data[index + 3];
+    const empty = isBlankPixel(red, green, blue, alpha, params);
+
+    rawCells.push({ empty, red, green, blue });
+
+    if (!empty) {
+      samples.push({ red, green, blue });
+    }
+  }
+
+  const palette = buildPalette(samples, params.maxColors);
+  const colorCounts = new Map<string, number>();
+  const cells: PixelCell[][] = [];
+
+  for (let row = 0; row < height; row += 1) {
+    const rowCells: PixelCell[] = [];
+
+    for (let col = 0; col < width; col += 1) {
+      const rawCell = rawCells[row * width + col];
+
+      if (rawCell.empty || palette.length === 0) {
+        rowCells.push({ empty: true, color: null });
+        continue;
+      }
+
+      const color = nearestColor(rawCell.red, rawCell.green, rawCell.blue, palette);
+      colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+      rowCells.push({ empty: false, color });
+    }
+
+    cells.push(rowCells);
+  }
+
+  const colors = Array.from(colorCounts.entries())
+    .map(([color, count]) => ({ color, count }))
+    .sort((first, second) => second.count - first.count);
+
+  return {
+    width,
+    height,
+    cells,
+    activeCells: colors.reduce((total, item) => total + item.count, 0),
+    colors,
+  };
+}
+
+function summarizeCells(cells: PixelCell[][]) {
+  const colorCounts = new Map<string, number>();
+  let activeCells = 0;
+
+  cells.forEach((row) => {
+    row.forEach((cell) => {
+      if (cell.empty) return;
+
+      activeCells += 1;
+
+      if (cell.color) {
+        colorCounts.set(cell.color, (colorCounts.get(cell.color) || 0) + 1);
+      }
+    });
+  });
+
+  const colors = Array.from(colorCounts.entries())
+    .map(([color, count]) => ({ color, count }))
+    .sort((first, second) => second.count - first.count);
+
+  return {
+    activeCells,
+    colors,
+  };
+}
+
+function trimGridToContent(grid: PixelGrid) {
+  let minX = grid.width;
+  let maxX = -1;
+  let minY = grid.height;
+  let maxY = -1;
+
+  grid.cells.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (cell.empty) return;
+
+      minX = Math.min(minX, colIndex);
+      maxX = Math.max(maxX, colIndex);
+      minY = Math.min(minY, rowIndex);
+      maxY = Math.max(maxY, rowIndex);
+    });
+  });
+
+  if (maxX < minX || maxY < minY) {
+    return null;
+  }
+
+  const cells = grid.cells
+    .slice(minY, maxY + 1)
+    .map((row) => row.slice(minX, maxX + 1));
+  const summary = summarizeCells(cells);
+
+  return {
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+    cells,
+    activeCells: summary.activeCells,
+    colors: summary.colors,
+  };
+}
+
+function prepareGridForOutput(grid: PixelGrid, shouldTrim: boolean) {
+  if (grid.activeCells === 0) {
+    return null;
+  }
+
+  return shouldTrim ? trimGridToContent(grid) : grid;
+}
+
+function drawPreview(canvas: HTMLCanvasElement, grid: PixelGrid, isDark: boolean) {
+  const context = canvas.getContext("2d");
+
+  if (!context) return;
+
+  const cellSize = 16;
+  const ratio = window.devicePixelRatio || 1;
+  const width = grid.width * cellSize;
+  const height = grid.height * cellSize;
+
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = isDark ? "#101014" : "#FFFDF7";
+  context.fillRect(0, 0, width, height);
+
+  grid.cells.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (!cell.empty && cell.color) {
+        context.fillStyle = cell.color;
+        context.fillRect(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
+      }
+
+      context.strokeStyle = isDark ? "rgba(255,255,255,0.10)" : "rgba(24,24,27,0.12)";
+      context.lineWidth = 1;
+      context.strokeRect(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
+    });
+  });
+}
+
+function wallOffset(lineIndex: number, maxLineIndex: number, cellSize: number, thickness: number) {
+  if (lineIndex === 0) {
+    return 0;
+  }
+
+  if (lineIndex === maxLineIndex) {
+    return lineIndex * cellSize - thickness;
+  }
+
+  return lineIndex * cellSize - thickness / 2;
+}
+
+function addEdge(map: Map<string, GridEdge>, key: string, edge: GridEdge) {
+  if (!map.has(key)) {
+    map.set(key, edge);
+  }
+}
+
+function collectGridEdges(grid: PixelGrid) {
+  const horizontalEdges = new Map<string, GridEdge>();
+  const verticalEdges = new Map<string, GridEdge>();
+
+  grid.cells.forEach((rowCells, row) => {
+    rowCells.forEach((cell, col) => {
+      if (cell.empty) return;
+
+      addEdge(horizontalEdges, `H-${row}-${col}`, { x: col, y: row });
+      addEdge(horizontalEdges, `H-${row + 1}-${col}`, { x: col, y: row + 1 });
+      addEdge(verticalEdges, `V-${col}-${row}`, { x: col, y: row });
+      addEdge(verticalEdges, `V-${col + 1}-${row}`, { x: col + 1, y: row });
+    });
+  });
+
+  return {
+    horizontalEdges: Array.from(horizontalEdges.values()),
+    verticalEdges: Array.from(verticalEdges.values()),
+  };
+}
+
+function mergeHorizontalEdges(edges: GridEdge[], grid: PixelGrid, cellSize: number, thickness: number) {
+  const walls: WallRect[] = [];
+  const byY = new Map<number, GridEdge[]>();
+
+  edges.forEach((edge) => {
+    byY.set(edge.y, [...(byY.get(edge.y) || []), edge]);
+  });
+
+  byY.forEach((lineEdges, y) => {
+    const sorted = [...lineEdges].sort((first, second) => first.x - second.x);
+    let start = sorted[0]?.x;
+    let previous = sorted[0]?.x;
+
+    for (let index = 1; index <= sorted.length; index += 1) {
+      const current = sorted[index]?.x;
+
+      if (current === previous + 1) {
+        previous = current;
+        continue;
+      }
+
+      if (start !== undefined && previous !== undefined) {
+        walls.push({
+          x: start * cellSize,
+          y: wallOffset(y, grid.height, cellSize, thickness),
+          width: (previous - start + 1) * cellSize,
+          depth: thickness,
+        });
+      }
+
+      start = current;
+      previous = current;
+    }
+  });
+
+  return walls;
+}
+
+function mergeVerticalEdges(edges: GridEdge[], grid: PixelGrid, cellSize: number, thickness: number) {
+  const walls: WallRect[] = [];
+  const byX = new Map<number, GridEdge[]>();
+
+  edges.forEach((edge) => {
+    byX.set(edge.x, [...(byX.get(edge.x) || []), edge]);
+  });
+
+  byX.forEach((lineEdges, x) => {
+    const sorted = [...lineEdges].sort((first, second) => first.y - second.y);
+    let start = sorted[0]?.y;
+    let previous = sorted[0]?.y;
+
+    for (let index = 1; index <= sorted.length; index += 1) {
+      const current = sorted[index]?.y;
+
+      if (current === previous + 1) {
+        previous = current;
+        continue;
+      }
+
+      if (start !== undefined && previous !== undefined) {
+        walls.push({
+          x: wallOffset(x, grid.width, cellSize, thickness),
+          y: start * cellSize,
+          width: thickness,
+          depth: (previous - start + 1) * cellSize,
+        });
+      }
+
+      start = current;
+      previous = current;
+    }
+  });
+
+  return walls;
+}
+
+function buildWallRects(grid: PixelGrid, cellSize: number, thickness: number) {
+  const { horizontalEdges, verticalEdges } = collectGridEdges(grid);
+
+  return [
+    ...mergeHorizontalEdges(horizontalEdges, grid, cellSize, thickness),
+    ...mergeVerticalEdges(verticalEdges, grid, cellSize, thickness),
+  ];
+}
+
+function vertex(point: [number, number, number]) {
+  return `      vertex ${point[0].toFixed(4)} ${point[1].toFixed(4)} ${point[2].toFixed(4)}`;
+}
+
+function facet(normal: [number, number, number], points: [[number, number, number], [number, number, number], [number, number, number]]) {
+  return [
+    `  facet normal ${normal[0]} ${normal[1]} ${normal[2]}`,
+    "    outer loop",
+    vertex(points[0]),
+    vertex(points[1]),
+    vertex(points[2]),
+    "    endloop",
+    "  endfacet",
+  ].join("\n");
+}
+
+function boxToFacets(wall: WallRect, height: number) {
+  const x0 = wall.x;
+  const x1 = wall.x + wall.width;
+  const y0 = wall.y;
+  const y1 = wall.y + wall.depth;
+  const z0 = 0;
+  const z1 = height;
+  const p000: [number, number, number] = [x0, y0, z0];
+  const p100: [number, number, number] = [x1, y0, z0];
+  const p110: [number, number, number] = [x1, y1, z0];
+  const p010: [number, number, number] = [x0, y1, z0];
+  const p001: [number, number, number] = [x0, y0, z1];
+  const p101: [number, number, number] = [x1, y0, z1];
+  const p111: [number, number, number] = [x1, y1, z1];
+  const p011: [number, number, number] = [x0, y1, z1];
+
+  return [
+    facet([0, 0, -1], [p000, p010, p110]),
+    facet([0, 0, -1], [p000, p110, p100]),
+    facet([0, 0, 1], [p001, p101, p111]),
+    facet([0, 0, 1], [p001, p111, p011]),
+    facet([0, -1, 0], [p000, p100, p101]),
+    facet([0, -1, 0], [p000, p101, p001]),
+    facet([0, 1, 0], [p010, p011, p111]),
+    facet([0, 1, 0], [p010, p111, p110]),
+    facet([-1, 0, 0], [p000, p001, p011]),
+    facet([-1, 0, 0], [p000, p011, p010]),
+    facet([1, 0, 0], [p100, p110, p111]),
+    facet([1, 0, 0], [p100, p111, p101]),
+  ];
+}
+
+function generateStl(grid: PixelGrid, params: Params) {
+  const walls = buildWallRects(grid, params.cellSizeMm, params.wallThicknessMm);
+  const facets = walls.flatMap((wall) => boxToFacets(wall, params.wallHeightMm));
+
+  return [
+    "solid pixel_knock_grid",
+    ...facets,
+    "endsolid pixel_knock_grid",
+  ].join("\n");
+}
+
+function downloadTextFile(content: string, fileName: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function PixelKnockBoardGeneratorTool() {
+  const { isDark } = useTheme();
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [language, setLanguage] = useState<Language>("en");
+  const [fileName, setFileName] = useState("");
+  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
+  const [grid, setGrid] = useState<PixelGrid | null>(null);
+  const [gridWidth, setGridWidth] = useState(String(defaultParams.gridWidth));
+  const [maxColors, setMaxColors] = useState(String(defaultParams.maxColors));
+  const [cellSizeMm, setCellSizeMm] = useState(String(defaultParams.cellSizeMm));
+  const [wallThicknessMm, setWallThicknessMm] = useState(String(defaultParams.wallThicknessMm));
+  const [wallHeightMm, setWallHeightMm] = useState(String(defaultParams.wallHeightMm));
+  const [alphaThreshold, setAlphaThreshold] = useState(String(defaultParams.alphaThreshold));
+  const [whiteThreshold, setWhiteThreshold] = useState(String(defaultParams.whiteThreshold));
+  const [removeWhiteBackground, setRemoveWhiteBackground] = useState(true);
+  const [trimEmptyEdges, setTrimEmptyEdges] = useState(true);
+  const [error, setError] = useState("");
+  const t = copy[language];
+
+  const params: Params = {
+    gridWidth: parseNumber(gridWidth, defaultParams.gridWidth, 8, 64),
+    maxColors: parseNumber(maxColors, defaultParams.maxColors, 2, 16),
+    cellSizeMm: parseNumber(cellSizeMm, defaultParams.cellSizeMm, 1, 100),
+    wallThicknessMm: parseNumber(wallThicknessMm, defaultParams.wallThicknessMm, 0.2, 20),
+    wallHeightMm: parseNumber(wallHeightMm, defaultParams.wallHeightMm, 0.2, 100),
+    alphaThreshold: parseNumber(alphaThreshold, defaultParams.alphaThreshold, 0, 255),
+    whiteThreshold: parseNumber(whiteThreshold, defaultParams.whiteThreshold, 0, 255),
+    removeWhiteBackground,
+  };
+
+  useEffect(() => {
+    if (grid && previewCanvasRef.current) {
+      drawPreview(previewCanvasRef.current, grid, isDark);
+    }
+  }, [grid, isDark]);
+
+  const processCurrentImage = (image = imageElement) => {
+    if (!image) {
+      setGrid(null);
+      setError(t.errors.uploadFirst);
+      return;
+    }
+
+    try {
+      const nextGrid = prepareGridForOutput(
+        processImageToGrid(image, params),
+        trimEmptyEdges,
+      );
+
+      if (!nextGrid) {
+        setGrid(null);
+        setError(t.errors.noVisiblePixels);
+        return;
+      }
+
+      setGrid(nextGrid);
+      setError("");
+    } catch {
+      setGrid(null);
+      setError(t.errors.couldNotProcess);
+    }
+  };
+
+  const handleFileChange = (file: File | null) => {
+    if (!file) return;
+
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setImageElement(null);
+      setGrid(null);
+      setFileName("");
+      setError(t.errors.invalidFile);
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      setFileName(file.name);
+      setImageElement(image);
+      setError("");
+
+      try {
+        const nextGrid = prepareGridForOutput(
+          processImageToGrid(image, params),
+          trimEmptyEdges,
+        );
+
+        if (!nextGrid) {
+          setGrid(null);
+          setError(t.errors.noVisiblePixels);
+          return;
+        }
+
+        setGrid(nextGrid);
+      } catch {
+        setGrid(null);
+        setError(t.errors.couldNotProcess);
+      }
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      setImageElement(null);
+      setGrid(null);
+      setError(t.errors.couldNotLoad);
+    };
+    image.src = url;
+  };
+
+  const reset = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    setFileName("");
+    setImageElement(null);
+    setGrid(null);
+    setError("");
+  };
+
+  const downloadPreview = () => {
+    if (!previewCanvasRef.current || !grid) {
+      setError(t.errors.previewFirst);
+      return;
+    }
+
+    previewCanvasRef.current.toBlob((blob) => {
+      if (!blob) {
+        setError(t.errors.couldNotCreatePng);
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "pixel-knock-preview.png";
+      link.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  };
+
+  const downloadStl = () => {
+    if (!grid || grid.activeCells === 0) {
+      setError(t.errors.stlFirst);
+      return;
+    }
+
+    downloadTextFile(
+      generateStl(grid, params),
+      "pixel-knock-grid.stl",
+      "model/stl",
+    );
+  };
+
+  const modelWidth = grid ? grid.width * params.cellSizeMm : 0;
+  const modelHeight = grid ? grid.height * params.cellSizeMm : 0;
+
+  return (
+    <ToolPanel>
+      <div className="w-full max-w-full">
+      <div className="flex w-full max-w-full flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-semibold">{t.title}</h2>
+          <p className={isDark ? "mt-3 max-w-3xl leading-7 text-white/60" : "mt-3 max-w-3xl leading-7 text-[#6B665D]"}>
+            {t.subtitle}
+          </p>
+        </div>
+
+        <div className="w-full shrink-0 md:w-auto">
+          <ToolLabel>{t.language}</ToolLabel>
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
+            <ToolButton
+              onClick={() => setLanguage("en")}
+              variant={language === "en" ? "primary" : "secondary"}
+            >
+              {t.english}
+            </ToolButton>
+            <ToolButton
+              onClick={() => setLanguage("zh")}
+              variant={language === "zh" ? "primary" : "secondary"}
+            >
+              {t.chinese}
+            </ToolButton>
+          </div>
+        </div>
+      </div>
+
+      <ToolResultBox muted>
+        {t.description}
+      </ToolResultBox>
+
+      <div className="mt-5 w-full max-w-full">
+        <ToolLabel>{t.uploadLabel}</ToolLabel>
+        <div
+          className={`flex w-full max-w-full flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center ${
+            isDark
+              ? "border-white/10 bg-white/[0.04]"
+              : "border-[#E5DED0] bg-[#F5F2EA]"
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(event) => handleFileChange(event.target.files?.[0] || null)}
+            className="hidden"
+          />
+          <div className="w-full sm:w-auto [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
+            <ToolButton onClick={() => fileInputRef.current?.click()}>
+              {t.chooseFile}
+            </ToolButton>
+          </div>
+          <span className={isDark ? "min-w-0 break-all text-sm text-white/55" : "min-w-0 break-all text-sm text-[#6B665D]"}>
+            {fileName ? `${t.loadedLocally}: ${fileName}` : t.noFile}
+          </span>
+        </div>
+        <p className={isDark ? "mt-2 text-sm text-white/45" : "mt-2 text-sm text-[#8A8173]"}>
+          {t.localProcessingNote}
+        </p>
+      </div>
+
+      <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="min-w-0">
+          <ToolLabel>{t.gridWidth} (8-64)</ToolLabel>
+          <ToolInput value={gridWidth} onChange={setGridWidth} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.maxColors} (2-16)</ToolLabel>
+          <ToolInput value={maxColors} onChange={setMaxColors} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.cellSize}</ToolLabel>
+          <ToolInput value={cellSizeMm} onChange={setCellSizeMm} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.wallThickness}</ToolLabel>
+          <ToolInput value={wallThicknessMm} onChange={setWallThicknessMm} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.wallHeight}</ToolLabel>
+          <ToolInput value={wallHeightMm} onChange={setWallHeightMm} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.alphaThreshold}</ToolLabel>
+          <ToolInput value={alphaThreshold} onChange={setAlphaThreshold} type="number" />
+        </div>
+        <div className="min-w-0">
+          <ToolLabel>{t.whiteThreshold}</ToolLabel>
+          <ToolInput value={whiteThreshold} onChange={setWhiteThreshold} type="number" />
+        </div>
+      </div>
+
+      <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        <ToolCheckbox checked={removeWhiteBackground} onChange={setRemoveWhiteBackground}>
+          {t.removeWhiteBackground}
+        </ToolCheckbox>
+        <ToolCheckbox checked={trimEmptyEdges} onChange={setTrimEmptyEdges}>
+          {t.trimEmptyEdges}
+        </ToolCheckbox>
+      </div>
+
+      <div className="mt-4 flex w-full max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
+        <ToolButton onClick={() => processCurrentImage()}>{t.generatePreview}</ToolButton>
+        <ToolButton onClick={downloadPreview} variant="secondary">
+          {t.downloadPng}
+        </ToolButton>
+        <ToolButton onClick={downloadStl} variant="secondary">
+          {t.downloadStl}
+        </ToolButton>
+        <ToolButton onClick={reset} variant="danger">
+          {t.clear}
+        </ToolButton>
+      </div>
+
+      {error ? <ToolResultBox>{error}</ToolResultBox> : null}
+
+      {grid ? (
+        <>
+          <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ToolStatCard label={t.gridSize} value={`${grid.width} × ${grid.height}`} />
+            <ToolStatCard label={t.activeCells} value={grid.activeCells} />
+            <ToolStatCard label={t.modelSize} value={`${modelWidth.toFixed(1)} × ${modelHeight.toFixed(1)} mm`} />
+          </div>
+
+          <ToolResultBox>
+            <div className="flex w-full max-w-full justify-center overflow-hidden">
+              <canvas
+                ref={previewCanvasRef}
+                className={`block h-auto max-w-full rounded-2xl border [image-rendering:pixelated] ${
+                  isDark ? "border-white/10" : "border-[#E5DED0]"
+                }`}
+              />
+            </div>
+          </ToolResultBox>
+
+          <ToolResultBox>
+            <h3 className="mb-4 text-lg font-semibold">{t.colorList}</h3>
+            <div className="grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
+              {grid.colors.map((item) => (
+                <div
+                  key={item.color}
+                  className={`flex min-w-0 flex-col gap-2 rounded-2xl border p-3 sm:flex-row sm:items-center sm:justify-between ${
+                    isDark ? "border-white/10" : "border-[#E5DED0]"
+                  }`}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      className="h-6 w-6 shrink-0 rounded-md border border-current/10"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="min-w-0 break-all font-mono text-sm">{item.color}</span>
+                  </div>
+                  <span className={isDark ? "text-sm text-white/55" : "text-sm text-[#6B665D]"}>
+                    {language === "zh" ? `${item.count}${t.cells}` : `${item.count} ${t.cells}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ToolResultBox>
+        </>
+      ) : (
+        <ToolResultBox muted>{t.emptyState}</ToolResultBox>
+      )}
+      </div>
+    </ToolPanel>
+  );
+}

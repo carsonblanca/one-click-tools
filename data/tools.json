@@ -396,6 +396,15 @@
     "description": "Show file name, type, size, width, height, and aspect ratio for a local image without uploading it."
   },
   {
+    "name": "Pixel Knock Grid Generator",
+    "slug": "pixel-knock-board-generator",
+    "tag": "Image",
+    "category": "Image",
+    "categorySlug": "image",
+    "desc": "Upload an image and generate a 3D printable pixel grid STL for pixel craft blocks. All processing runs locally in your browser.",
+    "description": "Upload an image and generate a 3D printable pixel grid STL for pixel craft blocks. All processing runs locally in your browser."
+  },
+  {
     "name": "Markdown Previewer",
     "slug": "markdown-previewer",
     "tag": "Developer",
