@@ -90,14 +90,22 @@ const copy = {
     whiteThreshold: "White threshold",
     removeWhiteBackground: "Remove near-white background",
     trimEmptyEdges: "Trim empty edges",
+    showColorNumbers: "Show color numbers",
     generatePreview: "Generate preview",
     downloadPng: "Download PNG preview",
     downloadStl: "Download STL grid",
+    downloadCsv: "Download color list CSV",
     clear: "Clear",
     gridSize: "Grid size",
+    totalCells: "Total cells",
     activeCells: "Active cells",
+    emptyCells: "Empty cells",
     modelSize: "Model size",
-    colorList: "Color list",
+    colorList: "Color groups",
+    hex: "HEX",
+    rgb: "RGB",
+    cellCount: "Cells",
+    percentage: "Percentage",
     cells: "cells",
     emptyState: "Upload an image to generate a no-base pixel grid STL preview.",
     errors: {
@@ -135,14 +143,22 @@ const copy = {
     whiteThreshold: "白色阈值",
     removeWhiteBackground: "去除近乎白色背景",
     trimEmptyEdges: "裁剪空白边缘",
+    showColorNumbers: "显示颜色编号",
     generatePreview: "生成预览",
     downloadPng: "下载 PNG 预览",
     downloadStl: "下载 STL 格栅",
+    downloadCsv: "下载颜色清单 CSV",
     clear: "清空",
     gridSize: "网格大小",
+    totalCells: "总方格数",
     activeCells: "有效细胞",
+    emptyCells: "空白方格",
     modelSize: "模型尺寸",
-    colorList: "颜色清单",
+    colorList: "颜色分组",
+    hex: "HEX",
+    rgb: "RGB",
+    cellCount: "方格数量",
+    percentage: "占比",
     cells: "个细胞",
     emptyState: "上传图片后生成无底板像素格栅 STL 预览。",
     errors: {
@@ -184,6 +200,21 @@ function parseHex(hex: string) {
     green: Number.parseInt(hex.slice(3, 5), 16),
     blue: Number.parseInt(hex.slice(5, 7), 16),
   };
+}
+
+function formatPercentage(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
+function getReadableTextColor(hex: string) {
+  const { red, green, blue } = parseHex(hex);
+  const luminance = red * 0.299 + green * 0.587 + blue * 0.114;
+
+  return luminance > 150 ? "#18181B" : "#FFFFFF";
+}
+
+function getColorIndexMap(grid: PixelGrid) {
+  return new Map(grid.colors.map((item, index) => [item.color, index + 1]));
 }
 
 function nearestColor(red: number, green: number, blue: number, palette: string[]) {
@@ -397,34 +428,68 @@ function prepareGridForOutput(grid: PixelGrid, shouldTrim: boolean) {
   return shouldTrim ? trimGridToContent(grid) : grid;
 }
 
-function drawPreview(canvas: HTMLCanvasElement, grid: PixelGrid, isDark: boolean) {
+function drawPreview(
+  canvas: HTMLCanvasElement,
+  grid: PixelGrid,
+  isDark: boolean,
+  showColorNumbers: boolean,
+) {
   const context = canvas.getContext("2d");
 
   if (!context) return;
 
-  const cellSize = 16;
+  const previewCellSize = clamp(Math.floor(640 / Math.max(grid.width, grid.height)), 10, 20);
   const ratio = window.devicePixelRatio || 1;
-  const width = grid.width * cellSize;
-  const height = grid.height * cellSize;
+  const width = grid.width * previewCellSize;
+  const height = grid.height * previewCellSize;
+  const colorIndexes = getColorIndexMap(grid);
 
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
+  canvas.style.height = "auto";
+  canvas.style.maxWidth = "100%";
+  canvas.style.aspectRatio = `${grid.width} / ${grid.height}`;
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   context.fillStyle = isDark ? "#101014" : "#FFFDF7";
   context.fillRect(0, 0, width, height);
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.font = `600 ${Math.max(9, previewCellSize * 0.45)}px ui-sans-serif, system-ui, sans-serif`;
 
   grid.cells.forEach((row, rowIndex) => {
     row.forEach((cell, colIndex) => {
       if (!cell.empty && cell.color) {
         context.fillStyle = cell.color;
-        context.fillRect(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
+        context.fillRect(
+          colIndex * previewCellSize,
+          rowIndex * previewCellSize,
+          previewCellSize,
+          previewCellSize,
+        );
+
+        if (showColorNumbers && previewCellSize >= 14) {
+          const colorIndex = colorIndexes.get(cell.color);
+
+          if (colorIndex) {
+            context.fillStyle = getReadableTextColor(cell.color);
+            context.fillText(
+              String(colorIndex),
+              colIndex * previewCellSize + previewCellSize / 2,
+              rowIndex * previewCellSize + previewCellSize / 2,
+            );
+          }
+        }
       }
 
       context.strokeStyle = isDark ? "rgba(255,255,255,0.10)" : "rgba(24,24,27,0.12)";
       context.lineWidth = 1;
-      context.strokeRect(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
+      context.strokeRect(
+        colIndex * previewCellSize,
+        rowIndex * previewCellSize,
+        previewCellSize,
+        previewCellSize,
+      );
     });
   });
 }
@@ -612,6 +677,29 @@ function generateStl(grid: PixelGrid, params: Params) {
   ].join("\n");
 }
 
+function buildColorCsv(grid: PixelGrid) {
+  const lines = ["index,hex,r,g,b,cells,percentage"];
+
+  grid.colors.forEach((item, index) => {
+    const { red, green, blue } = parseHex(item.color);
+    const percentage = grid.activeCells > 0 ? (item.count / grid.activeCells) * 100 : 0;
+
+    lines.push(
+      [
+        index + 1,
+        item.color,
+        red,
+        green,
+        blue,
+        item.count,
+        formatPercentage(percentage),
+      ].join(","),
+    );
+  });
+
+  return lines.join("\n");
+}
+
 function downloadTextFile(content: string, fileName: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -640,6 +728,7 @@ export default function PixelKnockBoardGeneratorTool() {
   const [whiteThreshold, setWhiteThreshold] = useState(String(defaultParams.whiteThreshold));
   const [removeWhiteBackground, setRemoveWhiteBackground] = useState(true);
   const [trimEmptyEdges, setTrimEmptyEdges] = useState(true);
+  const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
   const t = copy[language];
 
@@ -656,9 +745,9 @@ export default function PixelKnockBoardGeneratorTool() {
 
   useEffect(() => {
     if (grid && previewCanvasRef.current) {
-      drawPreview(previewCanvasRef.current, grid, isDark);
+      drawPreview(previewCanvasRef.current, grid, isDark, showColorNumbers);
     }
-  }, [grid, isDark]);
+  }, [grid, isDark, showColorNumbers]);
 
   const processCurrentImage = (image = imageElement) => {
     if (!image) {
@@ -780,6 +869,21 @@ export default function PixelKnockBoardGeneratorTool() {
     );
   };
 
+  const downloadCsv = () => {
+    if (!grid || grid.activeCells === 0) {
+      setError(t.errors.stlFirst);
+      return;
+    }
+
+    downloadTextFile(
+      buildColorCsv(grid),
+      "pixel-knock-color-list.csv",
+      "text/csv;charset=utf-8",
+    );
+  };
+
+  const totalCells = grid ? grid.width * grid.height : 0;
+  const emptyCells = grid ? totalCells - grid.activeCells : 0;
   const modelWidth = grid ? grid.width * params.cellSizeMm : 0;
   const modelHeight = grid ? grid.height * params.cellSizeMm : 0;
 
@@ -885,6 +989,9 @@ export default function PixelKnockBoardGeneratorTool() {
         <ToolCheckbox checked={trimEmptyEdges} onChange={setTrimEmptyEdges}>
           {t.trimEmptyEdges}
         </ToolCheckbox>
+        <ToolCheckbox checked={showColorNumbers} onChange={setShowColorNumbers}>
+          {t.showColorNumbers}
+        </ToolCheckbox>
       </div>
 
       <div className="mt-4 flex w-full max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
@@ -895,6 +1002,9 @@ export default function PixelKnockBoardGeneratorTool() {
         <ToolButton onClick={downloadStl} variant="secondary">
           {t.downloadStl}
         </ToolButton>
+        <ToolButton onClick={downloadCsv} variant="secondary">
+          {t.downloadCsv}
+        </ToolButton>
         <ToolButton onClick={reset} variant="danger">
           {t.clear}
         </ToolButton>
@@ -904,9 +1014,11 @@ export default function PixelKnockBoardGeneratorTool() {
 
       {grid ? (
         <>
-          <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ToolStatCard label={t.gridSize} value={`${grid.width} × ${grid.height}`} />
+            <ToolStatCard label={t.totalCells} value={totalCells} />
             <ToolStatCard label={t.activeCells} value={grid.activeCells} />
+            <ToolStatCard label={t.emptyCells} value={emptyCells} />
             <ToolStatCard label={t.modelSize} value={`${modelWidth.toFixed(1)} × ${modelHeight.toFixed(1)} mm`} />
           </div>
 
@@ -914,7 +1026,7 @@ export default function PixelKnockBoardGeneratorTool() {
             <div className="flex w-full max-w-full justify-center overflow-hidden">
               <canvas
                 ref={previewCanvasRef}
-                className={`block h-auto max-w-full rounded-2xl border [image-rendering:pixelated] ${
+                className={`block h-auto max-h-[70vh] max-w-full object-contain rounded-2xl border [image-rendering:pixelated] ${
                   isDark ? "border-white/10" : "border-[#E5DED0]"
                 }`}
               />
@@ -924,25 +1036,42 @@ export default function PixelKnockBoardGeneratorTool() {
           <ToolResultBox>
             <h3 className="mb-4 text-lg font-semibold">{t.colorList}</h3>
             <div className="grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
-              {grid.colors.map((item) => (
-                <div
-                  key={item.color}
-                  className={`flex min-w-0 flex-col gap-2 rounded-2xl border p-3 sm:flex-row sm:items-center sm:justify-between ${
-                    isDark ? "border-white/10" : "border-[#E5DED0]"
-                  }`}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className="h-6 w-6 shrink-0 rounded-md border border-current/10"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="min-w-0 break-all font-mono text-sm">{item.color}</span>
+              {grid.colors.map((item, index) => {
+                const { red, green, blue } = parseHex(item.color);
+                const percentage = grid.activeCells > 0 ? (item.count / grid.activeCells) * 100 : 0;
+
+                return (
+                  <div
+                    key={item.color}
+                    className={`flex min-w-0 flex-col gap-3 rounded-2xl border p-4 ${
+                      isDark ? "border-white/10" : "border-[#E5DED0]"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="shrink-0 text-sm font-semibold">#{index + 1}</span>
+                      <span
+                        className="h-8 w-8 shrink-0 rounded-md border border-current/10"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="min-w-0 break-all font-mono text-sm">{item.color}</span>
+                    </div>
+                    <div className={isDark ? "grid gap-1 text-sm text-white/60" : "grid gap-1 text-sm text-[#6B665D]"}>
+                      <div className="min-w-0 break-all font-mono">
+                        {t.hex}: {item.color}
+                      </div>
+                      <div className="font-mono">
+                        {t.rgb}: {red}, {green}, {blue}
+                      </div>
+                      <div>
+                        {t.cellCount}: {item.count}
+                      </div>
+                      <div>
+                        {t.percentage}: {formatPercentage(percentage)}
+                      </div>
+                    </div>
                   </div>
-                  <span className={isDark ? "text-sm text-white/55" : "text-sm text-[#6B665D]"}>
-                    {language === "zh" ? `${item.count}${t.cells}` : `${item.count} ${t.cells}`}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </ToolResultBox>
         </>
