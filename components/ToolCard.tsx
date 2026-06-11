@@ -8,6 +8,10 @@ type ToolCardProps = {
   slug: string;
   desc: string;
   tag: string;
+  href?: string;
+  openLabel?: string;
+  utilityLabel?: string;
+  styleKey?: string;
 };
 
 const darkCategoryStyles: Record<string, string> = {
@@ -45,18 +49,23 @@ export default function ToolCard({
   slug,
   desc,
   tag,
+  href,
+  openLabel = "Open",
+  utilityLabel = "One click utility",
+  styleKey,
 }: ToolCardProps) {
   const { isDark } = useTheme();
+  const categoryStyleKey = styleKey || tag;
 
   const style = isDark
-    ? darkCategoryStyles[tag] ||
+    ? darkCategoryStyles[categoryStyleKey] ||
       "bg-white/10 text-white/70 border-white/10"
-    : lightCategoryStyles[tag] ||
+    : lightCategoryStyles[categoryStyleKey] ||
       "bg-[#F4F1EA] text-[#6B665D] border-[#E5DED0]";
 
   return (
     <Link
-      href={`/tools/${slug}`}
+      href={href || `/tools/${slug}`}
       className={`group relative flex min-h-[154px] flex-col overflow-hidden rounded-[20px] border p-4 transition duration-300 hover:-translate-y-0.5 md:min-h-[176px] md:rounded-[22px] md:p-5 ${
         isDark
           ? "border-white/10 bg-[#101014]/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] hover:border-white/20 hover:bg-[#15151b]"
@@ -106,16 +115,14 @@ export default function ToolCard({
           isDark ? "border-white/10" : "border-[#E5DED0]"
         }`}
       >
-        <span className={isDark ? "text-white/35" : "text-[#8A8173]"}>
-          One click utility
-        </span>
+        <span className={isDark ? "text-white/35" : "text-[#8A8173]"}>{utilityLabel}</span>
 
         <span
           className={`transition group-hover:translate-x-1 ${
             isDark ? "text-white" : "text-[#2563EB]"
           }`}
         >
-          Open →
+          {openLabel} →
         </span>
       </div>
     </Link>

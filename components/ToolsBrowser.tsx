@@ -3,6 +3,12 @@
 import { useMemo, useState } from "react";
 import ToolCard from "./ToolCard";
 import { useTheme } from "./ThemeProvider";
+import {
+  getLocalized3dTool,
+  localizedCategoryNames,
+  localizedHome,
+  type ChineseLocale,
+} from "../lib/localizedContent";
 
 type Tool = {
   name: string;
@@ -23,13 +29,32 @@ type Category = {
 export default function ToolsBrowser({
   tools,
   categories,
+  locale = "en",
 }: {
   tools: Tool[];
   categories: Category[];
+  locale?: "en" | ChineseLocale;
 }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const { isDark } = useTheme();
+  const isLocalized = locale === "zh-cn" || locale === "zh-tw";
+  const localizedCopy = isLocalized ? localizedHome[locale] : null;
+
+  const getCategoryLabel = (categoryName: string) =>
+    isLocalized ? localizedCategoryNames[locale][categoryName] || categoryName : categoryName;
+
+  const getDisplayTool = (tool: Tool) => {
+    const localizedTool = isLocalized ? getLocalized3dTool(locale, tool.slug) : null;
+    const categoryName = tool.category || tool.tag;
+
+    return {
+      name: localizedTool?.name || tool.name,
+      desc: localizedTool?.desc || tool.desc || tool.description,
+      category: localizedTool?.category || getCategoryLabel(categoryName),
+      href: localizedTool ? `/${locale}/tools/${tool.slug}` : `/tools/${tool.slug}`,
+    };
+  };
 
   const categoriesWithTools = categories.filter((category) =>
     tools.some((tool) => tool.categorySlug === category.slug)
@@ -38,20 +63,24 @@ export default function ToolsBrowser({
   const filteredTools = useMemo(() => {
     return tools.filter((tool) => {
       const keyword = search.toLowerCase().trim();
+      const displayTool = getDisplayTool(tool);
 
       const matchesSearch =
         keyword === "" ||
         tool.name.toLowerCase().includes(keyword) ||
         tool.slug.toLowerCase().includes(keyword) ||
         tool.desc.toLowerCase().includes(keyword) ||
-        tool.category.toLowerCase().includes(keyword);
+        tool.category.toLowerCase().includes(keyword) ||
+        displayTool.name.toLowerCase().includes(keyword) ||
+        displayTool.desc.toLowerCase().includes(keyword) ||
+        displayTool.category.toLowerCase().includes(keyword);
 
       const matchesCategory =
         activeCategory === "all" || tool.categorySlug === activeCategory;
 
       return matchesSearch && matchesCategory;
     });
-  }, [tools, search, activeCategory]);
+  }, [tools, search, activeCategory, locale]);
 
   return (
     <section
@@ -65,7 +94,7 @@ export default function ToolsBrowser({
               isDark ? "text-white/35" : "text-[#8A8173]"
             }`}
           >
-            Tool Library
+            {localizedCopy ? "OneClick Tools" : "Tool Library"}
           </p>
 
           <h2
@@ -73,7 +102,7 @@ export default function ToolsBrowser({
               isDark ? "text-white" : "text-[#18181B]"
             }`}
           >
-            Pick a drawer.
+            {localizedCopy?.toolLibrary || "Pick a drawer."}
           </h2>
 
           <p
@@ -81,8 +110,8 @@ export default function ToolsBrowser({
               isDark ? "text-white/50" : "text-[#6B665D]"
             }`}
           >
-            Search, filter, and open lightweight tools built for quick everyday
-            work.
+            {localizedCopy?.toolLibraryIntro ||
+              "Search, filter, and open lightweight tools built for quick everyday work."}
           </p>
         </div>
 
@@ -93,7 +122,8 @@ export default function ToolsBrowser({
               : "border-[#E5DED0] bg-[#FFFDF7] text-[#6B665D]"
           }`}
         >
-          {tools.length} tools online
+          {localizedCopy?.toolsOnline.replace("{count}", String(tools.length)) ||
+            `${tools.length} tools online`}
         </div>
       </div>
 
@@ -117,7 +147,7 @@ export default function ToolsBrowser({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tools, e.g. image, json, base64..."
+              placeholder={localizedCopy?.searchPlaceholder || "Search tools, e.g. image, json, base64..."}
               className={`w-full rounded-xl border px-10 py-3 text-sm outline-none transition md:rounded-2xl md:py-3.5 ${
                 isDark
                   ? "border-white/10 bg-black/30 text-white placeholder:text-white/30 focus:border-white/25"
@@ -137,7 +167,7 @@ export default function ToolsBrowser({
                 : "border-[#E5DED0] bg-white text-[#6B665D] hover:border-[#2563EB]/30 hover:text-[#18181B]"
             }`}
           >
-            Reset
+            {localizedCopy?.reset || "Reset"}
           </button>
         </div>
 
@@ -154,7 +184,7 @@ export default function ToolsBrowser({
                 : "bg-[#F5F2EA] text-[#6B665D] hover:bg-[#EEF0FF] hover:text-[#18181B]"
             }`}
           >
-            All · {tools.length}
+            {localizedCopy?.allTools || "All"} · {tools.length}
           </button>
 
           {categoriesWithTools.map((category) => {
@@ -178,7 +208,7 @@ export default function ToolsBrowser({
                     : "bg-[#F5F2EA] text-[#6B665D] hover:bg-[#EEF0FF] hover:text-[#18181B]"
                 }`}
               >
-                {category.name} · {count}
+                {getCategoryLabel(category.name)} · {count}
               </button>
             );
           })}
@@ -191,23 +221,35 @@ export default function ToolsBrowser({
         }`}
       >
         <span>
-          Showing {filteredTools.length} of {tools.length} tools
+          {localizedCopy?.showingTools
+            .replace("{shown}", String(filteredTools.length))
+            .replace("{total}", String(tools.length)) ||
+            `Showing ${filteredTools.length} of ${tools.length} tools`}
         </span>
 
-        <span>No login required</span>
+        <span>{localizedCopy?.noLoginRequired || "No login required"}</span>
       </div>
 
       {filteredTools.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
-          {filteredTools.map((tool) => (
-            <ToolCard
-              key={tool.slug}
-              name={tool.name}
-              slug={tool.slug}
-              tag={tool.category || tool.tag}
-              desc={tool.desc || tool.description}
-            />
-          ))}
+          {filteredTools.map((tool) => {
+            const displayTool = getDisplayTool(tool);
+            const categoryName = tool.category || tool.tag;
+
+            return (
+              <ToolCard
+                key={tool.slug}
+                name={displayTool.name}
+                slug={tool.slug}
+                tag={displayTool.category}
+                desc={displayTool.desc}
+                href={displayTool.href}
+                openLabel={localizedCopy?.openTool || "Open"}
+                utilityLabel={localizedCopy?.oneClickUtility || "One click utility"}
+                styleKey={categoryName}
+              />
+            );
+          })}
         </div>
       ) : (
         <div
@@ -224,11 +266,11 @@ export default function ToolsBrowser({
               isDark ? "text-white" : "text-[#18181B]"
             }`}
           >
-            No tools found
+            {localizedCopy?.noToolsFound || "No tools found"}
           </h3>
 
           <p className={isDark ? "mt-3 text-white/45" : "mt-3 text-[#6B665D]"}>
-            Try another keyword or choose a different category.
+            {localizedCopy?.noToolsHint || "Try another keyword or choose a different category."}
           </p>
         </div>
       )}
