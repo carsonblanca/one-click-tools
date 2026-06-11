@@ -54,7 +54,7 @@ function formatHours(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} h`;
 }
 
-export default function PrintTimeCostCalculatorTool() {
+export default function PrintTimeCostCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");

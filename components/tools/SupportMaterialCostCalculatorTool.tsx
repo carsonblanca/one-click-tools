@@ -50,7 +50,7 @@ function formatCurrency(value: number) {
   });
 }
 
-export default function SupportMaterialCostCalculatorTool() {
+export default function SupportMaterialCostCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [mainWeight, setMainWeight] = useState("");
   const [supportWeight, setSupportWeight] = useState("");
   const [mainPrice, setMainPrice] = useState("");

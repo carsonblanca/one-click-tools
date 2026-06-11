@@ -55,7 +55,7 @@ function formatGrams(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} g`;
 }
 
-export default function FilamentCostCalculatorTool() {
+export default function FilamentCostCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [spoolPrice, setSpoolPrice] = useState("");
   const [spoolWeight, setSpoolWeight] = useState("");
   const [spoolUnit, setSpoolUnit] = useState<WeightUnit>("kg");

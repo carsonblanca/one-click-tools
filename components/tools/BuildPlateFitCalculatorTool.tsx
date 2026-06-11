@@ -62,7 +62,7 @@ function formatPercent(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
 }
 
-export default function BuildPlateFitCalculatorTool() {
+export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [modelX, setModelX] = useState("");
   const [modelY, setModelY] = useState("");
   const [modelZ, setModelZ] = useState("");

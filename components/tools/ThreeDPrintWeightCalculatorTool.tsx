@@ -45,7 +45,7 @@ function formatGrams(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} g`;
 }
 
-export default function ThreeDPrintWeightCalculatorTool() {
+export default function ThreeDPrintWeightCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [length, setLength] = useState("");
   const [diameter, setDiameter] = useState<Diameter>("1.75");
   const [density, setDensity] = useState("1.24");

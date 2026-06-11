@@ -75,7 +75,7 @@ function formatCurrency(value: number | null) {
     : value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
-export default function FilamentSpoolRemainingCalculatorTool() {
+export default function FilamentSpoolRemainingCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [currentTotalWeight, setCurrentTotalWeight] = useState("");
   const [emptySpoolWeight, setEmptySpoolWeight] = useState("");
   const [diameter, setDiameter] = useState<Diameter>("1.75");

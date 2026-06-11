@@ -37,7 +37,7 @@ export default function LanguageSuggestion() {
   useEffect(() => {
     const currentLocale = getLocaleFromPath(pathname || "/");
 
-    if (currentLocale !== "en") {
+    if (currentLocale !== "en" || pathname !== "/") {
       return;
     }
 

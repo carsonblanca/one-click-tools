@@ -44,7 +44,7 @@ function formatMeters(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} m`;
 }
 
-export default function FilamentLengthCalculatorTool() {
+export default function FilamentLengthCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [diameter, setDiameter] = useState<Diameter>("1.75");
   const [density, setDensity] = useState("1.24");
   const [weight, setWeight] = useState("");

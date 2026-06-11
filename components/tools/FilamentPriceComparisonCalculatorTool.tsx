@@ -61,7 +61,7 @@ function formatMoney(value: number, currency: string) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${currency}`;
 }
 
-export default function FilamentPriceComparisonCalculatorTool() {
+export default function FilamentPriceComparisonCalculatorTool({ locale = "en" }: { locale?: string }) {
   const { isDark } = useTheme();
   const [targetCurrency, setTargetCurrency] = useState("USD");
   const [rows, setRows] = useState<PriceRow[]>(sampleRows);

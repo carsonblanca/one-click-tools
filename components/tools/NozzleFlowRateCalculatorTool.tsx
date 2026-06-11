@@ -25,7 +25,7 @@ function formatFlow(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} mm³/s`;
 }
 
-export default function NozzleFlowRateCalculatorTool() {
+export default function NozzleFlowRateCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [layerHeight, setLayerHeight] = useState("");
   const [lineWidth, setLineWidth] = useState("");
   const [printSpeed, setPrintSpeed] = useState("");
