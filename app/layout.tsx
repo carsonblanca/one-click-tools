@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import FloatingFeedback from "../components/FloatingFeedback";
 import { ThemeProvider } from "../components/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -35,7 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <FloatingFeedback />
+        </ThemeProvider>
       </body>
     </html>
   );
