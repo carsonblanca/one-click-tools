@@ -783,5 +783,59 @@
     "categorySlug": "3d-printing",
     "desc": "Calculate volumetric flow rate from layer height, line width, and speed.",
     "description": "Calculate 3D printer nozzle volumetric flow rate in mm³/s using layer height, line width, and print speed."
+  },
+  {
+    "name": "Filament Price Comparison Calculator",
+    "slug": "filament-price-comparison-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Compare filament prices across regions and currencies.",
+    "description": "Compare user-entered filament prices, spool weights, currencies, and exchange rates to estimate price per kilogram across regions."
+  },
+  {
+    "name": "3D Model Search Aggregator",
+    "slug": "3d-model-search-aggregator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Generate outbound search links for popular 3D model platforms.",
+    "description": "Search multiple 3D model websites from one page by generating outbound links to each platform's own search results."
+  },
+  {
+    "name": "3D Print Time and Filament Estimator",
+    "slug": "3d-print-time-filament-estimator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate filament usage, material cost, flow rate, and print time.",
+    "description": "Quickly estimate 3D print filament usage, material cost, volumetric flow, and print time from nozzle, wall, infill, speed, and material settings."
+  },
+  {
+    "name": "Support Material Cost Calculator",
+    "slug": "support-material-cost-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate main and support material costs for 3D prints.",
+    "description": "Calculate main material cost, support material cost, waste cost, and total material cost for supported or multi-material 3D prints."
+  },
+  {
+    "name": "Filament Spool Remaining Calculator",
+    "slug": "filament-spool-remaining-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate remaining filament weight, length, value, and print count.",
+    "description": "Calculate remaining filament on a spool from current total weight, empty spool weight, filament diameter, material density, price, and model weight."
+  },
+  {
+    "name": "Build Plate Fit Calculator",
+    "slug": "build-plate-fit-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Check whether a model fits a printer build plate.",
+    "description": "Estimate bounding-box build plate fit, XY rotation fit, maximum uniform scale, and suggested scale for common 3D printer build volumes."
   }
 ]
