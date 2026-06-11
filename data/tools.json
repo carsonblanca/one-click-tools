@@ -729,5 +729,59 @@
     "categorySlug": "text",
     "desc": "Compare two blocks of text line by line.",
     "description": "Compare original and changed text line by line and show added, removed, and unchanged lines."
+  },
+  {
+    "name": "Filament Cost Calculator",
+    "slug": "filament-cost-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate filament cost from spool price, spool weight, model weight, and waste.",
+    "description": "Calculate cost per gram, estimated material used including waste, and model material cost for 3D printing."
+  },
+  {
+    "name": "Print Time Cost Calculator",
+    "slug": "print-time-cost-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate 3D print cost from print time, machine rate, material, labor, and margin.",
+    "description": "Calculate machine cost, base total cost, and an optional suggested price with profit margin for 3D printing jobs."
+  },
+  {
+    "name": "Filament Length Calculator",
+    "slug": "filament-length-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate filament length from weight, diameter, and material density.",
+    "description": "Calculate approximate filament length in meters from filament weight, diameter, and material density presets."
+  },
+  {
+    "name": "3D Print Weight Calculator",
+    "slug": "3d-print-weight-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Estimate filament weight from length, diameter, and material density.",
+    "description": "Calculate estimated 3D print filament weight in grams from filament length, diameter, and material density presets."
+  },
+  {
+    "name": "Scale Percentage Calculator",
+    "slug": "scale-percentage-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Calculate slicer scale percentages from original and target sizes.",
+    "description": "Calculate uniform and per-axis scale percentages for resizing 3D models in slicers."
+  },
+  {
+    "name": "Nozzle Flow Rate Calculator",
+    "slug": "nozzle-flow-rate-calculator",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
+    "desc": "Calculate volumetric flow rate from layer height, line width, and speed.",
+    "description": "Calculate 3D printer nozzle volumetric flow rate in mm³/s using layer height, line width, and print speed."
   }
 ]

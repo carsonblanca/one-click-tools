@@ -83,6 +83,12 @@ import TextDiffCheckerTool from "../../../components/tools/TextDiffCheckerTool";
 import FileSizeConverterTool from "../../../components/tools/FileSizeConverterTool";
 import FileNameCleanerTool from "../../../components/tools/FileNameCleanerTool";
 import QrCodeGeneratorTool from "../../../components/tools/QrCodeGeneratorTool";
+import FilamentCostCalculatorTool from "../../../components/tools/FilamentCostCalculatorTool";
+import PrintTimeCostCalculatorTool from "../../../components/tools/PrintTimeCostCalculatorTool";
+import FilamentLengthCalculatorTool from "../../../components/tools/FilamentLengthCalculatorTool";
+import ThreeDPrintWeightCalculatorTool from "../../../components/tools/ThreeDPrintWeightCalculatorTool";
+import ScalePercentageCalculatorTool from "../../../components/tools/ScalePercentageCalculatorTool";
+import NozzleFlowRateCalculatorTool from "../../../components/tools/NozzleFlowRateCalculatorTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
@@ -194,6 +200,18 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "file-size-converter") return <FileSizeConverterTool />;
 
   if (slug === "file-name-cleaner") return <FileNameCleanerTool />;
+
+  if (slug === "filament-cost-calculator") return <FilamentCostCalculatorTool />;
+
+  if (slug === "print-time-cost-calculator") return <PrintTimeCostCalculatorTool />;
+
+  if (slug === "filament-length-calculator") return <FilamentLengthCalculatorTool />;
+
+  if (slug === "3d-print-weight-calculator") return <ThreeDPrintWeightCalculatorTool />;
+
+  if (slug === "scale-percentage-calculator") return <ScalePercentageCalculatorTool />;
+
+  if (slug === "nozzle-flow-rate-calculator") return <NozzleFlowRateCalculatorTool />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
