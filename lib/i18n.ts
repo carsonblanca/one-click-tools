@@ -71,17 +71,31 @@ export function stripLocalePrefix(pathname: string) {
 }
 
 export function getLocalizedPath(pathname: string, targetLocale: Locale) {
-  const basePath = stripLocalePrefix(pathname);
+  return getLanguageSwitchTarget(pathname, targetLocale).path;
+}
+
+export function getLanguageSwitchTarget(pathname: string, targetLocale: Locale) {
+  const currentPath = pathname || "/";
+  const basePath = stripLocalePrefix(currentPath);
 
   if (targetLocale === "en") {
-    return basePath;
+    return {
+      path: basePath,
+      available: true,
+    };
   }
 
   if (!localizedBasePaths.has(basePath)) {
-    return `/${targetLocale}`;
+    return {
+      path: currentPath,
+      available: false,
+    };
   }
 
-  return basePath === "/" ? `/${targetLocale}` : `/${targetLocale}${basePath}`;
+  return {
+    path: basePath === "/" ? `/${targetLocale}` : `/${targetLocale}${basePath}`,
+    available: true,
+  };
 }
 
 export function detectBrowserLocale(languages: readonly string[]): Locale {
