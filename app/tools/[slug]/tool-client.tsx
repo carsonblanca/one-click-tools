@@ -89,6 +89,12 @@ import FilamentLengthCalculatorTool from "../../../components/tools/FilamentLeng
 import ThreeDPrintWeightCalculatorTool from "../../../components/tools/ThreeDPrintWeightCalculatorTool";
 import ScalePercentageCalculatorTool from "../../../components/tools/ScalePercentageCalculatorTool";
 import NozzleFlowRateCalculatorTool from "../../../components/tools/NozzleFlowRateCalculatorTool";
+import FilamentPriceComparisonCalculatorTool from "../../../components/tools/FilamentPriceComparisonCalculatorTool";
+import ThreeDModelSearchAggregatorTool from "../../../components/tools/ThreeDModelSearchAggregatorTool";
+import ThreeDPrintTimeFilamentEstimatorTool from "../../../components/tools/ThreeDPrintTimeFilamentEstimatorTool";
+import SupportMaterialCostCalculatorTool from "../../../components/tools/SupportMaterialCostCalculatorTool";
+import FilamentSpoolRemainingCalculatorTool from "../../../components/tools/FilamentSpoolRemainingCalculatorTool";
+import BuildPlateFitCalculatorTool from "../../../components/tools/BuildPlateFitCalculatorTool";
 
 export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "base64") return <Base64Tool />;
@@ -212,6 +218,18 @@ export default function ToolClient({ slug }: { slug: string }) {
   if (slug === "scale-percentage-calculator") return <ScalePercentageCalculatorTool />;
 
   if (slug === "nozzle-flow-rate-calculator") return <NozzleFlowRateCalculatorTool />;
+
+  if (slug === "filament-price-comparison-calculator") return <FilamentPriceComparisonCalculatorTool />;
+
+  if (slug === "3d-model-search-aggregator") return <ThreeDModelSearchAggregatorTool />;
+
+  if (slug === "3d-print-time-filament-estimator") return <ThreeDPrintTimeFilamentEstimatorTool />;
+
+  if (slug === "support-material-cost-calculator") return <SupportMaterialCostCalculatorTool />;
+
+  if (slug === "filament-spool-remaining-calculator") return <FilamentSpoolRemainingCalculatorTool />;
+
+  if (slug === "build-plate-fit-calculator") return <BuildPlateFitCalculatorTool />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">
