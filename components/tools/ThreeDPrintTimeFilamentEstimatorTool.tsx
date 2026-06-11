@@ -97,7 +97,7 @@ function formatCurrency(value: number | null) {
     : value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }
 
-export default function ThreeDPrintTimeFilamentEstimatorTool() {
+export default function ThreeDPrintTimeFilamentEstimatorTool({ locale = "en" }: { locale?: string }) {
   const [solidWeight, setSolidWeight] = useState("");
   const [nozzleSize, setNozzleSize] = useState<NozzleSize>("0.4");
   const [wallLoops, setWallLoops] = useState("2");

@@ -95,8 +95,9 @@ import ThreeDPrintTimeFilamentEstimatorTool from "../../../components/tools/Thre
 import SupportMaterialCostCalculatorTool from "../../../components/tools/SupportMaterialCostCalculatorTool";
 import FilamentSpoolRemainingCalculatorTool from "../../../components/tools/FilamentSpoolRemainingCalculatorTool";
 import BuildPlateFitCalculatorTool from "../../../components/tools/BuildPlateFitCalculatorTool";
+import type { Locale } from "../../../lib/i18n";
 
-export default function ToolClient({ slug }: { slug: string }) {
+export default function ToolClient({ slug, locale = "en" }: { slug: string; locale?: Locale }) {
   if (slug === "base64") return <Base64Tool />;
   if (slug === "json-formatter") return <JsonFormatterTool />;
   if (slug === "json-validator") return <JsonValidatorTool />;
@@ -207,29 +208,29 @@ export default function ToolClient({ slug }: { slug: string }) {
 
   if (slug === "file-name-cleaner") return <FileNameCleanerTool />;
 
-  if (slug === "filament-cost-calculator") return <FilamentCostCalculatorTool />;
+  if (slug === "filament-cost-calculator") return <FilamentCostCalculatorTool locale={locale} />;
 
-  if (slug === "print-time-cost-calculator") return <PrintTimeCostCalculatorTool />;
+  if (slug === "print-time-cost-calculator") return <PrintTimeCostCalculatorTool locale={locale} />;
 
-  if (slug === "filament-length-calculator") return <FilamentLengthCalculatorTool />;
+  if (slug === "filament-length-calculator") return <FilamentLengthCalculatorTool locale={locale} />;
 
-  if (slug === "3d-print-weight-calculator") return <ThreeDPrintWeightCalculatorTool />;
+  if (slug === "3d-print-weight-calculator") return <ThreeDPrintWeightCalculatorTool locale={locale} />;
 
-  if (slug === "scale-percentage-calculator") return <ScalePercentageCalculatorTool />;
+  if (slug === "scale-percentage-calculator") return <ScalePercentageCalculatorTool locale={locale} />;
 
-  if (slug === "nozzle-flow-rate-calculator") return <NozzleFlowRateCalculatorTool />;
+  if (slug === "nozzle-flow-rate-calculator") return <NozzleFlowRateCalculatorTool locale={locale} />;
 
-  if (slug === "filament-price-comparison-calculator") return <FilamentPriceComparisonCalculatorTool />;
+  if (slug === "filament-price-comparison-calculator") return <FilamentPriceComparisonCalculatorTool locale={locale} />;
 
-  if (slug === "3d-model-search-aggregator") return <ThreeDModelSearchAggregatorTool />;
+  if (slug === "3d-model-search-aggregator") return <ThreeDModelSearchAggregatorTool locale={locale} />;
 
-  if (slug === "3d-print-time-filament-estimator") return <ThreeDPrintTimeFilamentEstimatorTool />;
+  if (slug === "3d-print-time-filament-estimator") return <ThreeDPrintTimeFilamentEstimatorTool locale={locale} />;
 
-  if (slug === "support-material-cost-calculator") return <SupportMaterialCostCalculatorTool />;
+  if (slug === "support-material-cost-calculator") return <SupportMaterialCostCalculatorTool locale={locale} />;
 
-  if (slug === "filament-spool-remaining-calculator") return <FilamentSpoolRemainingCalculatorTool />;
+  if (slug === "filament-spool-remaining-calculator") return <FilamentSpoolRemainingCalculatorTool locale={locale} />;
 
-  if (slug === "build-plate-fit-calculator") return <BuildPlateFitCalculatorTool />;
+  if (slug === "build-plate-fit-calculator") return <BuildPlateFitCalculatorTool locale={locale} />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">

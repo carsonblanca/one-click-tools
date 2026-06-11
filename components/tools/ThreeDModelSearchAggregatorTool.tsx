@@ -24,7 +24,7 @@ const searchPlatforms = [
   { name: "Sketchfab", buildUrl: (query: string) => `https://sketchfab.com/search?q=${query}&type=models` },
 ];
 
-export default function ThreeDModelSearchAggregatorTool() {
+export default function ThreeDModelSearchAggregatorTool({ locale = "en" }: { locale?: string }) {
   const { isDark } = useTheme();
   const [keyword, setKeyword] = useState("");
   const encodedKeyword = encodeURIComponent(keyword.trim());

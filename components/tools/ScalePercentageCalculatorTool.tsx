@@ -44,7 +44,7 @@ function formatPercent(value: number | null) {
   return value === null ? "Not provided" : `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
 }
 
-export default function ScalePercentageCalculatorTool() {
+export default function ScalePercentageCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [originalSize, setOriginalSize] = useState("");
   const [targetSize, setTargetSize] = useState("");
   const [originalX, setOriginalX] = useState("");

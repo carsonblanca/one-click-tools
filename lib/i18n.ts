@@ -14,6 +14,30 @@ export const locales: Array<{
   { code: "zh-tw", label: "繁體中文", prefix: "/zh-tw" },
 ];
 
+export const localized3dToolSlugs = [
+  "filament-cost-calculator",
+  "print-time-cost-calculator",
+  "filament-length-calculator",
+  "3d-print-weight-calculator",
+  "scale-percentage-calculator",
+  "nozzle-flow-rate-calculator",
+  "filament-price-comparison-calculator",
+  "3d-model-search-aggregator",
+  "3d-print-time-filament-estimator",
+  "support-material-cost-calculator",
+  "filament-spool-remaining-calculator",
+  "build-plate-fit-calculator",
+];
+
+const localizedBasePaths = new Set([
+  "/",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/contact",
+  ...localized3dToolSlugs.map((slug) => `/tools/${slug}`),
+]);
+
 export function isLocale(value: string): value is Locale {
   return value === "en" || value === "zh-cn" || value === "zh-tw";
 }
@@ -51,6 +75,10 @@ export function getLocalizedPath(pathname: string, targetLocale: Locale) {
 
   if (targetLocale === "en") {
     return basePath;
+  }
+
+  if (!localizedBasePaths.has(basePath)) {
+    return `/${targetLocale}`;
   }
 
   return basePath === "/" ? `/${targetLocale}` : `/${targetLocale}${basePath}`;
