@@ -57,7 +57,7 @@ export default function ToolCard({
   return (
     <Link
       href={`/tools/${slug}`}
-      className={`group relative block overflow-hidden rounded-[28px] border p-6 transition duration-300 hover:-translate-y-1 ${
+      className={`group relative flex min-h-[154px] flex-col overflow-hidden rounded-[20px] border p-4 transition duration-300 hover:-translate-y-0.5 md:min-h-[176px] md:rounded-[22px] md:p-5 ${
         isDark
           ? "border-white/10 bg-[#101014]/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] hover:border-white/20 hover:bg-[#15151b]"
           : "border-[#E5DED0] bg-[#FFFDF7] shadow-[0_20px_60px_rgba(24,24,27,0.06)] hover:border-[#2563EB]/30 hover:bg-white"
@@ -69,9 +69,9 @@ export default function ToolCard({
         }`}
       />
 
-      <div className="mb-7 flex items-start justify-between gap-4">
+      <div className="mb-3 flex items-start justify-between gap-3 md:mb-4">
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold ${
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-xs font-semibold md:h-10 md:w-10 ${
             isDark
               ? "border-white/10 bg-white/[0.04] text-white"
               : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B]"
@@ -80,13 +80,13 @@ export default function ToolCard({
           {name.charAt(0)}
         </div>
 
-        <span className={`rounded-full border px-3 py-1 text-xs ${style}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] leading-none md:text-xs ${style}`}>
           {tag}
         </span>
       </div>
 
       <h3
-        className={`text-2xl font-semibold tracking-tight ${
+        className={`text-lg font-semibold tracking-tight md:text-xl ${
           isDark ? "text-white" : "text-[#18181B]"
         }`}
       >
@@ -94,7 +94,7 @@ export default function ToolCard({
       </h3>
 
       <p
-        className={`mt-3 min-h-[56px] leading-7 ${
+        className={`mt-2 overflow-hidden text-sm leading-6 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] ${
           isDark ? "text-white/55" : "text-[#6B665D]"
         }`}
       >
@@ -102,7 +102,7 @@ export default function ToolCard({
       </p>
 
       <div
-        className={`mt-7 flex items-center justify-between border-t pt-5 text-sm ${
+        className={`mt-auto flex items-center justify-between pt-4 text-xs md:text-sm ${
           isDark ? "border-white/10" : "border-[#E5DED0]"
         }`}
       >

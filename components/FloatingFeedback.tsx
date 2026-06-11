@@ -105,14 +105,14 @@ export default function FloatingFeedback() {
         type="button"
         aria-label="Open feedback dialog"
         onClick={openDialog}
-        className={`fixed right-4 bottom-24 z-40 inline-flex min-h-12 items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold shadow-lg transition sm:right-6 sm:bottom-28 ${
+        className={`fixed right-3 bottom-20 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold shadow-lg transition sm:right-6 sm:bottom-28 sm:h-auto sm:w-auto sm:min-h-12 sm:gap-2 sm:px-4 sm:py-3 ${
           isDark
             ? "border-lime-300/30 bg-lime-300 text-black shadow-lime-950/30 hover:bg-lime-200"
             : "border-[#D4C7A8] bg-[#18181B] text-white shadow-[#18181B]/15 hover:bg-[#2D2D32]"
         }`}
       >
         <span aria-hidden="true">?</span>
-        <span>Feedback</span>
+        <span className="hidden sm:inline">Feedback</span>
       </button>
 
       {isOpen ? (

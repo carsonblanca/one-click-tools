@@ -56,12 +56,12 @@ export default function ToolsBrowser({
   return (
     <section
       id="tools"
-      className="relative z-10 mx-auto max-w-7xl px-6 pb-28"
+      className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24"
     >
-      <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+      <div className="mb-4 flex flex-col justify-between gap-3 md:mb-6 md:flex-row md:items-end">
         <div>
           <p
-            className={`mb-3 text-sm uppercase tracking-[0.3em] ${
+            className={`mb-2 text-xs uppercase tracking-[0.24em] md:text-sm md:tracking-[0.3em] ${
               isDark ? "text-white/35" : "text-[#8A8173]"
             }`}
           >
@@ -69,7 +69,7 @@ export default function ToolsBrowser({
           </p>
 
           <h2
-            className={`text-4xl font-semibold tracking-tight md:text-5xl ${
+            className={`text-3xl font-semibold tracking-tight md:text-4xl ${
               isDark ? "text-white" : "text-[#18181B]"
             }`}
           >
@@ -77,7 +77,7 @@ export default function ToolsBrowser({
           </h2>
 
           <p
-            className={`mt-4 max-w-2xl leading-7 ${
+            className={`mt-2 max-w-2xl text-sm leading-6 md:text-base ${
               isDark ? "text-white/50" : "text-[#6B665D]"
             }`}
           >
@@ -87,7 +87,7 @@ export default function ToolsBrowser({
         </div>
 
         <div
-          className={`rounded-full border px-5 py-3 text-sm ${
+          className={`w-fit rounded-full border px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm ${
             isDark
               ? "border-white/10 bg-white/[0.04] text-white/50"
               : "border-[#E5DED0] bg-[#FFFDF7] text-[#6B665D]"
@@ -98,16 +98,16 @@ export default function ToolsBrowser({
       </div>
 
       <div
-        className={`mb-8 rounded-[32px] border p-4 shadow-2xl backdrop-blur ${
+        className={`mb-4 rounded-2xl border p-3 shadow-xl backdrop-blur md:mb-5 md:rounded-[24px] md:p-4 ${
           isDark
             ? "border-white/10 bg-[#0f0f13]/80 shadow-black/20"
             : "border-[#E5DED0] bg-[#FFFDF7]/90 shadow-[#18181B]/5"
         }`}
       >
-        <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+        <div className="grid gap-2 md:grid-cols-[1fr_auto] md:gap-3">
           <div className="relative">
             <div
-              className={`pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 ${
+              className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm ${
                 isDark ? "text-white/30" : "text-[#8A8173]"
               }`}
             >
@@ -118,7 +118,7 @@ export default function ToolsBrowser({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tools, e.g. image, json, base64..."
-              className={`w-full rounded-2xl border px-12 py-4 outline-none transition ${
+              className={`w-full rounded-xl border px-10 py-3 text-sm outline-none transition md:rounded-2xl md:py-3.5 ${
                 isDark
                   ? "border-white/10 bg-black/30 text-white placeholder:text-white/30 focus:border-white/25"
                   : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B] placeholder:text-[#8A8173] focus:border-[#2563EB]/40"
@@ -131,7 +131,7 @@ export default function ToolsBrowser({
               setSearch("");
               setActiveCategory("all");
             }}
-            className={`rounded-2xl border px-5 py-4 text-sm transition ${
+            className={`rounded-xl border px-4 py-3 text-sm transition md:rounded-2xl ${
               isDark
                 ? "border-white/10 bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
                 : "border-[#E5DED0] bg-white text-[#6B665D] hover:border-[#2563EB]/30 hover:text-[#18181B]"
@@ -141,10 +141,10 @@ export default function ToolsBrowser({
           </button>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-3 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
           <button
             onClick={() => setActiveCategory("all")}
-            className={`rounded-full px-4 py-2 text-sm transition ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs transition md:text-sm ${
               activeCategory === "all"
                 ? isDark
                   ? "bg-lime-300 text-black"
@@ -168,7 +168,7 @@ export default function ToolsBrowser({
               <button
                 key={category.slug}
                 onClick={() => setActiveCategory(category.slug)}
-                className={`rounded-full px-4 py-2 text-sm transition ${
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs transition md:text-sm ${
                   isActive
                     ? isDark
                       ? "bg-lime-300 text-black"
@@ -186,7 +186,7 @@ export default function ToolsBrowser({
       </div>
 
       <div
-        className={`mb-6 flex items-center justify-between text-sm ${
+        className={`mb-3 flex items-center justify-between text-xs md:mb-4 md:text-sm ${
           isDark ? "text-white/35" : "text-[#8A8173]"
         }`}
       >
@@ -198,7 +198,7 @@ export default function ToolsBrowser({
       </div>
 
       {filteredTools.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
           {filteredTools.map((tool) => (
             <ToolCard
               key={tool.slug}
