@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import FloatingFeedback from "../components/FloatingFeedback";
+import LanguageSuggestion from "../components/LanguageSuggestion";
 import { ThemeProvider } from "../components/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           {children}
+          <LanguageSuggestion />
           <FloatingFeedback />
         </ThemeProvider>
       </body>

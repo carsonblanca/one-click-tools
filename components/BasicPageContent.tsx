@@ -15,6 +15,8 @@ type BasicPageContentProps = {
   intro: string;
   sections: Section[];
   children?: ReactNode;
+  backHref?: string;
+  backLabel?: string;
 };
 
 export default function BasicPageContent({
@@ -23,6 +25,8 @@ export default function BasicPageContent({
   intro,
   sections,
   children,
+  backHref = "/",
+  backLabel = "Back to home",
 }: BasicPageContentProps) {
   const { isDark } = useTheme();
 
@@ -93,14 +97,14 @@ export default function BasicPageContent({
 
       <div className="mt-10">
         <Link
-          href="/"
+          href={backHref}
           className={`inline-flex rounded-2xl border px-6 py-4 ${
             isDark
               ? "border-white/10 bg-white/[0.04] text-white/70"
               : "border-[#E5DED0] bg-[#FFFDF7] text-[#6B665D]"
           }`}
         >
-          Back to home
+          {backLabel}
         </Link>
       </div>
     </section>

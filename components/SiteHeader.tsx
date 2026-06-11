@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./ThemeProvider";
 
@@ -42,21 +43,24 @@ export default function SiteHeader() {
           </div>
         </Link>
 
-        <nav
-          className={`hidden items-center gap-6 text-sm md:flex ${
-            isDark ? "text-white/55" : "text-[#6B665D]"
-          }`}
-        >
-          <Link href="/#tools" className="hover:opacity-100">
-            Tools
-          </Link>
+        <div className="flex items-center gap-2">
+          <nav
+            className={`hidden items-center gap-6 text-sm md:flex ${
+              isDark ? "text-white/55" : "text-[#6B665D]"
+            }`}
+          >
+            <Link href="/#tools" className="hover:opacity-100">
+              Tools
+            </Link>
 
-          <Link href="/site-map" className="hover:opacity-100">
-            Site Map
-          </Link>
+            <Link href="/site-map" className="hover:opacity-100">
+              Site Map
+            </Link>
+          </nav>
 
+          <LanguageSwitcher />
           <ThemeToggle />
-        </nav>
+        </div>
       </div>
     </header>
   );
