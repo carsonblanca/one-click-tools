@@ -403,6 +403,13 @@ export const localized3dTools: Record<ChineseLocale, Record<string, LocalizedToo
       desc: "检查模型边界尺寸是否能放进打印平台。",
       description: "输入模型尺寸和打印机成型尺寸，估算正常放置、旋转放置以及最大统一缩放比例。",
     },
+    "pixel-knock-board-generator": {
+      name: "敲豆豆像素图板生成器",
+      slug: "pixel-knock-board-generator",
+      category: "3D 打印",
+      desc: "上传图片，生成适合 3D 打印的像素图板、外框和分色颗粒文件。",
+      description: "上传图片，生成适合 3D 打印的像素图板、外框和分色颗粒文件。",
+    },
   },
   "zh-tw": {
     "filament-cost-calculator": {
@@ -488,6 +495,13 @@ export const localized3dTools: Record<ChineseLocale, Record<string, LocalizedToo
       category: "3D 列印",
       desc: "檢查模型邊界尺寸是否能放進列印平台。",
       description: "輸入模型尺寸和印表機成型尺寸，估算正常放置、旋轉放置以及最大統一縮放比例。",
+    },
+    "pixel-knock-board-generator": {
+      name: "敲豆豆像素圖板產生器",
+      slug: "pixel-knock-board-generator",
+      category: "3D 列印",
+      desc: "上傳圖片，產生適合 3D 列印的像素圖板、外框與分色顆粒檔案。",
+      description: "上傳圖片，產生適合 3D 列印的像素圖板、外框與分色顆粒檔案。",
     },
   },
 };

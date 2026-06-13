@@ -398,11 +398,24 @@
   {
     "name": "Pixel Knock Grid Generator",
     "slug": "pixel-knock-board-generator",
-    "tag": "Image",
-    "category": "Image",
-    "categorySlug": "image",
+    "tag": "3D Printing",
+    "category": "3D Printing",
+    "categorySlug": "3d-printing",
     "desc": "Upload an image and generate a 3D printable pixel grid STL for pixel craft blocks. All processing runs locally in your browser.",
-    "description": "Upload an image and generate a 3D printable pixel grid STL for pixel craft blocks. All processing runs locally in your browser.",
+    "description": "Upload an image and generate a 3D printable pixel grid STL for pixel art, mosaic, knock board, and craft block projects. All processing runs locally in your browser.",
+    "keywords": [
+      "Pixel Knock",
+      "Pixel Grid",
+      "knock board",
+      "mosaic",
+      "pixel art",
+      "敲豆豆",
+      "敲敲乐",
+      "拼豆",
+      "像素画",
+      "马赛克",
+      "3D 打印"
+    ],
     "whatIsThis": {
       "en": "Pixel Knock Grid Generator turns an image into a 3D printable pixel grid for hands-on craft projects. It runs locally in your browser, creates a no-base STL grid, and calculates the required block count for each color group.",
       "zh": "敲敲乐网格生成器是一款适合 3D 打印和手工拼搭的图片转网格工具。上传图片后，工具会在浏览器本地将图片转换成敲敲乐网格，并生成可用于 3D 打印的 STL 文件，同时统计每种颜色需要准备的颗粒数量。适合制作儿童手工、像素画、亲子活动材料包和 3D 打印创意作品。"

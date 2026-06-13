@@ -143,7 +143,7 @@ export default function ToolClient({ slug, locale = "en" }: { slug: string; loca
   if (slug === "image-cropper") return <ImageCropperTool />;
   if (slug === "image-rotate-flip") return <ImageRotateFlipTool />;
   if (slug === "image-metadata-viewer") return <ImageMetadataViewerTool />;
-  if (slug === "pixel-knock-board-generator") return <PixelKnockBoardGeneratorTool />;
+  if (slug === "pixel-knock-board-generator") return <PixelKnockBoardGeneratorTool locale={locale} />;
 
   if (slug === "markdown-previewer") return <MarkdownPreviewerTool />;
   if (slug === "html-formatter") return <HtmlFormatterTool />;
