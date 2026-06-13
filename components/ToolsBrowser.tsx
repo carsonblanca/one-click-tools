@@ -18,6 +18,7 @@ type Tool = {
   categorySlug: string;
   desc: string;
   description: string;
+  keywords?: string[] | string;
 };
 
 type Category = {
@@ -64,12 +65,17 @@ export default function ToolsBrowser({
     return tools.filter((tool) => {
       const keyword = search.toLowerCase().trim();
       const displayTool = getDisplayTool(tool);
+      const keywordsText = Array.isArray(tool.keywords)
+        ? tool.keywords.join(" ")
+        : tool.keywords || "";
 
       const matchesSearch =
         keyword === "" ||
         tool.name.toLowerCase().includes(keyword) ||
         tool.slug.toLowerCase().includes(keyword) ||
         tool.desc.toLowerCase().includes(keyword) ||
+        tool.description.toLowerCase().includes(keyword) ||
+        keywordsText.toLowerCase().includes(keyword) ||
         tool.category.toLowerCase().includes(keyword) ||
         displayTool.name.toLowerCase().includes(keyword) ||
         displayTool.desc.toLowerCase().includes(keyword) ||

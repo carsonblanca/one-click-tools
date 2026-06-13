@@ -13,6 +13,18 @@ You are working on OneClick Tools, a Next.js + Tailwind CSS online tools website
 - Do not add API calls, databases, authentication, payments, or server actions unless explicitly requested.
 - Do not touch deployment, DNS, Vercel, Cloudflare, or Google verification files unless explicitly requested.
 
+## Git and PR workflow
+
+- Codex may run normal Git operations on feature branches, including creating branches, committing, pushing, and opening pull requests.
+- Do not push directly to `main`.
+- Do not merge pull requests or merge feature branches into `main`; all development must go through a PR for the user to review and merge.
+- Do not force push.
+- Do not delete `main` or important remote branches.
+- Check the working tree before creating a new branch.
+- If uncommitted changes already exist, do not delete or overwrite them. Stop and report, or save them to a safe branch or stash with a clear note.
+- Do not include auto-generated `reports/daily/*` files in ordinary feature PRs.
+- Do not leak secrets, tokens, cookies, passwords, API keys, or user data.
+
 ## Project structure
 
 Important files:
@@ -77,3 +89,4 @@ Before considering a task done, run:
 
 ```bash
 npm run build
+```

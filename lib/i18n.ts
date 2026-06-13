@@ -27,6 +27,7 @@ export const localized3dToolSlugs = [
   "support-material-cost-calculator",
   "filament-spool-remaining-calculator",
   "build-plate-fit-calculator",
+  "pixel-knock-board-generator",
 ];
 
 const localizedBasePaths = new Set([

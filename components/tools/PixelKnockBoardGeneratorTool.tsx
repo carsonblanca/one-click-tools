@@ -2,6 +2,7 @@
 
 import { strToU8, zipSync } from "fflate";
 import { useEffect, useRef, useState } from "react";
+import type { Locale } from "../../lib/i18n";
 import { trackEvent } from "../analytics";
 import { useTheme } from "../ThemeProvider";
 import {
@@ -25,6 +26,10 @@ type ColorSummary = {
 };
 
 type Language = "en" | "zh";
+
+type PixelKnockBoardGeneratorToolProps = {
+  locale?: Locale;
+};
 
 type CropMode = "tight" | "center" | "original";
 
@@ -1752,11 +1757,15 @@ function buildReadme(
   ].join("\n");
 }
 
-export default function PixelKnockBoardGeneratorTool() {
+export default function PixelKnockBoardGeneratorTool({
+  locale = "en",
+}: PixelKnockBoardGeneratorToolProps) {
   const { isDark } = useTheme();
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>(
+    locale === "en" ? "en" : "zh",
+  );
   const [fileName, setFileName] = useState("");
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState("");
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
@@ -1784,6 +1793,11 @@ export default function PixelKnockBoardGeneratorTool() {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compare");
   const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setLanguage(locale === "en" ? "en" : "zh");
+  }, [locale]);
+
   const t = copy[language];
 
   const params: Params = {
