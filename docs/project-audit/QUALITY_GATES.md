@@ -9,6 +9,7 @@ Run these before merging feature work:
 ```bash
 npm run validate:tools
 npm run validate:analytics
+npm run validate:image-compressor
 npm run lint
 npx tsc --noEmit --incremental false
 npm run build
