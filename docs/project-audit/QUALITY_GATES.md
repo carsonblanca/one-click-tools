@@ -100,7 +100,7 @@ Before adding a new tool:
 
 - Add metadata to `data/tools.json`.
 - Use an existing category unless a new category is intentionally added.
-- Register the component in `app/tools/[slug]/tool-client.tsx`.
+- Register the component in `app/(en)/tools/[slug]/tool-client.tsx`.
 - Confirm the component file exists in `components/tools/`.
 - Use `ToolUI` primitives for inputs, buttons, panels, result boxes, checkboxes, and stat cards.
 - Keep processing client-side unless server work is explicitly approved.
