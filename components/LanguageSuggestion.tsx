@@ -17,14 +17,14 @@ const suggestionCopy: Record<"zh-cn" | "zh-tw", {
   continueLabel: string;
 }> = {
   "zh-cn": {
-    message: "检测到你可能更适合使用简体中文。是否切换？",
-    switchLabel: "切换到简体中文",
-    continueLabel: "继续使用 English",
+    message: "Your browser language looks like Simplified Chinese. Switch?",
+    switchLabel: "Switch to Simplified Chinese",
+    continueLabel: "Stay in English",
   },
   "zh-tw": {
-    message: "偵測到你可能更適合使用繁體中文。是否切換？",
-    switchLabel: "切換到繁體中文",
-    continueLabel: "繼續使用 English",
+    message: "Your browser language looks like Traditional Chinese. Switch?",
+    switchLabel: "Switch to Traditional Chinese",
+    continueLabel: "Stay in English",
   },
 };
 

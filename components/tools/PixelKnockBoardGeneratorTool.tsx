@@ -262,7 +262,7 @@ const copy = {
   en: {
     language: "Language",
     english: "English",
-    chinese: "中文",
+    chinese: "Chinese",
     title: "Pixel Knock Grid Generator",
     subtitle:
       "Turn an image into a 3D printable pixel grid STL. No base plate, just 1mm walls around each active pixel.",

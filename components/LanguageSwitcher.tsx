@@ -11,6 +11,24 @@ import {
 } from "../lib/i18n";
 import { useTheme } from "./ThemeProvider";
 
+const localeLabels: Record<Locale, Record<Locale, string>> = {
+  en: {
+    en: "English",
+    "zh-cn": "Simplified Chinese",
+    "zh-tw": "Traditional Chinese",
+  },
+  "zh-cn": {
+    en: "English",
+    "zh-cn": "简体中文",
+    "zh-tw": "繁體中文",
+  },
+  "zh-tw": {
+    en: "English",
+    "zh-cn": "简体中文",
+    "zh-tw": "繁體中文",
+  },
+};
+
 export default function LanguageSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
@@ -36,9 +54,13 @@ export default function LanguageSwitcher() {
 
     if (!target.available) {
       setNotice(
-        nextLocale === "zh-tw"
-          ? "這個工具的繁體中文版本正在完善中。"
-          : "这个工具的简体中文版本正在完善中。",
+        currentLocale === "en"
+          ? `The ${
+              nextLocale === "zh-tw" ? "Traditional Chinese" : "Simplified Chinese"
+            } version of this tool is not ready yet.`
+          : nextLocale === "zh-tw"
+            ? "這個工具的繁體中文版本正在完善中。"
+            : "这个工具的简体中文版本正在完善中。",
       );
       return;
     }
@@ -64,7 +86,7 @@ export default function LanguageSwitcher() {
         >
           {locales.map((locale) => (
             <option key={locale.code} value={locale.code}>
-              {locale.label}
+              {localeLabels[currentLocale][locale.code]}
             </option>
           ))}
         </select>

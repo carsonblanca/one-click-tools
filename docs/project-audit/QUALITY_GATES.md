@@ -85,6 +85,17 @@ Block release when:
 - Page title, H1, description, and tool slug describe different functionality.
 - Sitemap omits existing tool pages or includes duplicate URLs.
 
+## Tool Registration Blocking Conditions
+
+Block release when:
+
+- A metadata slug in `data/tools.json` is not registered in `app/(en)/tools/[slug]/tool-client.tsx`.
+- A registered slug has no metadata entry.
+- A registered component import cannot be resolved.
+- A registered component file is missing.
+- A slug, generated tool URL, tool name, or description is exactly duplicated.
+- Pixel Knock-specific metadata appears under any slug other than `pixel-knock-board-generator`.
+
 ## Temporarily Allowed Warnings
 
 These warnings are allowed temporarily but should be tracked:
@@ -117,3 +128,46 @@ Before adding a new tool:
 - Do not add fake metadata, fake components, or fake localized routes.
 - Do not collect user input, file names, image contents, cookies, credentials, or secrets in analytics events.
 - Do not modify production deployment, DNS, Vercel, Cloudflare, secrets, or environment variables as part of quality-gate work.
+
+## HTML Lang Check Method
+
+After `npm run build`, run the site locally and inspect representative pages:
+
+- `/` must render `<html lang="en">`.
+- `/tools/json-formatter` must render `<html lang="en">`.
+- `/zh-cn` and `/zh-cn/tools/pixel-knock-board-generator` must render `<html lang="zh-CN">`.
+- `/zh-tw` and `/zh-tw/tools/pixel-knock-board-generator` must render `<html lang="zh-TW">`.
+
+Do not fix this with client-side JavaScript after page load. The language must come from server-rendered route/layout output.
+
+## Canonical And Hreflang Check Method
+
+For each sampled page, inspect the generated head:
+
+- English tool pages must have a self-referencing canonical such as `https://one-click-tools.com/tools/json-formatter`.
+- English tool pages must include `zh-CN` and `zh-TW` hreflang only when those localized routes really exist.
+- Localized tool pages must have canonical URLs under their own locale path.
+- Open Graph `url` should match the canonical URL for English dynamic tool pages.
+- `sitemap.xml` must include 91 English tool URLs, only real localized tool URLs, and no duplicate `<loc>` values.
+
+## English Page Chinese Pollution Check Method
+
+For English samples such as `/`, `/tools/json-formatter`, and `/tools/pixel-knock-board-generator`:
+
+- Strip script and style tags before checking visible text.
+- Block release if visible English-page text contains Chinese SEO paragraphs, Chinese FAQ, Chinese helper copy, Chinese button text, or Pixel Knock Chinese-only terms.
+- Language switch UI on English pages should use English names such as `Simplified Chinese` and `Traditional Chinese`.
+- Pixel Knock English UI should label its internal language option as `Chinese`, not `中文`.
+
+## Production Manual Sample List
+
+Before production release, manually sample:
+
+- English home page: `/`
+- English ordinary tool page: `/tools/json-formatter`
+- English Pixel Knock page: `/tools/pixel-knock-board-generator`
+- Simplified Chinese home page: `/zh-cn`
+- Simplified Chinese Pixel Knock page: `/zh-cn/tools/pixel-knock-board-generator`
+- A non-localized Chinese tool URL such as `/zh-cn/tools/json-formatter`, which must not be advertised as a real localized page
+- `/sitemap.xml`
+- `/robots.txt`
