@@ -13,6 +13,8 @@ type LocalizedList = string[] | {
   zh?: string[];
 };
 
+type SeoContentLocale = "en" | "zh";
+
 type Tool = {
   name: string;
   slug: string;
@@ -145,7 +147,7 @@ const faqs = [
   },
 ];
 
-function getTextBlocks(content?: LocalizedText) {
+function getTextBlocks(content?: LocalizedText, locale: SeoContentLocale = "en") {
   if (!content) {
     return null;
   }
@@ -154,15 +156,13 @@ function getTextBlocks(content?: LocalizedText) {
     return [{ label: "", values: [content] }];
   }
 
-  const blocks = [
-    content.en ? { label: "English", values: [content.en] } : null,
-    content.zh ? { label: "中文", values: [content.zh] } : null,
-  ].filter((item): item is { label: string; values: string[] } => Boolean(item));
+  const localizedValue = content[locale];
+  const blocks = localizedValue ? [{ label: "", values: [localizedValue] }] : [];
 
   return blocks.length > 0 ? blocks : null;
 }
 
-function getListBlocks(content?: LocalizedList) {
+function getListBlocks(content?: LocalizedList, locale: SeoContentLocale = "en") {
   if (!content) {
     return null;
   }
@@ -171,10 +171,8 @@ function getListBlocks(content?: LocalizedList) {
     return [{ label: "", values: content }];
   }
 
-  const blocks = [
-    content.en ? { label: "English", values: content.en } : null,
-    content.zh ? { label: "中文", values: content.zh } : null,
-  ].filter((item): item is { label: string; values: string[] } => Boolean(item));
+  const localizedValues = content[locale];
+  const blocks = localizedValues ? [{ label: "", values: localizedValues }] : [];
 
   return blocks.length > 0 ? blocks : null;
 }
@@ -194,16 +192,18 @@ function getUseCases(category: string) {
 export default function ToolSeoContent({
   tool,
   relatedTools,
+  locale = "en",
 }: {
   tool: Tool;
   relatedTools: Tool[];
+  locale?: SeoContentLocale;
 }) {
   const { isDark } = useTheme();
   const category = getToolCategory(tool);
   const description = tool.description || tool.desc;
   const useCases = getUseCases(category);
-  const whatIsThisBlocks = getTextBlocks(tool.whatIsThis);
-  const howToBlocks = getListBlocks(tool.howTo);
+  const whatIsThisBlocks = getTextBlocks(tool.whatIsThis, locale);
+  const howToBlocks = getListBlocks(tool.howTo, locale);
 
   const cardClass = isDark
     ? "border-white/10 bg-white/[0.03]"

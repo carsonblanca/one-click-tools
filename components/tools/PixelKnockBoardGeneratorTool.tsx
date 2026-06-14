@@ -1794,10 +1794,6 @@ export default function PixelKnockBoardGeneratorTool({
   const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    setLanguage(locale === "en" ? "en" : "zh");
-  }, [locale]);
-
   const t = copy[language];
 
   const params: Params = {

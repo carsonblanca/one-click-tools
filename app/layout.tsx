@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import FloatingFeedback from "../components/FloatingFeedback";
 import LanguageSuggestion from "../components/LanguageSuggestion";
@@ -29,13 +30,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+function getDocumentLanguage(localeHeader: string | null) {
+  if (localeHeader === "zh-CN" || localeHeader === "zh-TW") {
+    return localeHeader;
+  }
+
+  return "en";
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  const requestHeaders = await headers();
+  const documentLanguage = getDocumentLanguage(
+    requestHeaders.get("x-oneclick-locale"),
+  );
+
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang={documentLanguage} data-scroll-behavior="smooth">
       <body>
         <ThemeProvider>
           {children}

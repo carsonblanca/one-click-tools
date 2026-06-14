@@ -25,11 +25,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const savedTheme = localStorage.getItem("oneclick-theme");
 
     if (savedTheme === "dark" || savedTheme === "light") {
-      setThemeState(savedTheme);
       document.documentElement.dataset.theme = savedTheme;
-    } else {
-      document.documentElement.dataset.theme = "dark";
+      const timer = window.setTimeout(() => {
+        setThemeState(savedTheme);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
+
+    document.documentElement.dataset.theme = "dark";
   }, []);
 
   const setTheme = (nextTheme: Theme) => {

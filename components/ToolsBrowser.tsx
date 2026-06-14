@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ToolCard from "./ToolCard";
 import { useTheme } from "./ThemeProvider";
 import {
@@ -42,20 +42,26 @@ export default function ToolsBrowser({
   const isLocalized = locale === "zh-cn" || locale === "zh-tw";
   const localizedCopy = isLocalized ? localizedHome[locale] : null;
 
-  const getCategoryLabel = (categoryName: string) =>
-    isLocalized ? localizedCategoryNames[locale][categoryName] || categoryName : categoryName;
+  const getCategoryLabel = useCallback(
+    (categoryName: string) =>
+      isLocalized ? localizedCategoryNames[locale][categoryName] || categoryName : categoryName,
+    [isLocalized, locale],
+  );
 
-  const getDisplayTool = (tool: Tool) => {
-    const localizedTool = isLocalized ? getLocalized3dTool(locale, tool.slug) : null;
-    const categoryName = tool.category || tool.tag;
+  const getDisplayTool = useCallback(
+    (tool: Tool) => {
+      const localizedTool = isLocalized ? getLocalized3dTool(locale, tool.slug) : null;
+      const categoryName = tool.category || tool.tag;
 
-    return {
-      name: localizedTool?.name || tool.name,
-      desc: localizedTool?.desc || tool.desc || tool.description,
-      category: localizedTool?.category || getCategoryLabel(categoryName),
-      href: localizedTool ? `/${locale}/tools/${tool.slug}` : `/tools/${tool.slug}`,
-    };
-  };
+      return {
+        name: localizedTool?.name || tool.name,
+        desc: localizedTool?.desc || tool.desc || tool.description,
+        category: localizedTool?.category || getCategoryLabel(categoryName),
+        href: localizedTool ? `/${locale}/tools/${tool.slug}` : `/tools/${tool.slug}`,
+      };
+    },
+    [getCategoryLabel, isLocalized, locale],
+  );
 
   const categoriesWithTools = categories.filter((category) =>
     tools.some((tool) => tool.categorySlug === category.slug)
@@ -86,7 +92,7 @@ export default function ToolsBrowser({
 
       return matchesSearch && matchesCategory;
     });
-  }, [tools, search, activeCategory, locale]);
+  }, [activeCategory, getDisplayTool, search, tools]);
 
   return (
     <section

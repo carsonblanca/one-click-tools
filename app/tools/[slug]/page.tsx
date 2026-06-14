@@ -1,5 +1,6 @@
 import Link from "next/link";
 import tools from "../../../data/tools.json";
+import { localized3dToolSlugs } from "../../../lib/i18n";
 import ToolPageContent from "./ToolPageContent";
 
 type Tool = {
@@ -10,7 +11,58 @@ type Tool = {
   categorySlug?: string;
   desc: string;
   description: string;
+  whatIsThis?: string | { en?: string; zh?: string };
+  howTo?: string[] | { en?: string[]; zh?: string[] };
 };
+
+function getEnglishText(content: Tool["whatIsThis"]) {
+  if (!content) {
+    return undefined;
+  }
+
+  if (typeof content === "string") {
+    return content;
+  }
+
+  return content.en;
+}
+
+function getEnglishList(content: Tool["howTo"]) {
+  if (!content) {
+    return undefined;
+  }
+
+  if (Array.isArray(content)) {
+    return content;
+  }
+
+  return content.en;
+}
+
+function getEnglishTool(tool: Tool): Tool {
+  const englishTool: Tool = {
+    name: tool.name,
+    slug: tool.slug,
+    tag: tool.tag,
+    category: tool.category,
+    categorySlug: tool.categorySlug,
+    desc: tool.desc,
+    description: tool.description,
+  };
+
+  const whatIsThis = getEnglishText(tool.whatIsThis);
+  const howTo = getEnglishList(tool.howTo);
+
+  if (whatIsThis) {
+    englishTool.whatIsThis = whatIsThis;
+  }
+
+  if (howTo) {
+    englishTool.howTo = howTo;
+  }
+
+  return englishTool;
+}
 
 export async function generateMetadata({
   params,
@@ -27,13 +79,27 @@ export async function generateMetadata({
     };
   }
 
+  const canonical = `https://one-click-tools.com/tools/${tool.slug}`;
+  const languages: Record<string, string> = {
+    en: canonical,
+  };
+
+  if (localized3dToolSlugs.includes(tool.slug)) {
+    languages["zh-CN"] = `https://one-click-tools.com/zh-cn/tools/${tool.slug}`;
+    languages["zh-TW"] = `https://one-click-tools.com/zh-tw/tools/${tool.slug}`;
+  }
+
   return {
     title: `${tool.name} Free Online Tool | OneClick Tools`,
     description: tool.description || tool.desc,
+    alternates: {
+      canonical,
+      languages,
+    },
     openGraph: {
       title: `${tool.name} Free Online Tool | OneClick Tools`,
       description: tool.description || tool.desc,
-      url: `https://one-click-tools.com/tools/${tool.slug}`,
+      url: canonical,
       siteName: "OneClick Tools",
       type: "website",
     },
@@ -85,8 +151,8 @@ export default async function ToolPage({
 
   return (
     <ToolPageContent
-      tool={tool}
-      relatedTools={finalRelatedTools}
+      tool={getEnglishTool(tool)}
+      relatedTools={finalRelatedTools.map(getEnglishTool)}
     />
   );
 }
