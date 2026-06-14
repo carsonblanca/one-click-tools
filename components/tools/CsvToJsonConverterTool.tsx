@@ -1,6 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getProcessingTimeBucket,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackResultCopy,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+} from "@/lib/analytics/tool-events";
 import {
   ToolButton,
   ToolButtonRow,
@@ -8,6 +18,13 @@ import {
   ToolResultBox,
   ToolTextarea,
 } from "../tool-ui/ToolUI";
+
+const analyticsBase = {
+  tool_slug: "csv-to-json-converter",
+  tool_category: "Developer",
+  tool_type: "file_conversion",
+  locale: "en",
+} satisfies ToolEventParams;
 
 function parseCsv(input: string) {
   const rows: string[][] = [];
@@ -107,19 +124,59 @@ export default function CsvToJsonConverterTool() {
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    trackToolView(analyticsBase);
+  }, []);
+
   const convert = () => {
+    const startedAt = performance.now();
+    trackToolStart(analyticsBase);
+    trackProcessStart({
+      ...analyticsBase,
+      input_type: "csv",
+      output_type: "json",
+      source_context: "convert",
+    });
+
     try {
       setOutput(csvToJson(input));
       setError("");
+      trackProcessSuccess({
+        ...analyticsBase,
+        input_type: "csv",
+        output_type: "json",
+        result_type: "converted_json",
+        source_context: "convert",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     } catch (caught) {
       setOutput("");
       setError(caught instanceof Error ? caught.message : "Invalid CSV.");
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "parse_error",
+        source_context: "convert",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     }
   };
 
   const copy = async () => {
     if (!output) return;
-    await navigator.clipboard.writeText(output);
+    try {
+      await navigator.clipboard.writeText(output);
+      trackResultCopy({
+        ...analyticsBase,
+        output_type: "json",
+        result_type: "converted_json",
+      });
+    } catch {
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "clipboard_error",
+        source_context: "copy_json",
+      });
+    }
   };
 
   const clear = () => {

@@ -8,6 +8,7 @@ Run these before merging feature work:
 
 ```bash
 npm run validate:tools
+npm run validate:analytics
 npm run lint
 npx tsc --noEmit --incremental false
 npm run build
@@ -128,6 +129,7 @@ Before adding a new tool:
 - Do not add fake metadata, fake components, or fake localized routes.
 - Do not collect user input, file names, image contents, cookies, credentials, or secrets in analytics events.
 - Do not modify production deployment, DNS, Vercel, Cloudflare, secrets, or environment variables as part of quality-gate work.
+- Do not add analytics events that collect file names, user input, raw URLs, raw errors, credentials, or private file content.
 
 ## HTML Lang Check Method
 

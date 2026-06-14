@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  getProcessingTimeBucket,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackResultDownload,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+} from "@/lib/analytics/tool-events";
 import { useTheme } from "../ThemeProvider";
 import {
   ToolButton,
@@ -13,6 +23,13 @@ import {
 
 const MATRIX_SIZE = 33;
 const CANVAS_SIZE = 264;
+
+const analyticsBase = {
+  tool_slug: "qr-code-generator",
+  tool_category: "Utility",
+  tool_type: "generator",
+  locale: "en",
+} satisfies ToolEventParams;
 
 function mix(value: number) {
   let next = value >>> 0;
@@ -155,26 +172,59 @@ export default function QrCodeGeneratorTool() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    trackToolView(analyticsBase);
+  }, []);
+
+  useEffect(() => {
     if (!matrix || !canvasRef.current) return;
     drawMatrix(canvasRef.current, matrix);
   }, [matrix]);
 
   const generate = () => {
+    const startedAt = performance.now();
+    trackToolStart(analyticsBase);
+
     const trimmed = input.trim();
 
     if (!trimmed) {
       setError("Enter text or a URL first.");
       setMatrix(null);
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "missing_input",
+        source_context: "generate",
+      });
       return;
     }
 
+    trackProcessStart({
+      ...analyticsBase,
+      input_type: "text",
+      output_type: "png",
+      source_context: "generate",
+    });
     setMatrix(buildVisualCode(trimmed));
     setError("");
+    trackProcessSuccess({
+      ...analyticsBase,
+      input_type: "text",
+      output_type: "png",
+      result_type: "visual_code",
+      source_context: "generate",
+      processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+    });
   };
 
   const downloadPng = () => {
+    trackToolStart(analyticsBase);
+
     if (!canvasRef.current || !matrix) {
       setError("Generate a visual code before downloading.");
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "missing_input",
+        source_context: "download_png",
+      });
       return;
     }
 
@@ -182,6 +232,11 @@ export default function QrCodeGeneratorTool() {
     link.href = canvasRef.current.toDataURL("image/png");
     link.download = "qr-like-code.png";
     link.click();
+    trackResultDownload({
+      ...analyticsBase,
+      output_type: "image/png",
+      result_type: "visual_code",
+    });
   };
 
   const clear = () => {
