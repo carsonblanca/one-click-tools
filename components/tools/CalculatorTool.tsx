@@ -22,7 +22,6 @@ export default function CalculatorTool() {
         return;
       }
 
-      // eslint-disable-next-line no-new-func
       const value = Function(`"use strict"; return (${input})`)();
       setResult(String(value));
     } catch {

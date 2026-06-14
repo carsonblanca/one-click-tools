@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import {
   ToolButton,
@@ -31,12 +31,17 @@ export default function FloatingFeedback() {
   const [error, setError] = useState("");
   const [sentNotice, setSentNotice] = useState("");
 
+  const closeDialog = useCallback(() => {
+    setIsOpen(false);
+    setError("");
+    setSentNotice("");
+  }, []);
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    setCurrentUrl(window.location.href);
     dialogRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -50,19 +55,13 @@ export default function FloatingFeedback() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [closeDialog, isOpen]);
 
   const openDialog = () => {
     setCurrentUrl(window.location.href);
     setError("");
     setSentNotice("");
     setIsOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsOpen(false);
-    setError("");
-    setSentNotice("");
   };
 
   const sendFeedback = () => {

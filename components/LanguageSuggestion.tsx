@@ -47,9 +47,15 @@ export default function LanguageSuggestion() {
 
     const detected = detectBrowserLocale(navigator.languages?.length ? navigator.languages : [navigator.language]);
 
-    if (detected === "zh-cn" || detected === "zh-tw") {
-      setSuggestedLocale(detected);
+    if (detected !== "zh-cn" && detected !== "zh-tw") {
+      return;
     }
+
+    const timer = window.setTimeout(() => {
+      setSuggestedLocale(detected);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [pathname]);
 
   const rememberChoice = (locale: Locale) => {
