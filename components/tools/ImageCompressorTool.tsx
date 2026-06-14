@@ -15,6 +15,28 @@ import {
   trackToolView,
   type ToolEventParams,
 } from "@/lib/analytics/tool-events";
+import {
+  formatImageCompressorFileSize,
+  formatImageDimensions,
+  getCompressionRateLabel,
+  getCompressionRatePercent,
+  getQualityPercent,
+  getSavedBytes,
+  isOutputSmaller,
+  isResolutionUnchanged,
+} from "@/lib/image-compressor-stats";
+import { useTheme } from "../ThemeProvider";
+
+type CompressionStats = {
+  originalBytes: number;
+  outputBytes: number;
+  originalWidth: number;
+  originalHeight: number;
+  outputWidth: number;
+  outputHeight: number;
+};
+
+type StatTone = "default" | "success" | "warning";
 
 const analyticsBase = {
   tool_slug: "image-compressor",
@@ -23,12 +45,67 @@ const analyticsBase = {
   locale: "en",
 } satisfies ToolEventParams;
 
+function CompressionStatCard({
+  label,
+  value,
+  isDark,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  isDark: boolean;
+  tone?: StatTone;
+}) {
+  const toneClass =
+    tone === "success"
+      ? isDark
+        ? "text-lime-200"
+        : "text-emerald-700"
+      : tone === "warning"
+        ? isDark
+          ? "text-amber-200"
+          : "text-amber-700"
+        : "";
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${
+        isDark
+          ? "border-white/10 bg-white/[0.04]"
+          : "border-[#E5DED0] bg-[#F5F2EA]"
+      }`}
+    >
+      <div className={isDark ? "text-sm text-white/45" : "text-sm text-[#8A8173]"}>
+        {label}
+      </div>
+      <div className={`mt-2 break-words text-2xl font-semibold ${toneClass}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
 export default function ImageCompressorTool() {
+  const { isDark } = useTheme();
   const [quality, setQuality] = useState("0.7");
-  const [originalSize, setOriginalSize] = useState("");
-  const [compressedSize, setCompressedSize] = useState("");
+  const [stats, setStats] = useState<CompressionStats | null>(null);
   const [preview, setPreview] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
+  const qualityPercent = getQualityPercent(quality);
+  const compressionRate = stats
+    ? getCompressionRatePercent(stats.originalBytes, stats.outputBytes)
+    : null;
+  const outputSmaller = stats
+    ? isOutputSmaller(stats.originalBytes, stats.outputBytes)
+    : false;
+  const resolutionUnchanged = stats ? isResolutionUnchanged(stats) : false;
+  const statusMessage = stats
+    ? outputSmaller
+      ? `File size reduced by ${compressionRate ?? 0}%, ${
+          resolutionUnchanged ? "resolution unchanged" : "resolution changed"
+        }`
+      : "The output file is not smaller. Try a lower quality setting."
+    : "Adjust quality to generate a result and see actual compression.";
 
   useEffect(() => {
     trackToolView(analyticsBase);
@@ -37,7 +114,9 @@ export default function ImageCompressorTool() {
   const compressImage = (file: File) => {
     const startedAt = performance.now();
 
-    setOriginalSize((file.size / 1024).toFixed(2) + " KB");
+    setStats(null);
+    setPreview("");
+    setDownloadUrl("");
     trackProcessStart({
       ...analyticsBase,
       input_type: getFileInputType(file),
@@ -82,11 +161,17 @@ export default function ImageCompressorTool() {
             return;
           }
 
-          setCompressedSize((blob.size / 1024).toFixed(2) + " KB");
-
           const url = URL.createObjectURL(blob);
           setPreview(url);
           setDownloadUrl(url);
+          setStats({
+            originalBytes: file.size,
+            outputBytes: blob.size,
+            originalWidth: img.width,
+            originalHeight: img.height,
+            outputWidth: canvas.width,
+            outputHeight: canvas.height,
+          });
           trackProcessSuccess({
             ...analyticsBase,
             output_type: "image/jpeg",
@@ -104,10 +189,13 @@ export default function ImageCompressorTool() {
 
   return (
     <div className="mt-8">
-      <div className="mb-4">
-        <label className="mb-2 block text-sm text-white/60">
-          Quality: {quality}
-        </label>
+      <div className="mb-5">
+        <div className="mb-3 flex items-end justify-between gap-4">
+          <label className={isDark ? "block text-sm text-white/60" : "block text-sm text-[#6B665D]"}>
+            Compression quality
+          </label>
+          <div className="text-3xl font-semibold tabular-nums">{qualityPercent}%</div>
+        </div>
 
         <input
           type="range"
@@ -144,19 +232,70 @@ export default function ImageCompressorTool() {
             compressImage(file);
           }
         }}
-        className="block w-full rounded-xl border border-white/10 bg-black/30 p-4"
+        className={`block w-full rounded-xl border p-4 ${
+          isDark
+            ? "border-white/10 bg-black/30 text-white"
+            : "border-[#E5DED0] bg-[#FFFDF7] text-[#18181B]"
+        }`}
       />
 
-      {(originalSize || compressedSize) && (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl bg-white/5 p-4">
-            <div className="text-sm text-white/50">Original Size</div>
-            <div className="mt-2 text-2xl font-bold">{originalSize}</div>
+      <div
+        className={`mt-6 rounded-2xl border p-4 text-sm ${
+          isDark
+            ? "border-white/10 bg-white/[0.04] text-white/60"
+            : "border-[#E5DED0] bg-[#FFFDF7] text-[#6B665D]"
+        } ${stats && !outputSmaller ? (isDark ? "text-amber-100" : "text-amber-700") : ""}`}
+      >
+        {statusMessage}
+      </div>
+
+      {stats && (
+        <div className="mt-6 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <CompressionStatCard
+              label="Original size"
+              value={formatImageCompressorFileSize(stats.originalBytes)}
+              isDark={isDark}
+            />
+            <CompressionStatCard
+              label="Output size"
+              value={formatImageCompressorFileSize(stats.outputBytes)}
+              isDark={isDark}
+              tone={outputSmaller ? "success" : "warning"}
+            />
+            <CompressionStatCard
+              label="Actual compression"
+              value={getCompressionRateLabel(stats.originalBytes, stats.outputBytes)}
+              isDark={isDark}
+              tone={outputSmaller ? "success" : "warning"}
+            />
+            <CompressionStatCard
+              label="Size reduced"
+              value={formatImageCompressorFileSize(
+                getSavedBytes(stats.originalBytes, stats.outputBytes),
+              )}
+              isDark={isDark}
+              tone={outputSmaller ? "success" : "warning"}
+            />
           </div>
 
-          <div className="rounded-xl bg-white/5 p-4">
-            <div className="text-sm text-white/50">Compressed Size</div>
-            <div className="mt-2 text-2xl font-bold">{compressedSize}</div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CompressionStatCard
+              label="Original dimensions"
+              value={formatImageDimensions(stats.originalWidth, stats.originalHeight)}
+              isDark={isDark}
+            />
+            <CompressionStatCard
+              label="Output dimensions"
+              value={formatImageDimensions(stats.outputWidth, stats.outputHeight)}
+              isDark={isDark}
+            />
+            <CompressionStatCard
+              label="Resolution"
+              value={resolutionUnchanged ? "Resolution unchanged" : "Resolution changed"}
+              isDark={isDark}
+              tone={resolutionUnchanged ? "success" : "warning"}
+            />
           </div>
         </div>
       )}

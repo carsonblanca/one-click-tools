@@ -9,7 +9,8 @@
     "lint": "eslint",
     "validate:tools": "node scripts/validate-tools.mjs",
     "validate:analytics": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-analytics.mjs",
-    "quality:check": "npm run validate:tools && npm run validate:analytics && npm run lint && npx tsc --noEmit --incremental false && npm run build"
+    "validate:image-compressor": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-image-compressor.mjs",
+    "quality:check": "npm run validate:tools && npm run validate:analytics && npm run validate:image-compressor && npm run lint && npx tsc --noEmit --incremental false && npm run build"
   },
   "dependencies": {
     "fflate": "^0.8.3",
