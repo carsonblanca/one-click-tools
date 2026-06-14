@@ -1,4 +1,12 @@
 export const unavailableCompressionLabel = "—";
+export const imageCompressorDebounceMs = 250;
+
+export const imageCompressorQualityPresets = [
+  { id: "high-quality", quality: "0.9", percent: 90, label: "High quality 90%" },
+  { id: "balanced", quality: "0.7", percent: 70, label: "Balanced 70%" },
+  { id: "smaller-file", quality: "0.5", percent: 50, label: "Smaller file 50%" },
+  { id: "strong-compression", quality: "0.3", percent: 30, label: "Strong compression 30%" },
+] as const;
 
 export function getQualityPercent(quality: number | string): number {
   const value = Number(quality);
@@ -6,6 +14,43 @@ export function getQualityPercent(quality: number | string): number {
   if (!Number.isFinite(value)) return 0;
 
   return Math.round(value * 100);
+}
+
+export function getQualityPresetId(quality: number | string): string | null {
+  const value = Number(quality);
+
+  if (!Number.isFinite(value)) return null;
+
+  const preset = imageCompressorQualityPresets.find(
+    (candidate) => Math.abs(Number(candidate.quality) - value) < 0.000001,
+  );
+
+  return preset?.id || null;
+}
+
+export function getLatestDebouncedQuality<T>(values: readonly T[]): T | null {
+  return values.length > 0 ? values[values.length - 1] : null;
+}
+
+export function isLatestCompressionRequest(
+  requestId: number,
+  latestRequestId: number,
+): boolean {
+  return requestId === latestRequestId;
+}
+
+export function getProcessingStateAfterRequestSettles({
+  currentProcessing,
+  requestId,
+  latestRequestId,
+}: {
+  currentProcessing: boolean;
+  requestId: number;
+  latestRequestId: number;
+}): boolean {
+  return isLatestCompressionRequest(requestId, latestRequestId)
+    ? false
+    : currentProcessing;
 }
 
 export function getSavedBytes(originalBytes: number, outputBytes: number): number {
