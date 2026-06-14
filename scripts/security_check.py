@@ -132,6 +132,10 @@ def read_text(path: Path) -> str:
         return ""
 
 
+def any_repo_path_exists(root: Path, candidates: list[str]) -> bool:
+    return any((root / candidate).exists() for candidate in candidates)
+
+
 def scan_sensitive_strings(root: Path, files: list[Path]) -> list[dict[str, str]]:
     matches: list[dict[str, str]] = []
 
@@ -265,9 +269,18 @@ def run_security_check(root: Optional[Path] = None) -> dict[str, Any]:
         add_issue(issues, "High", f"Sensitive string scan found {len(sensitive_matches)} possible match(es).")
 
     required_pages = {
-        "app/privacy/page.tsx": (root / "app/privacy/page.tsx").exists(),
-        "app/terms/page.tsx": (root / "app/terms/page.tsx").exists(),
-        "app/contact/page.tsx": (root / "app/contact/page.tsx").exists(),
+        "app/privacy/page.tsx": any_repo_path_exists(root, [
+            "app/privacy/page.tsx",
+            "app/(en)/privacy/page.tsx",
+        ]),
+        "app/terms/page.tsx": any_repo_path_exists(root, [
+            "app/terms/page.tsx",
+            "app/(en)/terms/page.tsx",
+        ]),
+        "app/contact/page.tsx": any_repo_path_exists(root, [
+            "app/contact/page.tsx",
+            "app/(en)/contact/page.tsx",
+        ]),
     }
 
     for path, exists in required_pages.items():

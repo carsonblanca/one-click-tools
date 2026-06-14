@@ -45,6 +45,12 @@ REQUIRED_ROUTES = [
     "app/terms/page.tsx",
     "app/contact/page.tsx",
 ]
+ROUTE_CANDIDATES = {
+    "app/about/page.tsx": ["app/about/page.tsx", "app/(en)/about/page.tsx"],
+    "app/privacy/page.tsx": ["app/privacy/page.tsx", "app/(en)/privacy/page.tsx"],
+    "app/terms/page.tsx": ["app/terms/page.tsx", "app/(en)/terms/page.tsx"],
+    "app/contact/page.tsx": ["app/contact/page.tsx", "app/(en)/contact/page.tsx"],
+}
 REQUIRED_SUPPORT_FILES = [
     "app/sitemap.ts",
     "app/robots.ts",
@@ -54,7 +60,7 @@ REQUIRED_SUPPORT_FILES = [
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 REGISTRATION_PATTERN = re.compile(r'slug === "([^"]+)"')
 IMPORT_PATTERN = re.compile(
-    r'import\s+\w+\s+from\s+"../../../components/tools/([^"]+)"'
+    r'import\s+\w+\s+from\s+"(?:@/components/tools/|\.\./\.\./\.\./(?:\.\./)?components/tools/)([^"]+)"'
 )
 EMAIL_ENV_KEYS = [
     "REPORT_EMAIL_TO",
@@ -99,6 +105,10 @@ def read_text(path: Path, issues: list[Issue], required: bool = True) -> str:
         if required:
             issues.append(Issue("High", f"Missing required file: {path}"))
     return ""
+
+
+def any_repo_path_exists(root: Path, candidates: list[str]) -> bool:
+    return any((root / candidate).exists() for candidate in candidates)
 
 
 def run_build(root: Path) -> tuple[bool, str]:
@@ -164,7 +174,7 @@ def check_tools(root: Path, issues: list[Issue]) -> dict[str, Any]:
 
 
 def check_registry(root: Path, tools: list[dict[str, Any]], issues: list[Issue]) -> dict[str, Any]:
-    tool_client_path = root / "app/tools/[slug]/tool-client.tsx"
+    tool_client_path = root / "app/(en)/tools/[slug]/tool-client.tsx"
     tool_client = read_text(tool_client_path, issues)
     registered_slugs = REGISTRATION_PATTERN.findall(tool_client)
     metadata_slugs = [tool["slug"] for tool in tools if isinstance(tool, dict) and tool.get("slug")]
@@ -216,7 +226,10 @@ def check_routes(root: Path, issues: list[Issue]) -> dict[str, bool]:
     results: dict[str, bool] = {}
 
     for relative_path in [*REQUIRED_ROUTES, *REQUIRED_SUPPORT_FILES]:
-        exists = (root / relative_path).exists()
+        exists = any_repo_path_exists(
+            root,
+            ROUTE_CANDIDATES.get(relative_path, [relative_path]),
+        )
         results[relative_path] = exists
         if not exists:
             issues.append(Issue("High", f"Missing required route/support file: {relative_path}"))
@@ -362,7 +375,7 @@ def build_report(
     if not build_ok:
         next_actions.append("Investigate and fix the webpack production build failure.")
     if registry_summary["missing_registrations"]:
-        next_actions.append("Register missing tool slugs in app/tools/[slug]/tool-client.tsx.")
+        next_actions.append("Register missing tool slugs in app/(en)/tools/[slug]/tool-client.tsx.")
     if tools_summary["duplicate_slugs"] or tools_summary["invalid_slugs"]:
         next_actions.append("Normalize or de-duplicate tool slugs in data/tools.json.")
     if tools_summary["missing_fields"]:

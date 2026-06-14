@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import ToolClient from "../app/tools/[slug]/tool-client";
+import ToolClient from "../app/(en)/tools/[slug]/tool-client";
 import type { ChineseLocale, LocalizedTool } from "../lib/localizedContent";
 import { getLocalized3dTools } from "../lib/localizedContent";
 import PageShell from "./PageShell";

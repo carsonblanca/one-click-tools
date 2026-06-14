@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const toolsPath = path.join(root, "data/tools.json");
-const toolClientPath = path.join(root, "app/tools/[slug]/tool-client.tsx");
+const toolClientPath = path.join(root, "app/(en)/tools/[slug]/tool-client.tsx");
 const localizedContentPath = path.join(root, "lib/localizedContent.ts");
 
 const requiredFields = [
@@ -71,7 +71,7 @@ function parseToolClient() {
   const source = readText(toolClientPath);
   const importMap = new Map();
   const imports = source.matchAll(
-    /import\s+(\w+)\s+from\s+"\.\.\/\.\.\/\.\.\/components\/tools\/([^"]+)";/g,
+    /import\s+(\w+)\s+from\s+"(?:@\/components\/tools\/|\.\.\/\.\.\/\.\.\/(?:\.\.\/)?components\/tools\/)([^"]+)";/g,
   );
 
   for (const match of imports) {
