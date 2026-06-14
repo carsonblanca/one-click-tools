@@ -1,115 +1,209 @@
-# Analytics Specification Draft
+# Analytics Specification
 
 Date: 2026-06-14
 
 ## Current Implementation
 
-`components/analytics.ts` provides a safe `trackEvent(eventName, params)` wrapper for optional `window.gtag` and optional Vercel Analytics `window.va`. It strips `null` and `undefined` values and catches analytics failures.
+Unified tool analytics lives in `lib/analytics/tool-events.ts`.
 
-Current explicit event usage exists only in `components/tools/PixelKnockBoardGeneratorTool.tsx`:
+`trackToolEvent()` sends sanitized events to two optional browser-side channels:
 
-- `upload_image`
-- `generate_preview`
-- `download_project_zip`
-- `download_stl_grid`
-- `download_png_preview`
-- `download_color_csv`
-- `switch_language`
-- `toggle_show_color_numbers`
+- `window.gtag("event", eventName, params)` when Google Analytics / gtag is present.
+- `window.va("event", { name, data })` when Vercel Analytics exposes `window.va`.
+
+If neither channel exists, the function returns silently. If either channel throws, the error is caught so analytics never blocks a tool workflow.
+
+The older `components/analytics.ts` helper still exists as a generic wrapper, but the current pilot tools use the unified helper directly.
+
+## Event Names
+
+Allowed event names:
+
+- `tool_view`
+- `tool_start`
+- `file_selected`
+- `process_start`
+- `process_success`
+- `process_error`
+- `result_download`
+- `result_copy`
+- `parameter_change`
+- `mode_change`
+- `language_change`
+- `share_click`
+- `upgrade_click`
+
+Unknown event names are rejected by the sanitizer.
+
+## Event Semantics
+
+- `tool_view`: the tool interaction component first becomes available in the browser.
+- `tool_start`: the user takes the first clear action in a tool.
+- `file_selected`: the user selects a valid local file.
+- `process_start`: processing, validation, conversion, calculation, or generation begins.
+- `process_success`: a usable result is produced.
+- `process_error`: processing fails or cannot begin.
+- `result_download`: the user starts a successful download action.
+- `result_copy`: the user copies a result.
+- `parameter_change`: the user changes a meaningful result-affecting parameter.
+- `mode_change`: the user switches a main processing mode.
+- `language_change`: the user changes the tool UI language.
+- `share_click`: reserved for share actions.
+- `upgrade_click`: reserved for future paid, batch, API, or pro entry points.
+
+Page load is not `tool_start`. Focus alone is not `tool_start`. Parameter initialization must not emit `parameter_change`.
+
+## Parameter Dictionary
+
+Base parameters:
+
+- `tool_slug`: required for every event.
+- `tool_category`: category from the tool inventory.
+- `tool_type`: one of the centralized tool type values.
+- `locale`: `en`, `zh-cn`, or `zh-tw`.
+- `event_version`: always `1`.
+
+Optional safe parameters:
+
+- `input_type`
+- `output_type`
+- `file_size_bucket`
+- `file_count_bucket`
+- `processing_time_bucket`
+- `error_code`
+- `result_type`
+- `source_context`
+- `mode`
+- `previous_mode`
+- `parameter_name`
+- `from_locale`
+- `to_locale`
+- `share_target`
+- `placement`
+- `plan`
+- `available`
+- `success`
+
+Unknown parameters are removed before sending.
+
+## Tool Types
+
+Allowed tool types:
+
+- `file_conversion`
+- `image_processing`
+- `text_processing`
+- `developer_validation`
+- `generator`
+- `calculator`
+- `professional_workflow`
+
+## Error Codes
+
+Allowed error codes:
+
+- `missing_input`
+- `invalid_input`
+- `parse_error`
+- `unsupported_file_type`
+- `file_too_large`
+- `canvas_error`
+- `download_error`
+- `clipboard_error`
+- `unknown_error`
+
+Do not send raw exception messages, stack traces, file names, or user input.
+
+## Bucket Rules
+
+File size:
+
+- `0-100kb`
+- `100kb-1mb`
+- `1mb-5mb`
+- `5mb-20mb`
+- `20mb-plus`
+
+File count:
+
+- `1`
+- `2-5`
+- `6-20`
+- `21-plus`
+
+Processing time:
+
+- `0-100ms`
+- `100-500ms`
+- `500ms-2s`
+- `2s-10s`
+- `10s-plus`
 
 ## Privacy Boundaries
 
 Never collect:
 
-- User uploaded file content.
 - File names or paths.
-- Image pixels, thumbnails, text input, pasted content, URLs entered by users, tokens, or decoded payloads.
-- Cookies, credentials, API keys, auth headers, or localStorage contents other than a coarse language preference state.
-- Email address entered in feedback forms.
-- Any value that can reasonably identify a person.
+- File contents.
+- Image pixels or thumbnails.
+- Text input, JSON, CSV, JWT, QR payloads, URLs entered by users, or decoded content.
+- STL, OBJ, or other model content.
+- Cookies, tokens, credentials, API keys, emails, phone numbers, addresses, or personal identifiers.
+- Full URL query strings that may contain private data.
 
-Allowed non-sensitive parameters:
+Allowed:
 
-- `tool_slug`
-- `category`
-- `locale`
-- `mode`
-- `success`
-- `error_code`
-- `duration_ms`
-- `file_type` as MIME family or extension only, not name.
-- `file_size_bucket` such as `<100KB`, `100KB-1MB`, `1-5MB`, `5-20MB`, `>20MB`.
-- Output type such as `png`, `stl`, `csv`, `json`.
-- Numeric configuration values only when they are not user content, for example grid width or selected unit.
+- Tool slug.
+- Tool type and category.
+- Page locale.
+- File MIME type or broad input type.
+- File size bucket.
+- File count bucket.
+- Processing time bucket.
+- Fixed error code.
+- Output/result type.
 
-## Standard Events
+## Duplicate Control
 
-| Event | When | Required Params | Optional Params |
-| --- | --- | --- | --- |
-| `tool_view` | Tool page becomes visible. | `tool_slug`, `category`, `locale` | `source`, `referrer_type` |
-| `tool_start` | User first interacts with a tool. | `tool_slug`, `category`, `locale` | `mode` |
-| `file_selected` | User selects a local file. | `tool_slug`, `category`, `locale`, `file_type`, `file_size_bucket` | `file_count` |
-| `process_start` | User starts conversion/calculation/preview. | `tool_slug`, `category`, `locale`, `mode` | `input_unit`, `output_unit` |
-| `process_success` | Tool completes successfully. | `tool_slug`, `category`, `locale`, `mode`, `duration_ms` | `output_type`, `result_count`, `color_count` |
-| `process_error` | Tool fails validation or processing. | `tool_slug`, `category`, `locale`, `mode`, `error_code` | `duration_ms`, `step` |
-| `result_download` | User downloads a generated result. | `tool_slug`, `category`, `locale`, `output_type` | `result_count`, `duration_ms` |
-| `result_copy` | User copies a result. | `tool_slug`, `category`, `locale`, `output_type` | `result_count` |
-| `language_change` | User changes language. | `from_locale`, `to_locale`, `path_type` | `tool_slug`, `available` |
-| `mode_change` | User changes a tool mode or option set. | `tool_slug`, `category`, `locale`, `mode` | `previous_mode` |
-| `share_click` | User clicks a share action. | `tool_slug`, `category`, `locale`, `share_target` | none |
-| `upgrade_click` | User clicks future upgrade/paywall CTA. | `tool_slug`, `category`, `locale`, `placement` | `plan` |
+`tool_view` and `tool_start` are de-duplicated in browser memory by event name, slug, locale, and source context. Other events are action-based and should be emitted only in direct response to user actions or completed processing.
 
-## Naming Rules
+Pixel Knock has been migrated away from legacy event names. The pilot does not intentionally send both old and new events.
 
-- Use snake_case for event names and params.
-- Use `tool_slug`, not `tool`, for consistency.
-- Use `locale` values: `en`, `zh-cn`, `zh-tw`.
-- Use stable `error_code` values, not raw exception messages.
-- Avoid event names tied to one tool unless the action is truly tool-specific.
-- Do not fire both old and new event names after migration; alias only in reporting if needed.
+## Validation
 
-## Suggested Error Codes
+Run:
 
-| Code | Meaning |
-| --- | --- |
-| `missing_input` | User attempted to run with no input. |
-| `invalid_input` | Input failed validation. |
-| `parse_error` | JSON/XML/YAML/CSV parsing failed. |
-| `unsupported_file_type` | File MIME/extension is unsupported. |
-| `file_too_large` | File exceeds configured local limit. |
-| `canvas_error` | Browser canvas operation failed. |
-| `download_error` | Blob or download creation failed. |
-| `unknown_error` | Fallback for unexpected failures. |
+```bash
+npm run validate:analytics
+```
 
-## Weekly Metrics
+The validator checks:
 
-- Tool views by category and locale.
-- Tool start rate: `tool_start / tool_view`.
-- Completion rate: `process_success / process_start`.
-- Error rate by tool and error code.
-- Download/copy conversion by tool.
-- Language switching demand and unsupported-localized-tool attempts.
-- Top tools with high starts but low success.
+- Event names match the allowed dictionary.
+- Unknown parameters are removed.
+- File names and user-content-like keys are removed.
+- Long strings are capped.
+- File size, file count, and processing time buckets map correctly.
+- Missing `tool_slug` rejects the event.
+- Missing `gtag` and `va` does not throw.
+- Each pilot tool contains a `tool_view` integration.
+- Pixel Knock no longer contains old event names.
 
-## 30-Day Review
+## Pilot Scope
 
-- Identify top 10 tools by views and by successful completions.
-- Identify tools with the highest error rate.
-- Compare English vs Chinese engagement for localized tools.
-- Decide which tools deserve custom SEO copy and language QA next.
-- Check if any event emits too many distinct parameter values.
+The pilot covers:
 
-## 90-Day Review
+- `pixel-knock-board-generator`
+- `image-compressor`
+- `image-resizer`
+- `png-to-webp`
+- `json-formatter`
+- `json-validator`
+- `csv-to-json-converter`
+- `qr-code-generator`
+- `percentage-calculator`
+- `build-plate-fit-calculator`
 
-- Retire or redesign tools with persistent low usage and high errors.
-- Prioritize localization based on real demand.
-- Add funnel tracking for future monetization only after privacy review.
-- Revisit file-size buckets and duration buckets for usefulness.
-- Audit analytics implementation for duplicate events.
+## Production Verification Limits
 
-## First Migration Slice
-
-1. Keep existing Pixel Knock events but map them into the standard model in reporting.
-2. Add shared helpers: `trackToolView`, `trackProcessStart`, `trackProcessSuccess`, `trackProcessError`, `trackDownload`, `trackCopy`.
-3. Wire five priority tools: Pixel Knock, JSON Formatter, Image Compressor, CSV to JSON, Build Plate Fit Calculator.
-4. Add tests for the sanitizer to prove private fields are not accepted.
+Code-level validation proves that calls are sanitized and sent to available browser analytics APIs. It does not prove that GA4 or Vercel Analytics received, accepted, processed, or displayed the events in production dashboards. That requires deployment, real browser traffic, and dashboard confirmation.

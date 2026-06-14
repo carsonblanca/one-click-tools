@@ -3,7 +3,23 @@
 import { strToU8, zipSync } from "fflate";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "../../lib/i18n";
-import { trackEvent } from "../analytics";
+import {
+  getFileInputType,
+  getFileSizeBucket,
+  getProcessingTimeBucket,
+  trackFileSelected,
+  trackLanguageChange,
+  trackModeChange,
+  trackParameterChange,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackResultDownload,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+  type ToolLocale,
+} from "@/lib/analytics/tool-events";
 import { useTheme } from "../ThemeProvider";
 import {
   ToolButton,
@@ -30,6 +46,12 @@ type Language = "en" | "zh";
 type PixelKnockBoardGeneratorToolProps = {
   locale?: Locale;
 };
+
+const pixelKnockAnalyticsBase = {
+  tool_slug: "pixel-knock-board-generator",
+  tool_category: "3D Printing",
+  tool_type: "professional_workflow",
+} satisfies Pick<ToolEventParams, "tool_slug" | "tool_category" | "tool_type">;
 
 type CropMode = "tight" | "center" | "original";
 
@@ -1757,6 +1779,22 @@ function buildReadme(
   ].join("\n");
 }
 
+function getAnalyticsLocale(locale: Locale | undefined): ToolLocale {
+  if (locale === "zh-cn" || locale === "zh-tw") {
+    return locale;
+  }
+
+  return "en";
+}
+
+function getLanguageEventLocale(language: Language, pageLocale: ToolLocale): ToolLocale {
+  if (language === "en") {
+    return "en";
+  }
+
+  return pageLocale === "zh-tw" ? "zh-tw" : "zh-cn";
+}
+
 export default function PixelKnockBoardGeneratorTool({
   locale = "en",
 }: PixelKnockBoardGeneratorToolProps) {
@@ -1793,6 +1831,11 @@ export default function PixelKnockBoardGeneratorTool({
   const [previewMode, setPreviewMode] = useState<PreviewMode>("compare");
   const [showColorNumbers, setShowColorNumbers] = useState(false);
   const [error, setError] = useState("");
+  const analyticsLocale = getAnalyticsLocale(locale);
+  const toolAnalytics = {
+    ...pixelKnockAnalyticsBase,
+    locale: analyticsLocale,
+  } satisfies ToolEventParams;
 
   const t = copy[language];
 
@@ -1842,26 +1885,11 @@ export default function PixelKnockBoardGeneratorTool({
     totalPlates: totalEstimatedPlates,
   };
 
-  const getAnalyticsParams = (targetGrid = grid, extra: Record<string, string | number | boolean | undefined> = {}) => ({
-    tool: "pixel-knock-board-generator",
-    gridWidth: targetGrid?.width,
-    gridHeight: targetGrid?.height,
-    colorCount: targetGrid?.colors.length,
-    activeBlocks: targetGrid?.activeCells,
-    lang: language,
-    printerPreset: printerModelId,
-    printerBrand: selectedPrinterBrand.brand,
-    printerModel: selectedPrinterModel.name,
-    printerPresetPending: Boolean(selectedPrinterModel.pending),
-    bedWidth: parsedBedWidth,
-    bedDepth: parsedBedDepth,
-    colorSimplification: params.colorSimplification,
-    mergeSimilarColors: params.mergeSimilarColors,
-    maxColors: params.maxColors,
-    finalColorCount: targetGrid?.colors.length,
-    ...extra,
-  });
   const parsedPaddingCells = parseNumber(paddingCells, 2, 0, 8);
+
+  useEffect(() => {
+    trackToolView(toolAnalytics);
+  }, [toolAnalytics]);
 
   useEffect(() => {
     return () => {
@@ -1894,6 +1922,12 @@ export default function PixelKnockBoardGeneratorTool({
   };
 
   const handlePrinterBrandChange = (brand: string) => {
+    trackToolStart(toolAnalytics);
+    trackParameterChange({
+      ...toolAnalytics,
+      parameter_name: "printer_brand",
+      source_context: "bed_fit",
+    });
     const nextBrand = getPrinterBrand(brand);
     const nextModel = nextBrand.models[0];
 
@@ -1904,6 +1938,12 @@ export default function PixelKnockBoardGeneratorTool({
   };
 
   const handlePrinterModelChange = (modelId: string) => {
+    trackToolStart(toolAnalytics);
+    trackParameterChange({
+      ...toolAnalytics,
+      parameter_name: "printer_model",
+      source_context: "bed_fit",
+    });
     const { brand, model } = getPrinterModelById(modelId);
 
     setPrinterBrand(brand.brand);
@@ -1913,11 +1953,25 @@ export default function PixelKnockBoardGeneratorTool({
   };
 
   const processCurrentImage = (image = imageElement) => {
+    trackToolStart(toolAnalytics);
+
     if (!image) {
       setGrid(null);
       setError(t.errors.uploadFirst);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "missing_input",
+        source_context: "manual_preview",
+      });
       return;
     }
+
+    trackProcessStart({
+      ...toolAnalytics,
+      input_type: "image",
+      output_type: "pixel_grid",
+      source_context: "manual_preview",
+    });
 
     try {
       const nextGrid = prepareGridForOutput(
@@ -1929,20 +1983,38 @@ export default function PixelKnockBoardGeneratorTool({
       if (!nextGrid) {
         setGrid(null);
         setError(t.errors.noVisiblePixels);
+        trackProcessError({
+          ...toolAnalytics,
+          error_code: "invalid_input",
+          source_context: "manual_preview",
+        });
         return;
       }
 
       setGrid(nextGrid);
       setError("");
-      trackEvent("generate_preview", getAnalyticsParams(nextGrid));
+      trackProcessSuccess({
+        ...toolAnalytics,
+        input_type: "image",
+        output_type: "pixel_grid",
+        result_type: "pixel_knock_preview",
+        source_context: "manual_preview",
+      });
     } catch {
       setGrid(null);
       setError(t.errors.couldNotProcess);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "canvas_error",
+        source_context: "manual_preview",
+      });
     }
   };
 
   const handleFileChange = (file: File | null) => {
     if (!file) return;
+
+    trackToolStart(toolAnalytics);
 
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
       setImageElement(null);
@@ -1950,8 +2022,21 @@ export default function PixelKnockBoardGeneratorTool({
       setFileName("");
       setOriginalPreviewUrl("");
       setError(t.errors.invalidFile);
+      trackProcessError({
+        ...toolAnalytics,
+        input_type: getFileInputType(file),
+        error_code: "unsupported_file_type",
+        source_context: "file_upload",
+      });
       return;
     }
+
+    trackFileSelected({
+      ...toolAnalytics,
+      input_type: getFileInputType(file),
+      file_size_bucket: getFileSizeBucket(file.size),
+      file_count_bucket: "1",
+    });
 
     const url = URL.createObjectURL(file);
     const image = new Image();
@@ -1963,6 +2048,14 @@ export default function PixelKnockBoardGeneratorTool({
       setImageElement(image);
       setError("");
 
+      const startedAt = performance.now();
+      trackProcessStart({
+        ...toolAnalytics,
+        input_type: getFileInputType(file),
+        output_type: "pixel_grid",
+        source_context: "auto_preview",
+      });
+
       try {
         const nextGrid = prepareGridForOutput(
           processImageToGrid(image, params),
@@ -1973,14 +2066,33 @@ export default function PixelKnockBoardGeneratorTool({
         if (!nextGrid) {
           setGrid(null);
           setError(t.errors.noVisiblePixels);
+          trackProcessError({
+            ...toolAnalytics,
+            error_code: "invalid_input",
+            source_context: "auto_preview",
+            processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+          });
           return;
         }
 
         setGrid(nextGrid);
-        trackEvent("upload_image", getAnalyticsParams(nextGrid));
+        trackProcessSuccess({
+          ...toolAnalytics,
+          input_type: getFileInputType(file),
+          output_type: "pixel_grid",
+          result_type: "pixel_knock_preview",
+          source_context: "auto_preview",
+          processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+        });
       } catch {
         setGrid(null);
         setError(t.errors.couldNotProcess);
+        trackProcessError({
+          ...toolAnalytics,
+          error_code: "canvas_error",
+          source_context: "auto_preview",
+          processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+        });
       }
     };
     image.onerror = () => {
@@ -1988,6 +2100,11 @@ export default function PixelKnockBoardGeneratorTool({
       setImageElement(null);
       setGrid(null);
       setError(t.errors.couldNotLoad);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "invalid_input",
+        source_context: "file_load",
+      });
     };
     image.src = url;
   };
@@ -2006,16 +2123,27 @@ export default function PixelKnockBoardGeneratorTool({
   };
 
   const downloadPreview = () => {
+    trackToolStart(toolAnalytics);
     const previewCanvas = getPreviewCanvas();
 
     if (!previewCanvas || !grid) {
       setError(t.errors.previewFirst);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "missing_input",
+        source_context: "download_png",
+      });
       return;
     }
 
     previewCanvas.toBlob((blob) => {
       if (!blob) {
         setError(t.errors.couldNotCreatePng);
+        trackProcessError({
+          ...toolAnalytics,
+          error_code: "download_error",
+          source_context: "download_png",
+        });
         return;
       }
 
@@ -2026,13 +2154,23 @@ export default function PixelKnockBoardGeneratorTool({
       link.download = "pixel-knock-preview.png";
       link.click();
       URL.revokeObjectURL(url);
-      trackEvent("download_png_preview", getAnalyticsParams());
+      trackResultDownload({
+        ...toolAnalytics,
+        output_type: "image/png",
+        result_type: "pixel_knock_preview",
+      });
     }, "image/png");
   };
 
   const downloadStl = () => {
+    trackToolStart(toolAnalytics);
     if (!grid || grid.activeCells === 0) {
       setError(t.errors.stlFirst);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "missing_input",
+        source_context: "download_stl",
+      });
       return;
     }
 
@@ -2041,12 +2179,22 @@ export default function PixelKnockBoardGeneratorTool({
       "pixel-knock-grid.stl",
       "model/stl",
     );
-    trackEvent("download_stl_grid", getAnalyticsParams());
+    trackResultDownload({
+      ...toolAnalytics,
+      output_type: "stl",
+      result_type: "grid_frame",
+    });
   };
 
   const downloadCsv = () => {
+    trackToolStart(toolAnalytics);
     if (!grid || grid.activeCells === 0) {
       setError(t.errors.stlFirst);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "missing_input",
+        source_context: "download_csv",
+      });
       return;
     }
 
@@ -2055,14 +2203,24 @@ export default function PixelKnockBoardGeneratorTool({
       "pixel-knock-color-list.csv",
       "text/csv;charset=utf-8",
     );
-    trackEvent("download_color_csv", getAnalyticsParams());
+    trackResultDownload({
+      ...toolAnalytics,
+      output_type: "csv",
+      result_type: "color_list",
+    });
   };
 
   const downloadProjectZip = async () => {
+    trackToolStart(toolAnalytics);
     const previewCanvas = getPreviewCanvas();
 
     if (!grid || grid.activeCells === 0 || grid.colors.length === 0 || !previewCanvas) {
       setError(t.errors.stlFirst);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "missing_input",
+        source_context: "download_zip",
+      });
       return;
     }
 
@@ -2070,11 +2228,21 @@ export default function PixelKnockBoardGeneratorTool({
 
     if (blockSizeMm <= 0) {
       setError(t.errors.blockSizeInvalid);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "invalid_input",
+        source_context: "download_zip",
+      });
       return;
     }
 
     if (parsedBedWidth <= 0 || parsedBedDepth <= 0) {
       setError(t.errors.bedSizeInvalid);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "invalid_input",
+        source_context: "download_zip",
+      });
       return;
     }
 
@@ -2100,9 +2268,18 @@ export default function PixelKnockBoardGeneratorTool({
         "application/zip",
       );
       setError("");
-      trackEvent("download_project_zip", getAnalyticsParams());
+      trackResultDownload({
+        ...toolAnalytics,
+        output_type: "zip",
+        result_type: "project_package",
+      });
     } catch {
       setError(t.errors.couldNotCreateZip);
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "download_error",
+        source_context: "download_zip",
+      });
     }
   };
 
@@ -2132,8 +2309,16 @@ export default function PixelKnockBoardGeneratorTool({
           <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap [&_button]:min-h-12 [&_button]:w-full sm:[&_button]:w-auto">
             <ToolButton
               onClick={() => {
+                trackToolStart(toolAnalytics);
+                if (language !== "en") {
+                  trackLanguageChange({
+                    ...toolAnalytics,
+                    from_locale: getLanguageEventLocale(language, analyticsLocale),
+                    to_locale: "en",
+                    source_context: "pixel_knock_internal_language",
+                  });
+                }
                 setLanguage("en");
-                trackEvent("switch_language", getAnalyticsParams(grid, { lang: "en" }));
               }}
               variant={language === "en" ? "primary" : "secondary"}
             >
@@ -2141,8 +2326,16 @@ export default function PixelKnockBoardGeneratorTool({
             </ToolButton>
             <ToolButton
               onClick={() => {
+                trackToolStart(toolAnalytics);
+                if (language !== "zh") {
+                  trackLanguageChange({
+                    ...toolAnalytics,
+                    from_locale: getLanguageEventLocale(language, analyticsLocale),
+                    to_locale: getLanguageEventLocale("zh", analyticsLocale),
+                    source_context: "pixel_knock_internal_language",
+                  });
+                }
                 setLanguage("zh");
-                trackEvent("switch_language", getAnalyticsParams(grid, { lang: "zh" }));
               }}
               variant={language === "zh" ? "primary" : "secondary"}
             >
@@ -2211,19 +2404,46 @@ export default function PixelKnockBoardGeneratorTool({
           <ToolLabel>{t.colorSimplification}</ToolLabel>
           <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 [&_button]:min-h-12 [&_button]:w-full">
             <ToolButton
-              onClick={() => setColorSimplification("strong")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackParameterChange({
+                  ...toolAnalytics,
+                  parameter_name: "color_simplification",
+                  mode: "strong",
+                  source_context: "color_controls",
+                });
+                setColorSimplification("strong");
+              }}
               variant={colorSimplification === "strong" ? "primary" : "secondary"}
             >
               {t.simplificationStrong}
             </ToolButton>
             <ToolButton
-              onClick={() => setColorSimplification("standard")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackParameterChange({
+                  ...toolAnalytics,
+                  parameter_name: "color_simplification",
+                  mode: "standard",
+                  source_context: "color_controls",
+                });
+                setColorSimplification("standard");
+              }}
               variant={colorSimplification === "standard" ? "primary" : "secondary"}
             >
               {t.simplificationStandard}
             </ToolButton>
             <ToolButton
-              onClick={() => setColorSimplification("detailed")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackParameterChange({
+                  ...toolAnalytics,
+                  parameter_name: "color_simplification",
+                  mode: "detailed",
+                  source_context: "color_controls",
+                });
+                setColorSimplification("detailed");
+              }}
               variant={colorSimplification === "detailed" ? "primary" : "secondary"}
             >
               {t.simplificationDetailed}
@@ -2248,19 +2468,46 @@ export default function PixelKnockBoardGeneratorTool({
           <ToolLabel>{t.cropMode}</ToolLabel>
           <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 [&_button]:min-h-12 [&_button]:w-full">
             <ToolButton
-              onClick={() => setCropMode("tight")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackModeChange({
+                  ...toolAnalytics,
+                  mode: "tight",
+                  previous_mode: cropMode,
+                  source_context: "crop_mode",
+                });
+                setCropMode("tight");
+              }}
               variant={cropMode === "tight" ? "primary" : "secondary"}
             >
               {t.cropModeTight}
             </ToolButton>
             <ToolButton
-              onClick={() => setCropMode("center")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackModeChange({
+                  ...toolAnalytics,
+                  mode: "center",
+                  previous_mode: cropMode,
+                  source_context: "crop_mode",
+                });
+                setCropMode("center");
+              }}
               variant={cropMode === "center" ? "primary" : "secondary"}
             >
               {t.cropModeCenter}
             </ToolButton>
             <ToolButton
-              onClick={() => setCropMode("original")}
+              onClick={() => {
+                trackToolStart(toolAnalytics);
+                trackModeChange({
+                  ...toolAnalytics,
+                  mode: "original",
+                  previous_mode: cropMode,
+                  source_context: "crop_mode",
+                });
+                setCropMode("original");
+              }}
               variant={cropMode === "original" ? "primary" : "secondary"}
             >
               {t.cropModeOriginal}
@@ -2398,10 +2645,13 @@ export default function PixelKnockBoardGeneratorTool({
           checked={showColorNumbers}
           onChange={(checked) => {
             setShowColorNumbers(checked);
-            trackEvent(
-              "toggle_show_color_numbers",
-              getAnalyticsParams(grid, { enabled: checked }),
-            );
+            trackToolStart(toolAnalytics);
+            trackParameterChange({
+              ...toolAnalytics,
+              parameter_name: "show_color_numbers",
+              mode: checked ? "enabled" : "disabled",
+              source_context: "preview_options",
+            });
           }}
         >
           {t.showColorNumbers}
@@ -2572,19 +2822,46 @@ export default function PixelKnockBoardGeneratorTool({
                 </p>
                 <div className="grid w-full max-w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto [&_button]:min-h-10 [&_button]:w-full">
                   <ToolButton
-                    onClick={() => setPreviewMode("compare")}
+                    onClick={() => {
+                      trackToolStart(toolAnalytics);
+                      trackModeChange({
+                        ...toolAnalytics,
+                        mode: "compare",
+                        previous_mode: previewMode,
+                        source_context: "preview_mode",
+                      });
+                      setPreviewMode("compare");
+                    }}
                     variant={previewMode === "compare" ? "primary" : "secondary"}
                   >
                     {t.previewModeCompare}
                   </ToolButton>
                   <ToolButton
-                    onClick={() => setPreviewMode("original")}
+                    onClick={() => {
+                      trackToolStart(toolAnalytics);
+                      trackModeChange({
+                        ...toolAnalytics,
+                        mode: "original",
+                        previous_mode: previewMode,
+                        source_context: "preview_mode",
+                      });
+                      setPreviewMode("original");
+                    }}
                     variant={previewMode === "original" ? "primary" : "secondary"}
                   >
                     {t.previewModeOriginal}
                   </ToolButton>
                   <ToolButton
-                    onClick={() => setPreviewMode("pixel")}
+                    onClick={() => {
+                      trackToolStart(toolAnalytics);
+                      trackModeChange({
+                        ...toolAnalytics,
+                        mode: "pixel",
+                        previous_mode: previewMode,
+                        source_context: "preview_mode",
+                      });
+                      setPreviewMode("pixel");
+                    }}
                     variant={previewMode === "pixel" ? "primary" : "secondary"}
                   >
                     {t.previewModePixel}

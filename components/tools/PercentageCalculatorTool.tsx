@@ -1,6 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getProcessingTimeBucket,
+  trackModeChange,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+} from "@/lib/analytics/tool-events";
 import {
   ToolButton,
   ToolButtonRow,
@@ -12,6 +22,13 @@ import {
 } from "../tool-ui/ToolUI";
 
 type PercentageMode = "percentOf" | "whatPercent" | "change";
+
+const analyticsBase = {
+  tool_slug: "percentage-calculator",
+  tool_category: "Calculator",
+  tool_type: "calculator",
+  locale: "en",
+} satisfies ToolEventParams;
 
 const modes: Array<{
   key: PercentageMode;
@@ -79,7 +96,21 @@ export default function PercentageCalculatorTool() {
   const [error, setError] = useState("");
   const activeMode = modes.find((item) => item.key === mode) || modes[0];
 
+  useEffect(() => {
+    trackToolView(analyticsBase);
+  }, []);
+
   const calculate = () => {
+    const startedAt = performance.now();
+    trackToolStart(analyticsBase);
+    trackProcessStart({
+      ...analyticsBase,
+      input_type: "number",
+      output_type: "number",
+      mode,
+      source_context: "calculate",
+    });
+
     try {
       setResult(
         calculatePercentage(
@@ -89,9 +120,25 @@ export default function PercentageCalculatorTool() {
         ),
       );
       setError("");
+      trackProcessSuccess({
+        ...analyticsBase,
+        input_type: "number",
+        output_type: "number",
+        result_type: "percentage_result",
+        mode,
+        source_context: "calculate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     } catch (caught) {
       setResult("");
       setError(caught instanceof Error ? caught.message : "Invalid numbers.");
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "invalid_input",
+        mode,
+        source_context: "calculate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     }
   };
 
@@ -110,6 +157,13 @@ export default function PercentageCalculatorTool() {
           <ToolButton
             key={item.key}
             onClick={() => {
+              trackToolStart(analyticsBase);
+              trackModeChange({
+                ...analyticsBase,
+                mode: item.key,
+                previous_mode: mode,
+                source_context: "calculation_type",
+              });
               setMode(item.key);
               setResult("");
               setError("");

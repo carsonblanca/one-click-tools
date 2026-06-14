@@ -1,6 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getProcessingTimeBucket,
+  trackParameterChange,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+  type ToolLocale,
+} from "@/lib/analytics/tool-events";
 import {
   ToolButton,
   ToolButtonRow,
@@ -11,6 +22,12 @@ import {
   ToolResultBox,
   ToolStatCard,
 } from "../tool-ui/ToolUI";
+
+const analyticsBase = {
+  tool_slug: "build-plate-fit-calculator",
+  tool_category: "3D Printing",
+  tool_type: "professional_workflow",
+} satisfies Pick<ToolEventParams, "tool_slug" | "tool_category" | "tool_type">;
 
 type PrinterPreset = {
   name: string;
@@ -62,6 +79,14 @@ function formatPercent(value: number) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
 }
 
+function getAnalyticsLocale(locale: string): ToolLocale {
+  if (locale === "zh-cn" || locale === "zh-tw") {
+    return locale;
+  }
+
+  return "en";
+}
+
 export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?: string }) {
   const [modelX, setModelX] = useState("");
   const [modelY, setModelY] = useState("");
@@ -73,8 +98,22 @@ export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?
   const [clearanceMargin, setClearanceMargin] = useState("");
   const [result, setResult] = useState<FitResult | null>(null);
   const [error, setError] = useState("");
+  const toolAnalytics = {
+    ...analyticsBase,
+    locale: getAnalyticsLocale(locale),
+  } satisfies ToolEventParams;
+
+  useEffect(() => {
+    trackToolView(toolAnalytics);
+  }, [toolAnalytics]);
 
   const applyPreset = (preset: PrinterPreset) => {
+    trackToolStart(toolAnalytics);
+    trackParameterChange({
+      ...toolAnalytics,
+      parameter_name: "printer_preset",
+      source_context: "common_printer_presets",
+    });
     setBuildX(String(preset.x));
     setBuildY(String(preset.y));
     setBuildZ(String(preset.z));
@@ -83,6 +122,15 @@ export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?
   };
 
   const calculate = () => {
+    const startedAt = performance.now();
+    trackToolStart(toolAnalytics);
+    trackProcessStart({
+      ...toolAnalytics,
+      input_type: "dimensions",
+      output_type: "fit_result",
+      source_context: "calculate",
+    });
+
     try {
       const x = parsePositive(modelX, "model X dimension");
       const y = parsePositive(modelY, "model Y dimension");
@@ -109,9 +157,23 @@ export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?
         suggestedScale: Math.min(100, maxScale),
       });
       setError("");
+      trackProcessSuccess({
+        ...toolAnalytics,
+        input_type: "dimensions",
+        output_type: "fit_result",
+        result_type: "build_plate_fit",
+        source_context: "calculate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     } catch (caught) {
       setResult(null);
       setError(caught instanceof Error ? caught.message : "Could not calculate build plate fit.");
+      trackProcessError({
+        ...toolAnalytics,
+        error_code: "invalid_input",
+        source_context: "calculate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     }
   };
 
@@ -173,7 +235,19 @@ export default function BuildPlateFitCalculatorTool({ locale = "en" }: { locale?
       </div>
 
       <div className="mt-5">
-        <ToolCheckbox checked={allowRotation} onChange={setAllowRotation}>
+        <ToolCheckbox
+          checked={allowRotation}
+          onChange={(checked) => {
+            trackToolStart(toolAnalytics);
+            trackParameterChange({
+              ...toolAnalytics,
+              parameter_name: "allow_rotation",
+              mode: checked ? "enabled" : "disabled",
+              source_context: "fit_options",
+            });
+            setAllowRotation(checked);
+          }}
+        >
           Allow XY rotation
         </ToolCheckbox>
       </div>

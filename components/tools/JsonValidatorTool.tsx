@@ -1,6 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getProcessingTimeBucket,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackResultCopy,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+} from "@/lib/analytics/tool-events";
 import {
   ToolButton,
   ToolButtonRow,
@@ -10,28 +20,75 @@ import {
   ToolTextarea,
 } from "../tool-ui/ToolUI";
 
+const analyticsBase = {
+  tool_slug: "json-validator",
+  tool_category: "Developer",
+  tool_type: "developer_validation",
+  locale: "en",
+} satisfies ToolEventParams;
+
 export default function JsonValidatorTool() {
   const [input, setInput] = useState("");
   const [formatted, setFormatted] = useState("");
   const [status, setStatus] = useState("Not checked");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    trackToolView(analyticsBase);
+  }, []);
+
   const validate = () => {
+    const startedAt = performance.now();
+    trackToolStart(analyticsBase);
+    trackProcessStart({
+      ...analyticsBase,
+      input_type: "json",
+      output_type: "json",
+      source_context: "validate",
+    });
+
     try {
       const parsed: unknown = JSON.parse(input);
       setFormatted(JSON.stringify(parsed, null, 2));
       setStatus("Valid");
       setError("");
+      trackProcessSuccess({
+        ...analyticsBase,
+        input_type: "json",
+        output_type: "json",
+        result_type: "validated_json",
+        source_context: "validate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     } catch (caught) {
       setFormatted("");
       setStatus("Invalid");
       setError(caught instanceof Error ? caught.message : "Invalid JSON.");
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "parse_error",
+        source_context: "validate",
+        processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+      });
     }
   };
 
   const copyFormatted = async () => {
     if (!formatted) return;
-    await navigator.clipboard.writeText(formatted);
+    try {
+      await navigator.clipboard.writeText(formatted);
+      trackResultCopy({
+        ...analyticsBase,
+        output_type: "json",
+        result_type: "formatted_json",
+      });
+    } catch {
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "clipboard_error",
+        source_context: "copy_formatted",
+      });
+    }
   };
 
   const clear = () => {

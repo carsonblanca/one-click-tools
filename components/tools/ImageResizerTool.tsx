@@ -1,6 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getFileInputType,
+  getFileSizeBucket,
+  getProcessingTimeBucket,
+  trackFileSelected,
+  trackProcessError,
+  trackProcessStart,
+  trackProcessSuccess,
+  trackResultDownload,
+  trackToolStart,
+  trackToolView,
+  type ToolEventParams,
+} from "@/lib/analytics/tool-events";
+
+const analyticsBase = {
+  tool_slug: "image-resizer",
+  tool_category: "Image",
+  tool_type: "image_processing",
+  locale: "en",
+} satisfies ToolEventParams;
 
 export default function ImageResizerTool() {
   const [file, setFile] = useState<File | null>(null);
@@ -9,16 +29,42 @@ export default function ImageResizerTool() {
   const [preview, setPreview] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
 
+  useEffect(() => {
+    trackToolView(analyticsBase);
+  }, []);
+
   const resizeImage = () => {
-    if (!file) return;
+    trackToolStart(analyticsBase);
+
+    if (!file) {
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "missing_input",
+        source_context: "resize",
+      });
+      return;
+    }
 
     const newWidth = Number(width);
     const newHeight = Number(height);
 
     if (!newWidth || !newHeight) {
+      trackProcessError({
+        ...analyticsBase,
+        error_code: "invalid_input",
+        source_context: "resize",
+      });
       alert("Please enter valid width and height.");
       return;
     }
+
+    const startedAt = performance.now();
+    trackProcessStart({
+      ...analyticsBase,
+      input_type: getFileInputType(file),
+      output_type: "image/png",
+      source_context: "resize",
+    });
 
     const img = new Image();
     const reader = new FileReader();
@@ -33,17 +79,39 @@ export default function ImageResizerTool() {
       canvas.height = newHeight;
 
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) {
+        trackProcessError({
+          ...analyticsBase,
+          error_code: "canvas_error",
+          source_context: "resize",
+          processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+        });
+        return;
+      }
 
       ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
       canvas.toBlob(
         (blob) => {
-          if (!blob) return;
+          if (!blob) {
+            trackProcessError({
+              ...analyticsBase,
+              error_code: "canvas_error",
+              source_context: "resize",
+              processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+            });
+            return;
+          }
 
           const url = URL.createObjectURL(blob);
           setPreview(url);
           setDownloadUrl(url);
+          trackProcessSuccess({
+            ...analyticsBase,
+            output_type: "image/png",
+            result_type: "resized_image",
+            processing_time_bucket: getProcessingTimeBucket(performance.now() - startedAt),
+          });
         },
         "image/png"
       );
@@ -60,6 +128,15 @@ export default function ImageResizerTool() {
         onChange={(e) => {
           const selectedFile = e.target.files?.[0] || null;
           setFile(selectedFile);
+          if (selectedFile) {
+            trackToolStart(analyticsBase);
+            trackFileSelected({
+              ...analyticsBase,
+              input_type: getFileInputType(selectedFile),
+              file_size_bucket: getFileSizeBucket(selectedFile.size),
+              file_count_bucket: "1",
+            });
+          }
         }}
         className="block w-full rounded-xl border border-white/10 bg-black/30 p-4"
       />
@@ -98,6 +175,13 @@ export default function ImageResizerTool() {
           <a
             href={downloadUrl}
             download="resized.png"
+            onClick={() =>
+              trackResultDownload({
+                ...analyticsBase,
+                output_type: "image/png",
+                result_type: "resized_image",
+              })
+            }
             className="mt-6 inline-block rounded-xl bg-purple-600 px-5 py-3"
           >
             Download Image
