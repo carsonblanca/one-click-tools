@@ -10,7 +10,8 @@
     "validate:tools": "node scripts/validate-tools.mjs",
     "validate:analytics": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-analytics.mjs",
     "validate:image-compressor": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-image-compressor.mjs",
-    "quality:check": "npm run validate:tools && npm run validate:analytics && npm run validate:image-compressor && npm run lint && npx tsc --noEmit --incremental false && npm run build"
+    "quality:check": "npm run validate:tools && npm run validate:analytics && npm run validate:image-compressor && npm run lint && npx tsc --noEmit --incremental false && npm run build",
+    "test:qr": "node scripts/test-qr-code-generator.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",
@@ -20,6 +21,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
