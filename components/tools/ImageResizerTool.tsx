@@ -14,6 +14,13 @@ import {
   trackToolView,
   type ToolEventParams,
 } from "@/lib/analytics/tool-events";
+import { useTheme } from "../ThemeProvider";
+import {
+  ToolButton,
+  ToolInput,
+  ToolPanel,
+  ToolResultBox,
+} from "../tool-ui/ToolUI";
 
 const analyticsBase = {
   tool_slug: "image-resizer",
@@ -23,6 +30,7 @@ const analyticsBase = {
 } satisfies ToolEventParams;
 
 export default function ImageResizerTool() {
+  const { isDark } = useTheme();
   const [file, setFile] = useState<File | null>(null);
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
@@ -121,7 +129,7 @@ export default function ImageResizerTool() {
   };
 
   return (
-    <div className="mt-8">
+    <ToolPanel>
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp"
@@ -138,56 +146,57 @@ export default function ImageResizerTool() {
             });
           }
         }}
-        className="block w-full rounded-xl border border-white/10 bg-black/30 p-4"
+        className={`block w-full rounded-2xl border px-4 py-4 outline-none transition file:mr-3 file:rounded-xl file:border-0 file:px-3 file:py-1.5 file:text-sm file:font-medium ${
+          isDark
+            ? "border-white/10 bg-black/30 text-white file:bg-lime-300 file:text-black"
+            : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B] file:bg-[#2563EB] file:text-white"
+        }`}
       />
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <input
+        <ToolInput
           value={width}
-          onChange={(e) => setWidth(e.target.value)}
+          onChange={setWidth}
           placeholder="Width, e.g. 800"
-          className="rounded-xl border border-white/10 bg-black/30 p-4"
         />
-
-        <input
+        <ToolInput
           value={height}
-          onChange={(e) => setHeight(e.target.value)}
+          onChange={setHeight}
           placeholder="Height, e.g. 600"
-          className="rounded-xl border border-white/10 bg-black/30 p-4"
         />
       </div>
 
-      <button
-        onClick={resizeImage}
-        className="mt-4 rounded-xl bg-purple-600 px-5 py-3"
-      >
-        Resize Image
-      </button>
+      <div className="mt-4">
+        <ToolButton onClick={resizeImage}>Resize Image</ToolButton>
+      </div>
 
       {preview && (
-        <div className="mt-8">
+        <ToolResultBox>
           <img
             src={preview}
             alt="Resized preview"
-            className="max-w-full rounded-2xl border border-white/10"
+            className="max-w-full rounded-2xl"
           />
 
-          <a
-            href={downloadUrl}
-            download="resized.png"
-            onClick={() =>
-              trackResultDownload({
-                ...analyticsBase,
-                output_type: "image/png",
-                result_type: "resized_image",
-              })
-            }
-            className="mt-6 inline-block rounded-xl bg-purple-600 px-5 py-3"
-          >
-            Download Image
-          </a>
-        </div>
+          <div className="mt-6">
+            <ToolButton
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = downloadUrl;
+                link.download = "resized.png";
+                link.click();
+                trackResultDownload({
+                  ...analyticsBase,
+                  output_type: "image/png",
+                  result_type: "resized_image",
+                });
+              }}
+            >
+              Download Image
+            </ToolButton>
+          </div>
+        </ToolResultBox>
       )}
-    </div>
+    </ToolPanel>
   );
 }
