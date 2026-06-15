@@ -113,8 +113,8 @@
     "tag": "Utility",
     "category": "Utility",
     "categorySlug": "utility",
-    "desc": "Generate a QR-like visual code preview online.",
-    "description": "Generate a simple QR-like visual code preview and download it as a PNG."
+    "desc": "Generate scannable QR codes online.",
+    "description": "Generate standards-compliant QR codes from text or URLs and download them as PNG images."
   },
   {
     "name": "File Size Converter",
