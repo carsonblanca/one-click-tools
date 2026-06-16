@@ -11,7 +11,8 @@
     "validate:analytics": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-analytics.mjs",
     "validate:image-compressor": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-image-compressor.mjs",
     "quality:check": "npm run validate:tools && npm run validate:analytics && npm run validate:image-compressor && npm run lint && npx tsc --noEmit --incremental false && npm run build",
-    "test:qr": "node scripts/test-qr-code-generator.mjs"
+    "test:qr": "node scripts/test-qr-code-generator.mjs",
+    "validate:filament-parameters": "node scripts/validate-filament-parameters.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",
