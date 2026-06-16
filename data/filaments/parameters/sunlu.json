@@ -1,0 +1,787 @@
+{
+  "brandId": "sunlu",
+  "brandName": "SUNLU",
+  "verifiedAt": "2026-06-16",
+  "records": [
+    {
+      "id": "sunlu-petg-params",
+      "productLineId": "sunlu-petg",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 240,
+          "max": 260,
+          "unit": "C",
+          "raw": "240-260°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 60,
+          "max": 70,
+          "unit": "C",
+          "raw": "60-70°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "lte",
+        "value": 300,
+        "min": null,
+        "max": null,
+        "unit": "mm/s",
+        "raw": "≤300mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/products/petg-3d-printing-filament",
+          "label": "SUNLU PETG product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        },
+        {
+          "url": "https://media.sunlu.com/prod/20260330/f27808f0-3a19-49e3-bd79-6e846d6f4c15.pdf",
+          "label": "SUNLU PETG TDS",
+          "sourceStatus": "official_tds",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_tds",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Print settings extracted from SUNLU official product page Parameter Information table. TDS available for download."
+    },
+    {
+      "id": "sunlu-pla-lite-params",
+      "productLineId": "sunlu-pla-lite",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 50,
+          "max": 60,
+          "unit": "C",
+          "raw": "50-60°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": [
+        {
+          "nozzleTemperature": {
+            "operator": "range",
+            "value": null,
+            "min": 200,
+            "max": 210,
+            "unit": "°C",
+            "raw": "200-210℃"
+          },
+          "printSpeed": {
+            "operator": "range",
+            "value": null,
+            "min": 50,
+            "max": 100,
+            "unit": "mm/s",
+            "raw": "50-100mm/s"
+          },
+          "raw": "200-210℃/50-100mm/s"
+        },
+        {
+          "nozzleTemperature": {
+            "operator": "range",
+            "value": null,
+            "min": 210,
+            "max": 240,
+            "unit": "°C",
+            "raw": "210-240℃"
+          },
+          "printSpeed": {
+            "operator": "range",
+            "value": null,
+            "min": 100,
+            "max": 200,
+            "unit": "mm/s",
+            "raw": "100-200mm/s"
+          },
+          "raw": "210-240℃/100-200mm/s"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/products/pla-lite-filament",
+          "label": "SUNLU PLA Lite product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        },
+        {
+          "url": "https://media.sunlu.com/prod/20260423/bbf6d99b-179f-4eee-a7d6-505d125658cd.pdf",
+          "label": "SUNLU PLA Lite TDS",
+          "sourceStatus": "official_tds",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_tds",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Official page provides two correlated temperature/speed ranges: 200-210°C at 50-100mm/s and 210-240°C at 100-200mm/s. Stored in conditionSets. Bed temperature 50-60°C is consistent across both."
+    },
+    {
+      "id": "sunlu-pla-params",
+      "productLineId": "sunlu-pla",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-plus-params",
+      "productLineId": "sunlu-pla-plus",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-meta-params",
+      "productLineId": "sunlu-pla-meta",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-silk-params",
+      "productLineId": "sunlu-pla-silk",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-matte-params",
+      "productLineId": "sunlu-pla-matte",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-wood-params",
+      "productLineId": "sunlu-pla-wood",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-marble-params",
+      "productLineId": "sunlu-pla-marble",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-pla-cf-params",
+      "productLineId": "sunlu-pla-cf",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/pla",
+          "label": "SUNLU PLA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-abs-params",
+      "productLineId": "sunlu-abs",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/abs",
+          "label": "SUNLU ABS collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-asa-params",
+      "productLineId": "sunlu-asa",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/asa",
+          "label": "SUNLU ASA collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-tpu-params",
+      "productLineId": "sunlu-tpu",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/collections/tpu",
+          "label": "SUNLU TPU collection page",
+          "sourceStatus": "official_collection_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_collection_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "sunlu-high-speed-abs-params",
+      "productLineId": "sunlu-high-speed-abs",
+      "brandId": "sunlu",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.sunlu.com/products/high-speed-abs-filament",
+          "label": "SUNLU High Speed ABS product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    }
+  ]
+}

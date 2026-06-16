@@ -1,0 +1,861 @@
+{
+  "brandId": "esun",
+  "brandName": "eSUN",
+  "verifiedAt": "2026-06-16",
+  "records": [
+    {
+      "id": "esun-pla-plus-params",
+      "productLineId": "esun-pla-plus",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 210,
+          "max": 230,
+          "unit": "C",
+          "raw": "210-230°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 45,
+          "max": 60,
+          "unit": "C",
+          "raw": "45-60°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "lt",
+        "value": 300,
+        "min": null,
+        "max": null,
+        "unit": "mm/s",
+        "raw": "<300mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": true,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/pla-pro-product/",
+          "label": "eSUN PLA+ official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        },
+        {
+          "url": "https://www.esun3d.com/uploads/PLA+-TDS-EN-.pdf",
+          "label": "eSUN PLA+ TDS",
+          "sourceStatus": "official_tds",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_tds",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Print settings from Parameter Information table on eSUN PLA+ product page. Refillable spool available."
+    },
+    {
+      "id": "esun-petg-params",
+      "productLineId": "esun-petg",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 240,
+          "max": 260,
+          "unit": "C",
+          "raw": "240-260°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 75,
+          "max": 90,
+          "unit": "C",
+          "raw": "75-90°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "lt",
+        "value": 150,
+        "min": null,
+        "max": null,
+        "unit": "mm/s",
+        "raw": "<150mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 60,
+        "durationHours": 4,
+        "notes": "Dry at 60°C for 4 hours"
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": true,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/petg-product/",
+          "label": "eSUN PETG official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        },
+        {
+          "url": "https://www.esun3d.com/uploads/PETG-TDS1.pdf",
+          "label": "eSUN PETG TDS",
+          "sourceStatus": "official_tds",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_tds",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Print settings from Parameter Information table on eSUN PETG product page. Drying recommendation included."
+    },
+    {
+      "id": "esun-pla-basic-params",
+      "productLineId": "esun-pla-basic",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/pla-basic-product/",
+          "label": "eSUN PLA-Basic official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-matte-params",
+      "productLineId": "esun-pla-matte",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epla-matte-product/",
+          "label": "eSUN PLA-Matte official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-silk-params",
+      "productLineId": "esun-pla-silk",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/esilk-pla-product/",
+          "label": "eSUN PLA-Silk official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-hs-params",
+      "productLineId": "esun-pla-hs",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epla-hf-product/",
+          "label": "eSUN PLA-HS official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-st-params",
+      "productLineId": "esun-pla-st",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epla-st-product/",
+          "label": "eSUN PLA-ST official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-cf-params",
+      "productLineId": "esun-pla-cf",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epla-cf-product/",
+          "label": "eSUN PLA-CF official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pla-lw-params",
+      "productLineId": "esun-pla-lw",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epla-lw-product/",
+          "label": "eSUN PLA-LW official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-petg-basic-params",
+      "productLineId": "esun-petg-basic",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epetg-lite-product/",
+          "label": "eSUN PETG-Basic official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-abs-plus-params",
+      "productLineId": "esun-abs-plus",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/abs-pro-product/",
+          "label": "eSUN ABS+ official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-asa-params",
+      "productLineId": "esun-asa",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/easa-product/",
+          "label": "eSUN ASA official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-tpu-95a-params",
+      "productLineId": "esun-tpu-95a",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/etpu-95a-product/",
+          "label": "eSUN TPU-95A official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pa-cf-params",
+      "productLineId": "esun-pa-cf",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/epa-cf-product/",
+          "label": "eSUN PA-CF official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-pva-params",
+      "productLineId": "esun-pva",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/pva-product/",
+          "label": "eSUN PVA official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    },
+    {
+      "id": "esun-hips-params",
+      "productLineId": "esun-hips",
+      "brandId": "esun",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://www.esun3d.com/hips-product/",
+          "label": "eSUN HIPS official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-16"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Parameter values were not found in the currently verified official sources."
+    }
+  ]
+}
