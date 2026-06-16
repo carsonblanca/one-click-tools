@@ -3,6 +3,8 @@ import tools from "@/data/tools.json";
 import categories from "@/data/categories.json";
 import ToolsBrowser from "@/components/ToolsBrowser";
 import HomeHero from "@/components/HomeHero";
+import HotTools from "@/components/HotTools";
+import HomeSeoText from "@/components/HomeSeoText";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PageShell from "@/components/PageShell";
@@ -63,9 +65,10 @@ export default function Home() {
     <PageShell>
       <SiteHeader />
 
-      <HomeHero tools={toolList} />
-
+      <HomeHero />
+      <HotTools tools={toolList} />
       <ToolsBrowser tools={toolList} categories={categoryList} />
+      <HomeSeoText />
 
       <SiteFooter />
     </PageShell>
