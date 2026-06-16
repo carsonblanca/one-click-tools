@@ -36,6 +36,8 @@ const localizedBasePaths = new Set([
   "/privacy",
   "/terms",
   "/contact",
+  "/filaments",
+  "/filaments/compare",
   ...localized3dToolSlugs.map((slug) => `/tools/${slug}`),
 ]);
 

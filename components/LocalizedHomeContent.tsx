@@ -1,64 +1,47 @@
 "use client";
 
-import ToolsBrowser from "./ToolsBrowser";
-import { localizedHome, type ChineseLocale } from "../lib/localizedContent";
+import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
-
-type Tool = {
-  name: string;
-  slug: string;
-  tag: string;
-  category: string;
-  categorySlug: string;
-  desc: string;
-  description: string;
-};
-
-type Category = {
-  name: string;
-  slug: string;
-  description: string;
-};
+import { localizedHome, type ChineseLocale } from "../lib/localizedContent";
 
 export default function LocalizedHomeContent({
   locale,
-  tools,
-  categories,
 }: {
   locale: ChineseLocale;
-  tools: Tool[];
-  categories: Category[];
 }) {
   const { isDark } = useTheme();
   const copy = localizedHome[locale];
 
-  return (
-    <>
-      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-12 sm:px-6 md:pt-24 md:pb-16">
-        <div className="max-w-4xl">
-          <div
-            className={`mb-5 inline-flex rounded-full border px-4 py-2 text-sm ${
-              isDark
-                ? "border-white/10 bg-white/[0.05] text-white/55"
-                : "border-[#E5DED0] bg-[#FFFDF7] text-[#6B665D]"
-            }`}
-          >
-            OneClick Tools
-          </div>
-          <h1 className="text-5xl font-semibold tracking-[-0.05em] md:text-7xl">
-            {copy.heroTitle}
-          </h1>
-          <p
-            className={`mt-6 max-w-3xl text-lg leading-8 md:text-xl ${
-              isDark ? "text-white/60" : "text-[#6B665D]"
-            }`}
-          >
-            {copy.heroSubtitle}
-          </p>
-        </div>
-      </section>
+  const filamentHref = `/${locale}/filaments`;
 
-      <ToolsBrowser tools={tools} categories={categories} locale={locale} />
-    </>
+  return (
+    <section className="relative z-10 mx-auto max-w-7xl px-4 pt-8 pb-2 sm:px-6 md:pt-12 md:pb-4">
+      <div
+        className={`rounded-[22px] border p-6 transition md:p-8 ${
+          isDark ? "border-white/10 bg-white/[0.03]" : "border-[#E2DACB] bg-[#FFFDF8]"
+        }`}
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className={`text-3xl font-semibold tracking-tight md:text-4xl ${isDark ? "text-white" : "text-[#18181B]"}`}>
+              {copy.heroTitle}
+            </h1>
+            <p className={`mt-2 max-w-2xl text-sm leading-relaxed md:text-base ${isDark ? "text-white/50" : "text-[#6B665D]"}`}>
+              {copy.heroSubtitle}
+            </p>
+          </div>
+          <Link
+            href={filamentHref}
+            className={`shrink-0 rounded-2xl px-5 py-3 text-center text-sm font-medium transition ${
+              isDark
+                ? "bg-lime-300 text-black hover:bg-lime-200"
+                : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+            }`}
+          >
+            {locale === "zh-cn" ? "3D 打印耗材库" : "3D 列印耗材庫"}
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }

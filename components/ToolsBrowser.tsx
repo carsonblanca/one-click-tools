@@ -63,9 +63,13 @@ export default function ToolsBrowser({
     [getCategoryLabel, isLocalized, locale],
   );
 
-  const categoriesWithTools = categories.filter((category) =>
-    tools.some((tool) => tool.categorySlug === category.slug)
-  );
+  const categoriesWithTools = categories
+    .filter((category) => tools.some((tool) => tool.categorySlug === category.slug))
+    .sort((a, b) => {
+      if (a.slug === "3d-printing") return -1;
+      if (b.slug === "3d-printing") return 1;
+      return 0;
+    });
 
   const filteredTools = useMemo(() => {
     return tools.filter((tool) => {
@@ -97,7 +101,7 @@ export default function ToolsBrowser({
   return (
     <section
       id="tools"
-      className="relative z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24"
+      className="relative z-10 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 md:pb-24"
     >
       <div className="mb-4 flex flex-col justify-between gap-3 md:mb-6 md:flex-row md:items-end">
         <div>
@@ -243,7 +247,7 @@ export default function ToolsBrowser({
       </div>
 
       {filteredTools.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filteredTools.map((tool) => {
             const displayTool = getDisplayTool(tool);
             const categoryName = tool.category || tool.tag;
