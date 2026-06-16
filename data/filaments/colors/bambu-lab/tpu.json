@@ -1,0 +1,53 @@
+{
+  "brandId": "bambu-lab",
+  "brandName": "Bambu Lab",
+  "verifiedAt": "2026-06-16",
+  "colors": [
+    {
+      "id": "bambu-lab-tpu-95a-black",
+      "productLineId": "bambu-lab-tpu-95a",
+      "brandId": "bambu-lab",
+      "officialName": "Black",
+      "displayNameZh": "黑色",
+      "aliases": [],
+      "officialColorCode": "40100",
+      "hex": null,
+      "rgb": null,
+      "finish": "matte",
+      "opacity": "opaque",
+      "officialProductUrl": "https://store.bambulab.com/products/tpu-95a",
+      "officialColorSourceUrl": null,
+      "officialImageUrl": null,
+      "colorValueSource": "unknown",
+      "hasOfficialColorChart": true,
+      "hasPhysicalSwatch": false,
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Color name verified from Bambu Lab store. Hex not yet confirmed.",
+      "completenessStatus": "unknown"
+    },
+    {
+      "id": "bambu-lab-tpu-95a-white",
+      "productLineId": "bambu-lab-tpu-95a",
+      "brandId": "bambu-lab",
+      "officialName": "White",
+      "displayNameZh": "白色",
+      "aliases": [],
+      "officialColorCode": "40101",
+      "hex": null,
+      "rgb": null,
+      "finish": "matte",
+      "opacity": "opaque",
+      "officialProductUrl": "https://store.bambulab.com/products/tpu-95a",
+      "officialColorSourceUrl": null,
+      "officialImageUrl": null,
+      "colorValueSource": "unknown",
+      "hasOfficialColorChart": true,
+      "hasPhysicalSwatch": false,
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Color name verified from Bambu Lab store. Hex not yet confirmed.",
+      "completenessStatus": "unknown"
+    }
+  ]
+}

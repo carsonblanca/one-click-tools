@@ -1,0 +1,32 @@
+{
+  "brandId": "bambu-lab",
+  "brandName": "Bambu Lab",
+  "verifiedAt": "2026-06-16",
+  "colors": [
+    {
+      "id": "bambu-lab-pla-wood-brown",
+      "productLineId": "bambu-lab-pla-wood",
+      "brandId": "bambu-lab",
+      "officialName": "Wood",
+      "displayNameZh": "木色",
+      "aliases": [
+        "Wood Brown"
+      ],
+      "officialColorCode": "17100",
+      "hex": null,
+      "rgb": null,
+      "finish": "matte",
+      "opacity": "opaque",
+      "officialProductUrl": "https://store.bambulab.com/products/pla-wood",
+      "officialColorSourceUrl": null,
+      "officialImageUrl": null,
+      "colorValueSource": "unknown",
+      "hasOfficialColorChart": false,
+      "hasPhysicalSwatch": false,
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-16",
+      "sourceNotes": "Wood-filled PLA. Color name verified from store. Hex not yet confirmed.",
+      "completenessStatus": "unknown"
+    }
+  ]
+}

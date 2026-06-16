@@ -1,0 +1,10 @@
+[
+  {
+    "id": "r3d-pla-basic-sample",
+    "path": "data/filaments/r3d-pla-basic.sample.json",
+    "brand": "R3D",
+    "materialType": "PLA",
+    "category": "Basic",
+    "status": "structure_sample"
+  }
+]
