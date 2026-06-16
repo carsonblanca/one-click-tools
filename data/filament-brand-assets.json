@@ -1,0 +1,332 @@
+[
+  {
+    "brandId": "bambu-lab",
+    "brandName": "Bambu Lab",
+    "logoPath": "/filament-brands/bambu-lab.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:BambuLab_logo.svg",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "CC-BY-SA 4.0 licensed SVG from Wikimedia Commons. Matches logo displayed on bambulab.com."
+  },
+  {
+    "brandId": "sunlu",
+    "brandName": "SUNLU",
+    "logoPath": "/filament-brands/sunlu.png",
+    "sourceUrl": "https://sunlu.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG extracted from Schema.org logo field on sunlu.com homepage."
+  },
+  {
+    "brandId": "esun",
+    "brandName": "eSUN",
+    "logoPath": "/filament-brands/esun.png",
+    "sourceUrl": "https://esun3dstore.com",
+    "sourceType": "official-store",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from official eSUN store. Matches logo on esun3d.com."
+  },
+  {
+    "brandId": "jayo",
+    "brandName": "JAYO",
+    "logoPath": "/filament-brands/jayo.png",
+    "sourceUrl": "https://jayo3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from jayo3d.com official Shopify store header logo."
+  },
+  {
+    "brandId": "kexcelled",
+    "brandName": "Kexcelled",
+    "logoPath": "/filament-brands/kexcelled.png",
+    "sourceUrl": "https://kexcelled3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from kexcelled3d.com official Shopify store favicon reference."
+  },
+  {
+    "brandId": "r3d",
+    "brandName": "R3D",
+    "logoPath": null,
+    "sourceUrl": null,
+    "sourceType": null,
+    "verifiedAt": null,
+    "verificationStatus": "pending",
+    "notes": "Cannot confirm official logo. r3dprint.com unreachable. r3d.es uses a different entity (R3D LABS). Wuhu R3D Technology logo unconfirmed."
+  },
+  {
+    "brandId": "generic",
+    "brandName": "Generic",
+    "logoPath": "/filament-brands/generic-spool.svg",
+    "sourceUrl": null,
+    "sourceType": "internal",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "Neutral filament spool icon, not a brand logo. Used as fallback."
+  },
+  {
+    "brandId": "polymaker",
+    "brandName": "Polymaker",
+    "logoPath": "/filament-brands/polymaker.png",
+    "sourceUrl": "https://shop.polymaker.com",
+    "sourceType": "official-store",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Polymaker official Shopify store."
+  },
+  {
+    "brandId": "overture",
+    "brandName": "Overture",
+    "logoPath": "/filament-brands/overture.png",
+    "sourceUrl": "https://overture3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Overture official website."
+  },
+  {
+    "brandId": "prusament",
+    "brandName": "Prusament",
+    "logoPath": "/filament-brands/prusament.svg",
+    "sourceUrl": "https://prusa3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from Prusa3D official website (Prusament brand)."
+  },
+  {
+    "brandId": "colorfabb",
+    "brandName": "ColorFabb",
+    "logoPath": "/filament-brands/colorfabb.svg",
+    "sourceUrl": "https://colorfabb.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from ColorFabb official website header."
+  },
+  {
+    "brandId": "fiberlogy",
+    "brandName": "Fiberlogy",
+    "logoPath": "/filament-brands/fiberlogy.svg",
+    "sourceUrl": "https://fiberlogy.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from Fiberlogy official website."
+  },
+  {
+    "brandId": "hatchbox",
+    "brandName": "Hatchbox",
+    "logoPath": null,
+    "sourceUrl": null,
+    "sourceType": null,
+    "verifiedAt": null,
+    "verificationStatus": "pending",
+    "notes": "Hatchbox official website is a JS-heavy Shopify store. Could not extract a clean logo reliably. Logo may require manual extraction."
+  },
+  {
+    "brandId": "matterhackers",
+    "brandName": "MatterHackers",
+    "logoPath": "/filament-brands/matterhackers.svg",
+    "sourceUrl": "https://www.matterhackers.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from MatterHackers official website header."
+  },
+  {
+    "brandId": "formfutura",
+    "brandName": "FormFutura",
+    "logoPath": null,
+    "sourceUrl": "https://formfutura.com",
+    "sourceType": "official-website",
+    "verifiedAt": null,
+    "verificationStatus": "pending",
+    "notes": "Local FormFutura asset is not a valid image file. Use the generic spool fallback until a verified logo asset is added."
+  },
+  {
+    "brandId": "basf-ultrafuse",
+    "brandName": "BASF Ultrafuse",
+    "logoPath": "/filament-brands/ultrafuse.png",
+    "sourceUrl": "https://forward-am.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "Forward AM brand logo (parent brand of Ultrafuse). PNG from forward-am.com."
+  },
+  {
+    "brandId": "fillamentum",
+    "brandName": "Fillamentum",
+    "logoPath": "/filament-brands/fillamentum.png",
+    "sourceUrl": "https://fillamentum.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Fillamentum official website header logo."
+  },
+  {
+    "brandId": "flashforge",
+    "brandName": "Flashforge",
+    "logoPath": "/filament-brands/flashforge.png",
+    "sourceUrl": "https://www.flashforge.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Flashforge official Shopify store."
+  },
+  {
+    "brandId": "creality",
+    "brandName": "Creality",
+    "logoPath": "/filament-brands/creality.svg",
+    "sourceUrl": "https://www.creality.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from Creality official website header."
+  },
+  {
+    "brandId": "anycubic",
+    "brandName": "Anycubic",
+    "logoPath": "/filament-brands/anycubic.png",
+    "sourceUrl": "https://www.anycubic.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Anycubic official website (Nuxt build)."
+  },
+  {
+    "brandId": "elegoo",
+    "brandName": "ELEGOO",
+    "logoPath": "/filament-brands/elegoo.png",
+    "sourceUrl": "https://www.elegoo.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from ELEGOO official Shopify store."
+  },
+  {
+    "brandId": "geeetech",
+    "brandName": "Geeetech",
+    "logoPath": "/filament-brands/geeetech.png",
+    "sourceUrl": "https://www.geeetech.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Geeetech official website."
+  },
+  {
+    "brandId": "ziro",
+    "brandName": "ZIRO",
+    "logoPath": "/filament-brands/ziro.png",
+    "sourceUrl": "https://ziro3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from ZIRO official Shopify store."
+  },
+  {
+    "brandId": "amolen",
+    "brandName": "AMOLEN",
+    "logoPath": "/filament-brands/amolen.png",
+    "sourceUrl": "https://www.amolen.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from AMOLEN official Shopify store."
+  },
+  {
+    "brandId": "eryone",
+    "brandName": "Eryone",
+    "logoPath": "/filament-brands/eryone.png",
+    "sourceUrl": "https://www.eryone.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Eryone official website (GlobalSo CMS)."
+  },
+  {
+    "brandId": "duramic",
+    "brandName": "Duramic",
+    "logoPath": "/filament-brands/duramic.png",
+    "sourceUrl": "https://duramic3d.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Duramic 3D official Shopify store."
+  },
+  {
+    "brandId": "inland",
+    "brandName": "Inland",
+    "logoPath": null,
+    "sourceUrl": null,
+    "sourceType": null,
+    "verifiedAt": null,
+    "verificationStatus": "pending",
+    "notes": "Micro Center store brand. No standalone official logo found. Inland is sold exclusively through Micro Center."
+  },
+  {
+    "brandId": "proto-pasta",
+    "brandName": "Proto-pasta",
+    "logoPath": "/filament-brands/protopasta.svg",
+    "sourceUrl": "https://protopasta.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from Proto-pasta official website header."
+  },
+  {
+    "brandId": "atomic-filament",
+    "brandName": "Atomic Filament",
+    "logoPath": "/filament-brands/atomic-filament.png",
+    "sourceUrl": "https://atomicfilament.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Atomic Filament official Shopify store."
+  },
+  {
+    "brandId": "3dxtech",
+    "brandName": "3DXTECH",
+    "logoPath": "/filament-brands/3dxtech.svg",
+    "sourceUrl": "https://www.3dxtech.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from 3DXTECH official website header."
+  },
+  {
+    "brandId": "ninjatek",
+    "brandName": "NinjaTek",
+    "logoPath": "/filament-brands/ninjatek.svg",
+    "sourceUrl": "https://ninjatek.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from NinjaTek official website header."
+  },
+  {
+    "brandId": "recreus",
+    "brandName": "Recreus",
+    "logoPath": "/filament-brands/recreus.png",
+    "sourceUrl": "https://recreus.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "PNG from Recreus official website."
+  },
+  {
+    "brandId": "spectrum-filaments",
+    "brandName": "Spectrum Filaments",
+    "logoPath": "/filament-brands/spectrum-filaments.svg",
+    "sourceUrl": "https://spectrumfilaments.com",
+    "sourceType": "official-website",
+    "verifiedAt": "2026-06-16",
+    "verificationStatus": "verified",
+    "notes": "SVG from Spectrum Filaments official website header."
+  }
+]
