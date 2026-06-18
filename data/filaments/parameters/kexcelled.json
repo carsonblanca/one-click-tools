@@ -1,0 +1,360 @@
+{
+  "brandId": "kexcelled",
+  "brandName": "Kexcelled",
+  "verifiedAt": "2026-06-19",
+  "records": [
+    {
+      "id": "kexcelled-k5-pla-params",
+      "productLineId": "kexcelled-k5-pla",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 190,
+          "max": 220,
+          "unit": "C",
+          "raw": "190-220\u00B0C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60\u00B0C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 100,
+        "unit": "mm/s",
+        "raw": "40-100 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50\u00B0C / 2h"
+      },
+      "hardenedNozzleRequired": false,
+      "enclosureRecommended": false,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-pla",
+          "label": "Kexcelled THE K5 PLA official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official print parameters from Kexcelled THE K5 PLA product page. Chamber: room temperature. Cooling fan: 100%. Retraction: 0.5-5mm at 30-70mm/s. Build plate: glass, PEI, sticker. Min nozzle: 0.2mm."
+    },
+    {
+      "id": "kexcelled-k5-pla-m-params",
+      "productLineId": "kexcelled-k5-pla-m",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 210,
+          "max": 230,
+          "unit": "C",
+          "raw": "210-230\u00B0C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60\u00B0C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 3,
+        "notes": "50\u00B0C / 3h"
+      },
+      "hardenedNozzleRequired": false,
+      "enclosureRecommended": false,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-pla-m",
+          "label": "Kexcelled THE K5 PLA M official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official print parameters from Kexcelled THE K5 PLA M product page. Chamber: room temp. Cooling: 100%. Retraction: 0.5-5mm at 30-70mm/s. Plate: glass/PEI/sticker. Min nozzle: 0.4mm. Near/remote columns identical."
+    },
+    {
+      "id": "kexcelled-k6-pla-params",
+      "productLineId": "kexcelled-k6-pla",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 200,
+          "max": 230,
+          "unit": "C",
+          "raw": "200-230\u00B0C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": null,
+          "max": 60,
+          "unit": "C",
+          "raw": "\u5E38\u6E29-60\u00B0C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k6-pla",
+          "label": "Kexcelled THE K6 PLA official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Partial official parameters from Kexcelled THE K6 PLA product page. Nozzle 200-230C, bed room-temp to 60C, speed 40-80mm/s. Missing: cooling fan, retraction, drying, min nozzle, max volumetric speed, chamber, build plate. Do not auto-fill from K5 PLA."
+    },
+    {
+      "id": "kexcelled-k5-pla-p-params",
+      "productLineId": "kexcelled-k5-pla-p",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 190,
+          "max": 220,
+          "unit": "C",
+          "raw": "190-220\u00B0C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60\u00B0C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 100,
+        "unit": "mm/s",
+        "raw": "40-100 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50\u00B0C / 2h"
+      },
+      "hardenedNozzleRequired": false,
+      "enclosureRecommended": false,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "No official print parameters found for THE K5 PLA P. Parameters temporarily inherited from THE K5 PLA (kexcelled-k5-pla). Same brand, same material family (PLA). inheritableFrom: kexcelled-k5-pla-params. inheritableSourceType: same_brand_same_material_fallback."
+    },
+    {
+      "id": "kexcelled-k5-petg-gf-params",
+      "productLineId": "kexcelled-k5-petg-gf",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 240,
+          "max": 260,
+          "unit": "C",
+          "raw": "240-260\u00B0C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 70,
+          "max": 80,
+          "unit": "C",
+          "raw": "70-80\u00B0C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 150,
+        "unit": "mm/s",
+        "raw": "40-150 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50\u00B0C / 2h"
+      },
+      "hardenedNozzleRequired": false,
+      "enclosureRecommended": false,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
+          "label": "Kexcelled THE K5 PETG GF official product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official print parameters from Kexcelled THE K5 PETG GF product page. Chamber: room temp. Cooling: 0-50%. Retraction: 0.5-5mm at 30-70mm/s. Min nozzle: 0.4mm. Build adhesion: liquid glue or glue stick. Manufacturer recommends Teflon-coated nozzle (not hardened steel requirement)."
+    }
+  ]
+}

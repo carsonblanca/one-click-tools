@@ -10,6 +10,7 @@ import colorfabb from "@/data/filaments/product-lines/colorfabb.json";
 import fiberlogy from "@/data/filaments/product-lines/fiberlogy.json";
 import fillamentum from "@/data/filaments/product-lines/fillamentum.json";
 import spectrumFilaments from "@/data/filaments/product-lines/spectrum-filaments.json";
+import kexcelled from "@/data/filaments/product-lines/kexcelled.json";
 
 const BRAND_FILES = [
   bambuLab,
@@ -22,6 +23,7 @@ const BRAND_FILES = [
   fiberlogy,
   fillamentum,
   spectrumFilaments,
+  kexcelled,
 ] as const;
 
 function loadAll(): FilamentProductLine[] {

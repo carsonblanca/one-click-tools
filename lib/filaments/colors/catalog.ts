@@ -23,6 +23,11 @@ import pc from "@/data/filaments/colors/bambu-lab/pc.json";
 import pva from "@/data/filaments/colors/bambu-lab/pva.json";
 import supportPla from "@/data/filaments/colors/bambu-lab/support-pla.json";
 import supportPetg from "@/data/filaments/colors/bambu-lab/support-petg.json";
+import k5pla from "@/data/filaments/colors/kexcelled/k5-pla.json";
+import k5plam from "@/data/filaments/colors/kexcelled/k5-pla-m.json";
+import k6pla from "@/data/filaments/colors/kexcelled/k6-pla.json";
+import k5plap from "@/data/filaments/colors/kexcelled/k5-pla-p.json";
+import k5petggf from "@/data/filaments/colors/kexcelled/k5-petg-gf.json";
 
 const COLOR_FILES = [
   plaBasic,
@@ -48,6 +53,11 @@ const COLOR_FILES = [
   pva,
   supportPla,
   supportPetg,
+  k5pla,
+  k5plam,
+  k6pla,
+  k5plap,
+  k5petggf,
 ] as const;
 
 function loadAll(): FilamentColorSku[] {

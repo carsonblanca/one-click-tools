@@ -17,6 +17,8 @@ export const MATERIAL_CATEGORY_TREE: CategoryNode[] = [
       { id: "pla-hs",       labelZh: "高速",   labelEn: "High Speed" },
       { id: "pla-cf",       labelZh: "碳纤",   labelEn: "CF" },
       { id: "pla-glow",     labelZh: "发光",   labelEn: "Glow" },
+      { id: "pla-tough",    labelZh: "高韧性", labelEn: "Tough" },
+      { id: "pla-metallic", labelZh: "金属质感", labelEn: "Metallic" },
     ],
   },
   {
@@ -102,8 +104,8 @@ export const BRAND_CATEGORY_TREE: CategoryNode[] = [
     labelZh: "Kexcelled",
     labelEn: "Kexcelled",
     children: [
+      { id: "kexcelled-pla", labelZh: "PLA", labelEn: "PLA" },
       { id: "kexcelled-petg", labelZh: "PETG", labelEn: "PETG" },
-      { id: "kexcelled-tpu",  labelZh: "TPU",  labelEn: "TPU" },
     ],
   },
   {

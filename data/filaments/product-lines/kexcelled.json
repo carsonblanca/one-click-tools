@@ -1,0 +1,181 @@
+{
+  "brandId": "kexcelled",
+  "brandName": "Kexcelled",
+  "brandNameZh": null,
+  "countryOrRegion": "CN",
+  "website": "https://kexcelled3d.com",
+  "officialStore": "https://kexcelled3d.com/zh/collections/filaments",
+  "verifiedAt": "2026-06-19",
+  "productLines": [
+    {
+      "id": "kexcelled-k5-pla",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA",
+        "kexcelled pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Standard",
+      "productLine": "THE K5 PLA",
+      "displayName": "Kexcelled THE K5 PLA",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 44,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Official color chart with HEX values verified. Official TDS with mechanical and print parameters verified. Standard mapping requires manual verification for some ISO standards.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-pla",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-pla-m",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA M",
+        "kexcelled matte pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Matte",
+      "productLine": "THE K5 PLA M",
+      "displayName": "Kexcelled THE K5 PLA M",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-m",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 23,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Official color chart with HEX values verified. Official matte PLA with TDS. Standard mapping requires manual verification.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-m",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-m",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-m",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k6-pla",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K6 PLA",
+        "kexcelled tough pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Tough",
+      "productLine": "THE K6 PLA",
+      "displayName": "Kexcelled THE K6 PLA",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k6-pla",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 10,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Color chart verified but no HEX values published. Official TDS with mechanical and partial print parameters. Manufacturer claims improved impact performance vs standard PLA (manufacturerClaims, not platform-verified).",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k6-pla",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k6-pla",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k6-pla",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-pla-p",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA P",
+        "kexcelled metallic pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Metallic",
+      "productLine": "THE K5 PLA P",
+      "displayName": "Kexcelled THE K5 PLA P",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-p",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 7,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Metallic-effect PLA (not metal-filled, not silk). No HEX values published. No official print parameters found for this series; inherited from THE K5 PLA. Standard mapping requires manual verification.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-p",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-p",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-p",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-petg-gf",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PETG GF",
+        "kexcelled petg gf"
+      ],
+      "materialType": "PETG",
+      "series": null,
+      "variant": "Glass Fiber Reinforced",
+      "productLine": "THE K5 PETG GF",
+      "displayName": "Kexcelled THE K5 PETG GF",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 9,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Official color chart with HEX and TCX values verified. Official TDS with mechanical and print parameters. Manufacturer recommends Teflon-coated nozzle. Manufacturer compatibility claims logged as manufacturerCompatibilityClaims.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
+        "presetDataUrl": null
+      }
+    }
+  ]
+}
