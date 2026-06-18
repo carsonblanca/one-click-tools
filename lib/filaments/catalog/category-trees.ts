@@ -19,6 +19,9 @@ export const MATERIAL_CATEGORY_TREE: CategoryNode[] = [
       { id: "pla-glow",     labelZh: "发光",   labelEn: "Glow" },
       { id: "pla-tough",    labelZh: "高韧性", labelEn: "Tough" },
       { id: "pla-metallic", labelZh: "金属质感", labelEn: "Metallic" },
+      { id: "pla-marble",   labelZh: "大理石",  labelEn: "Marble" },
+      { id: "pla-sparkle",  labelZh: "闪耀",    labelEn: "Sparkle" },
+      { id: "pla-wood",     labelZh: "木质",    labelEn: "Wood" },
     ],
   },
   {

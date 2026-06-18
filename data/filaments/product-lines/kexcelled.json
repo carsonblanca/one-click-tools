@@ -176,6 +176,210 @@
         "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-petg-gf",
         "presetDataUrl": null
       }
+    },
+    {
+      "id": "kexcelled-k5-pla-magic",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA Magic",
+        "kexcelled marble pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Marble",
+      "productLine": "THE K5 PLA Magic",
+      "displayName": "Kexcelled THE K5 PLA Magic",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-magic",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 9,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Marble-effect PLA. Product options show 9 colors w/ color codes. Partial print parameters + inherited from THE K5 PLA. No evidence of real stone filler.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-magic",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-magic",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-magic",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k6-pla-cf10",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K6 PLA CF10",
+        "kexcelled cf pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Carbon Fiber Reinforced",
+      "productLine": "THE K6 PLA CF10",
+      "displayName": "Kexcelled THE K6 PLA CF10",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k6-pla-cf10",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 1,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Single color (Black). Abrasive, wear-resistant nozzle recommended but not hardened steel required. Direct Drive and Bowden parameters both listed.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k6-pla-cf10",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k6-pla-cf10",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k6-pla-cf10",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-pla-cf",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA CF",
+        "kexcelled carbon fiber pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Carbon Fiber Reinforced",
+      "productLine": "THE K5 PLA CF",
+      "displayName": "Kexcelled THE K5 PLA CF",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cf",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 4,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": false,
+      "hasSpoolSpecs": false,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Partial product data. Color options confirmed from official product listing. No TDS, no print parameters, no mechanical specs found. Do NOT share parameters with K6 PLA CF10.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cf",
+        "technicalDataUrl": null,
+        "spoolSpecsUrl": null,
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-pla-sparkle",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA Sparkle",
+        "kexcelled sparkle pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Sparkle",
+      "productLine": "THE K5 PLA Sparkle",
+      "displayName": "Kexcelled THE K5 PLA Sparkle",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-sparkle",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 7,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Sparkle/glitter effect PLA. Official print parameters and mechanical specs verified. Partial parameters inherited from THE K5 PLA for missing fields only.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-sparkle",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-sparkle",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-sparkle",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-wood",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "WOOD K5",
+        "kexcelled wood pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Wood-filled",
+      "productLine": "THE K5 WOOD",
+      "displayName": "Kexcelled THE K5 WOOD",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/wood-k5",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 9,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": true,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page at kexcelled3d.com/zh. Wood-filled PLA. Official min nozzle 0.4mm (not 0.2mm from base PLA). Hygroscopic, recommend drying before print. Parameters inherited from THE K5 PLA.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/wood-k5",
+        "technicalDataUrl": "https://kexcelled3d.com/zh/products/wood-k5",
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/wood-k5",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-k5-pla-cc",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA CC",
+        "kexcelled glow pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Glow-in-the-dark",
+      "productLine": "THE K5 PLA CC",
+      "displayName": "Kexcelled THE K5 PLA CC",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cc",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 5,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": false,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Glow-in-the-dark PLA. AMS/AMS Lite strongly discouraged due to abrasive phosphorescent particles and brittleness. Parameters from industry reference, not KEXCELLED official. Physical properties from generic sheet labeled PLA K5, applicability requires series verification.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cc",
+        "technicalDataUrl": null,
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cc",
+        "presetDataUrl": null
+      }
     }
   ]
 }

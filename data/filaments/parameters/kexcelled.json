@@ -16,7 +16,7 @@
           "min": 190,
           "max": 220,
           "unit": "C",
-          "raw": "190-220\u00B0C"
+          "raw": "190-220°C"
         }
       },
       "bedTemperature": {
@@ -28,7 +28,7 @@
           "min": 30,
           "max": 60,
           "unit": "C",
-          "raw": "30-60\u00B0C"
+          "raw": "30-60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -43,7 +43,7 @@
       "dryingRecommendation": {
         "temperatureC": 50,
         "durationHours": 2,
-        "notes": "50\u00B0C / 2h"
+        "notes": "50°C / 2h"
       },
       "hardenedNozzleRequired": false,
       "enclosureRecommended": false,
@@ -88,7 +88,7 @@
           "min": 210,
           "max": 230,
           "unit": "C",
-          "raw": "210-230\u00B0C"
+          "raw": "210-230°C"
         }
       },
       "bedTemperature": {
@@ -100,7 +100,7 @@
           "min": 30,
           "max": 60,
           "unit": "C",
-          "raw": "30-60\u00B0C"
+          "raw": "30-60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -115,7 +115,7 @@
       "dryingRecommendation": {
         "temperatureC": 50,
         "durationHours": 3,
-        "notes": "50\u00B0C / 3h"
+        "notes": "50°C / 3h"
       },
       "hardenedNozzleRequired": false,
       "enclosureRecommended": false,
@@ -160,7 +160,7 @@
           "min": 200,
           "max": 230,
           "unit": "C",
-          "raw": "200-230\u00B0C"
+          "raw": "200-230°C"
         }
       },
       "bedTemperature": {
@@ -172,7 +172,7 @@
           "min": null,
           "max": 60,
           "unit": "C",
-          "raw": "\u5E38\u6E29-60\u00B0C"
+          "raw": "常温-60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -232,7 +232,7 @@
           "min": 190,
           "max": 220,
           "unit": "C",
-          "raw": "190-220\u00B0C"
+          "raw": "190-220°C"
         }
       },
       "bedTemperature": {
@@ -244,7 +244,7 @@
           "min": 30,
           "max": 60,
           "unit": "C",
-          "raw": "30-60\u00B0C"
+          "raw": "30-60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -259,7 +259,7 @@
       "dryingRecommendation": {
         "temperatureC": 50,
         "durationHours": 2,
-        "notes": "50\u00B0C / 2h"
+        "notes": "50°C / 2h"
       },
       "hardenedNozzleRequired": false,
       "enclosureRecommended": false,
@@ -297,7 +297,7 @@
           "min": 240,
           "max": 260,
           "unit": "C",
-          "raw": "240-260\u00B0C"
+          "raw": "240-260°C"
         }
       },
       "bedTemperature": {
@@ -309,7 +309,7 @@
           "min": 70,
           "max": 80,
           "unit": "C",
-          "raw": "70-80\u00B0C"
+          "raw": "70-80°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -324,7 +324,7 @@
       "dryingRecommendation": {
         "temperatureC": 50,
         "durationHours": 2,
-        "notes": "50\u00B0C / 2h"
+        "notes": "50°C / 2h"
       },
       "hardenedNozzleRequired": false,
       "enclosureRecommended": false,
@@ -355,6 +355,396 @@
       "parameterStatus": "partial",
       "lastVerifiedAt": "2026-06-19",
       "sourceNotes": "Official print parameters from Kexcelled THE K5 PETG GF product page. Chamber: room temp. Cooling: 0-50%. Retraction: 0.5-5mm at 30-70mm/s. Min nozzle: 0.4mm. Build adhesion: liquid glue or glue stick. Manufacturer recommends Teflon-coated nozzle (not hardened steel requirement)."
+    },
+    {
+      "id": "kexcelled-k5-pla-magic-params",
+      "productLineId": "kexcelled-k5-pla-magic",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 190,
+          "max": 220,
+          "unit": "C",
+          "raw": "190-220°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50°C / 2h (inherited from THE K5 PLA)"
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-pla-magic",
+          "label": "Kexcelled THE K5 PLA Magic product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official print parameters for nozzle/bed/speed. Inheritable fallback for chamber, min nozzle, cooling, retraction, drying, and build plate from THE K5 PLA (kexcelled-k5-pla)."
+    },
+    {
+      "id": "kexcelled-k6-pla-cf10-params",
+      "productLineId": "kexcelled-k6-pla-cf10",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 210,
+          "max": 230,
+          "unit": "C",
+          "raw": "210-230°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 100,
+        "unit": "mm/s",
+        "raw": "40-100 mm/s (Bowden) / 40-80 mm/s (Direct Drive)"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50°C / 2h"
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": "Abrasive material; wear-resistant nozzle recommended"
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k6-pla-cf10",
+          "label": "Kexcelled THE K6 PLA CF10 product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official parameters from Kexcelled THE K6 PLA CF10 product page. Direct Drive: 0.5-5mm retraction, 40-80mm/s speed. Bowden: 2-10mm retraction, 40-100mm/s speed. Chamber: room temp. Min nozzle: 0.4mm. Fan: 100%. Platform: glass/PEI/sticker. Wear-resistant nozzle recommended."
+    },
+    {
+      "id": "kexcelled-k5-pla-cf-params",
+      "productLineId": "kexcelled-k5-pla-cf",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "No print parameters found for THE K5 PLA CF. Do NOT share parameters with THE K6 PLA CF10. Parameter status: missing_or_unverified."
+    },
+    {
+      "id": "kexcelled-k5-pla-sparkle-params",
+      "productLineId": "kexcelled-k5-pla-sparkle",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 200,
+          "max": 220,
+          "unit": "C",
+          "raw": "200-220°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50°C / 2h (inherited from THE K5 PLA)"
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-pla-sparkle",
+          "label": "Kexcelled THE K5 PLA Sparkle product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official nozzle 200-220°C, bed 30-60°C, speed 40-80mm/s from product page. Inheritable fallback for chamber, min nozzle, cooling, retraction, drying, and build plate from THE K5 PLA (kexcelled-k5-pla). Official nozzle temp 200-220°C takes priority over base PLA 190-220°C."
+    },
+    {
+      "id": "kexcelled-k5-wood-params",
+      "productLineId": "kexcelled-k5-wood",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 190,
+          "max": 220,
+          "unit": "C",
+          "raw": "190-220°C (inherited from THE K5 PLA)"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 60,
+          "unit": "C",
+          "raw": "30-60°C (inherited from THE K5 PLA)"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 100,
+        "unit": "mm/s",
+        "raw": "40-100 mm/s (inherited from THE K5 PLA)"
+      },
+      "dryingRecommendation": {
+        "temperatureC": 50,
+        "durationHours": 2,
+        "notes": "50°C / 2h (inherited from THE K5 PLA). Wood-filled PLA is hygroscopic; drying before print recommended."
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": "Min nozzle 0.4mm (official WOOD spec, overrides base PLA 0.2mm)"
+      },
+      "conditionSets": null,
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/wood-k5",
+          "label": "Kexcelled THE K5 WOOD product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official parameters from Kexcelled WOOD K5 product page. Min nozzle 0.4mm (official, overrides inherited 0.2mm). Hygroscopic, drying recommended. Print parameters inherited from THE K5 PLA for nozzle/bed/speed/cooling/retraction/drying/build plate."
+    },
+    {
+      "id": "kexcelled-k5-pla-cc-params",
+      "productLineId": "kexcelled-k5-pla-cc",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 190,
+          "max": 230,
+          "unit": "C",
+          "raw": "190-230°C (industry reference)"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 25,
+          "max": 60,
+          "unit": "C",
+          "raw": "25-60°C (industry reference)"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": 55,
+        "durationHours": 6,
+        "notes": "55°C / 6h (industry reference). Glow filament may need extended drying."
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": "no",
+        "adapterRequired": null,
+        "notes": "AMS/AMS Lite strongly discouraged. Abrasive phosphorescent particles. Brittle filament risk. Use external spool holder with direct feed path."
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "No KEXCELLED official print parameters found for THE K5 PLA CC. Parameters are industry reference for glow-in-the-dark PLA. Nozzle 0.4mm minimum recommended; 0.6mm preferred. Abrasive material. AMS/AMS Lite strongly discouraged. Physical property sheet labeled 'PLA K5' requires series verification."
     }
   ]
 }

@@ -67,14 +67,32 @@ const PLACEHOLDER_RGB = { r: 217, g: 217, b: 217 };
 function buildKexcelledRecords(): CatalogRecord[] {
   const colors = getAllFilamentColors().filter((c) => c.brandId === "kexcelled");
   return colors.map((c) => {
-    const parts = c.productLineId.split("-");
-    const materialType = parts[1].toUpperCase();
+    const materialTypeMap: Record<string, string> = {
+      "kexcelled-k5-pla": "PLA",
+      "kexcelled-k5-pla-m": "PLA",
+      "kexcelled-k6-pla": "PLA",
+      "kexcelled-k5-pla-p": "PLA",
+      "kexcelled-k5-petg-gf": "PETG",
+      "kexcelled-k5-pla-magic": "PLA",
+      "kexcelled-k6-pla-cf10": "PLA",
+      "kexcelled-k5-pla-cf": "PLA",
+      "kexcelled-k5-pla-sparkle": "PLA",
+      "kexcelled-k5-wood": "PLA",
+      "kexcelled-k5-pla-cc": "PLA",
+    };
+    const materialType = materialTypeMap[c.productLineId] || "PLA";
     const variantMap: Record<string, string> = {
       "kexcelled-k5-pla": "Standard",
       "kexcelled-k5-pla-m": "Matte",
       "kexcelled-k6-pla": "Tough",
       "kexcelled-k5-pla-p": "Metallic",
       "kexcelled-k5-petg-gf": "Glass Fiber Reinforced",
+      "kexcelled-k5-pla-magic": "Marble",
+      "kexcelled-k6-pla-cf10": "Carbon Fiber Reinforced",
+      "kexcelled-k5-pla-cf": "Carbon Fiber Reinforced",
+      "kexcelled-k5-pla-sparkle": "Sparkle",
+      "kexcelled-k5-wood": "Wood-filled",
+      "kexcelled-k5-pla-cc": "Glow-in-the-dark",
     };
     const variantZhMap: Record<string, string> = {
       "kexcelled-k5-pla": "标准",
@@ -82,6 +100,12 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "高韧性",
       "kexcelled-k5-pla-p": "金属质感",
       "kexcelled-k5-petg-gf": "玻纤增强",
+      "kexcelled-k5-pla-magic": "大理石",
+      "kexcelled-k6-pla-cf10": "碳纤维增强",
+      "kexcelled-k5-pla-cf": "碳纤维增强",
+      "kexcelled-k5-pla-sparkle": "闪耀",
+      "kexcelled-k5-wood": "木质",
+      "kexcelled-k5-pla-cc": "夜光",
     };
     const productLineMap: Record<string, string> = {
       "kexcelled-k5-pla": "THE K5 PLA",
@@ -89,6 +113,12 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "THE K6 PLA",
       "kexcelled-k5-pla-p": "THE K5 PLA P",
       "kexcelled-k5-petg-gf": "THE K5 PETG GF",
+      "kexcelled-k5-pla-magic": "THE K5 PLA Magic",
+      "kexcelled-k6-pla-cf10": "THE K6 PLA CF10",
+      "kexcelled-k5-pla-cf": "THE K5 PLA CF",
+      "kexcelled-k5-pla-sparkle": "THE K5 PLA Sparkle",
+      "kexcelled-k5-wood": "THE K5 WOOD",
+      "kexcelled-k5-pla-cc": "THE K5 PLA CC",
     };
     const variant = variantMap[c.productLineId] || "Standard";
     const variantZh = variantZhMap[c.productLineId] || "标准";

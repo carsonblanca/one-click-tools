@@ -1,0 +1,30 @@
+{
+  "brandId": "kexcelled",
+  "brandName": "Kexcelled",
+  "verifiedAt": "2026-06-19",
+  "colors": [
+    {
+      "id": "kexcelled-k6-pla-cf10-blk",
+      "productLineId": "kexcelled-k6-pla-cf10",
+      "brandId": "kexcelled",
+      "officialName": "Black",
+      "displayNameZh": "黑色",
+      "aliases": [],
+      "officialColorCode": null,
+      "hex": null,
+      "rgb": null,
+      "finish": null,
+      "opacity": "opaque",
+      "officialProductUrl": null,
+      "officialColorSourceUrl": null,
+      "officialImageUrl": null,
+      "colorValueSource": "unknown",
+      "hasOfficialColorChart": true,
+      "hasPhysicalSwatch": false,
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Color name from Kexcelled product page. No official HEX. colorReferenceType: visual_only.",
+      "completenessStatus": "unknown"
+    }
+  ]
+}
