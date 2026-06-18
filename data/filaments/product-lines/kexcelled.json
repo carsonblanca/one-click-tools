@@ -380,6 +380,76 @@
         "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-pla-cc",
         "presetDataUrl": null
       }
+    },
+    {
+      "id": "kexcelled-the-k5-petg",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "THE K5 PETG",
+        "kexcelled petg",
+        "PETG K5"
+      ],
+      "materialType": "PETG",
+      "series": null,
+      "variant": "Standard",
+      "productLine": "THE K5 PETG",
+      "displayName": "Kexcelled THE K5 PETG",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k5-petg",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 48,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": false,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "Official product page. 48 color options including transparent variants. Partial official print params (nozzle 225-245C, bed 70-80C, speed 40-80mm/s). Remaining fields missing or require system defaults. Transparent colors are color effects within this series, not a separate product line.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k5-petg",
+        "technicalDataUrl": null,
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k5-petg",
+        "presetDataUrl": null
+      }
+    },
+    {
+      "id": "kexcelled-the-k6-petg",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "THE K6 PETG",
+        "kexcelled high heat petg",
+        "PETG K6"
+      ],
+      "materialType": "PETG",
+      "series": null,
+      "variant": "High Heat",
+      "productLine": "THE K6 PETG",
+      "displayName": "Kexcelled THE K6 PETG",
+      "officialProductUrl": "https://kexcelled3d.com/zh/products/the-k6-petg",
+      "technicalDataUrl": null,
+      "officialStoreUrl": "https://kexcelled3d.com/zh/collections/filaments",
+      "countryOrRegion": "CN",
+      "verificationStatus": "verified",
+      "lastVerifiedAt": "2026-06-19",
+      "knownColorCount": 3,
+      "hasOfficialColorChart": true,
+      "hasTechnicalDataSheet": false,
+      "hasSpoolSpecs": true,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "High-heat PETG. Official print params have conflicting evidence (250-270C/80-100C vs 225-245C/70-80C). Primary uses 250-270C/80-100C. Conflicting evidence preserved for manual review. Manufacturer claims chemical resistance and hot water tolerance (not platform-verified). Injection molded reference properties saved separately.",
+      "evidence": {
+        "officialColorChartUrl": "https://kexcelled3d.com/zh/products/the-k6-petg",
+        "technicalDataUrl": null,
+        "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k6-petg",
+        "presetDataUrl": null
+      }
     }
   ]
 }

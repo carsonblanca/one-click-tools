@@ -34,6 +34,8 @@ import k5placf from "@/data/filaments/colors/kexcelled/k5-pla-cf.json";
 import k5plasparkle from "@/data/filaments/colors/kexcelled/k5-pla-sparkle.json";
 import k5wood from "@/data/filaments/colors/kexcelled/k5-wood.json";
 import k5placc from "@/data/filaments/colors/kexcelled/k5-pla-cc.json";
+import k5petg from "@/data/filaments/colors/kexcelled/k5-petg.json";
+import k6petg from "@/data/filaments/colors/kexcelled/k6-petg.json";
 
 const COLOR_FILES = [
   plaBasic,
@@ -70,6 +72,8 @@ const COLOR_FILES = [
   k5plasparkle,
   k5wood,
   k5placc,
+  k5petg,
+  k6petg,
 ] as const;
 
 function loadAll(): FilamentColorSku[] {

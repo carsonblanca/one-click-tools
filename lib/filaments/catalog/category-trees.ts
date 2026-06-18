@@ -33,6 +33,7 @@ export const MATERIAL_CATEGORY_TREE: CategoryNode[] = [
       { id: "petg-hf",      labelZh: "HF",     labelEn: "HF" },
       { id: "petg-cf",      labelZh: "碳纤",   labelEn: "CF" },
       { id: "petg-gf",      labelZh: "玻纤",   labelEn: "GF" },
+      { id: "petg-high-heat", labelZh: "高耐热", labelEn: "High Heat" },
     ],
   },
   {

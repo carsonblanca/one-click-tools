@@ -79,6 +79,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "PLA",
       "kexcelled-k5-wood": "PLA",
       "kexcelled-k5-pla-cc": "PLA",
+      "kexcelled-the-k5-petg": "PETG",
+      "kexcelled-the-k6-petg": "PETG",
     };
     const materialType = materialTypeMap[c.productLineId] || "PLA";
     const variantMap: Record<string, string> = {
@@ -93,6 +95,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "Sparkle",
       "kexcelled-k5-wood": "Wood-filled",
       "kexcelled-k5-pla-cc": "Glow-in-the-dark",
+      "kexcelled-the-k5-petg": "Standard",
+      "kexcelled-the-k6-petg": "High Heat",
     };
     const variantZhMap: Record<string, string> = {
       "kexcelled-k5-pla": "标准",
@@ -106,6 +110,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "闪耀",
       "kexcelled-k5-wood": "木质",
       "kexcelled-k5-pla-cc": "夜光",
+      "kexcelled-the-k5-petg": "标准",
+      "kexcelled-the-k6-petg": "高耐热",
     };
     const productLineMap: Record<string, string> = {
       "kexcelled-k5-pla": "THE K5 PLA",
@@ -119,6 +125,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "THE K5 PLA Sparkle",
       "kexcelled-k5-wood": "THE K5 WOOD",
       "kexcelled-k5-pla-cc": "THE K5 PLA CC",
+      "kexcelled-the-k5-petg": "THE K5 PETG",
+      "kexcelled-the-k6-petg": "THE K6 PETG",
     };
     const variant = variantMap[c.productLineId] || "Standard";
     const variantZh = variantZhMap[c.productLineId] || "标准";

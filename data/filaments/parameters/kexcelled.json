@@ -745,6 +745,148 @@
       "parameterStatus": "partial",
       "lastVerifiedAt": "2026-06-19",
       "sourceNotes": "No KEXCELLED official print parameters found for THE K5 PLA CC. Parameters are industry reference for glow-in-the-dark PLA. Nozzle 0.4mm minimum recommended; 0.6mm preferred. Abrasive material. AMS/AMS Lite strongly discouraged. Physical property sheet labeled 'PLA K5' requires series verification."
+    },
+    {
+      "id": "kexcelled-the-k5-petg-params",
+      "productLineId": "kexcelled-the-k5-petg",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 225,
+          "max": 245,
+          "unit": "C",
+          "raw": "225-245°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 70,
+          "max": 80,
+          "unit": "C",
+          "raw": "70-80°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-petg",
+          "label": "Kexcelled THE K5 PETG product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Official parameters from Kexcelled THE K5 PETG: nozzle 225-245C, bed 70-80C, speed 40-80mm/s. Missing: chamber temp, min nozzle, cooling fan, retraction, drying, build plate, max volumetric speed. Do NOT inherit from K5 PETG M (230-260C/55-80C/55-65C 8-12h)."
+    },
+    {
+      "id": "kexcelled-the-k6-petg-params",
+      "productLineId": "kexcelled-the-k6-petg",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 250,
+          "max": 270,
+          "unit": "C",
+          "raw": "250-270°C"
+        }
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 80,
+          "max": 100,
+          "unit": "C",
+          "raw": "80-100°C"
+        }
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null,
+        "refillable": null,
+        "cardboardSpool": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k6-petg",
+          "label": "Kexcelled THE K6 PETG product page",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-06-19"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-06-19",
+      "sourceNotes": "Primary official params: nozzle 250-270C, bed 80-100C, speed 40-80mm/s. Conflicting evidence: another product image shows 225-245C/70-80C (may belong to K5 PETG base; requires manual verification). Missing: chamber temp, min nozzle, cooling fan, retraction, drying, build plate, max volumetric speed."
     }
   ]
 }
