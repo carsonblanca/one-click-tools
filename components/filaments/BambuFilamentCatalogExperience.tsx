@@ -54,6 +54,28 @@ function downloadJson(fileName: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
+function slugifyPresetFileName(value: string) {
+  return value
+    .replace(/[\/:*?"<>|\\]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function buildPresetDownloadFileName(record: { brand: string; productLine: string; variant: string }) {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const dateStr = yy + mm + dd;
+
+  const brand = slugifyPresetFileName(record.brand);
+  const line = slugifyPresetFileName(record.productLine);
+  const variant = slugifyPresetFileName(record.variant);
+
+  return "OneClick-" + brand + "-" + line + "-" + variant + "-" + dateStr + ".json";
+}
+
 function Stars({ value }: { value: number }) {
   return (
     <span className="inline-flex text-amber-400" aria-label={`${value} out of 5`}>
@@ -120,6 +142,8 @@ const LABELS: Record<Locale, Record<string, string>> = {
     images: "images",
     noPhysicalSwatch: "No physical swatch",
     selectPrinter: "Select printer",
+    paramsPending: "Parameters Pending",
+    presetsUnavailable: "Verified print parameters are not yet available.",
     presetNoGcode: "Filament preset only. No G-code is included.",
     compareHint: "2-4 items",
   },
@@ -172,6 +196,8 @@ const LABELS: Record<Locale, Record<string, string>> = {
     images: "张图片",
     noPhysicalSwatch: "暂无实拍",
     selectPrinter: "选择打印机",
+    paramsPending: "参数待补充",
+    presetsUnavailable: "该系列缺少可验证打印参数，暂不可生成预设。",
     presetNoGcode: "仅生成耗材预设，不包含 G-code。",
     compareHint: "2-4 款",
   },
@@ -224,6 +250,8 @@ const LABELS: Record<Locale, Record<string, string>> = {
     images: "張圖片",
     noPhysicalSwatch: "暫無實拍",
     selectPrinter: "選擇印表機",
+    paramsPending: "參數待補充",
+    presetsUnavailable: "該系列缺少可驗證列印參數，暫不可產生預設。",
     presetNoGcode: "僅產生線材預設，不包含 G-code。",
     compareHint: "2-4 款",
   },
@@ -648,6 +676,8 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                 const cardPrinterId = cardPrinters[record.id] || printerOptions[0]?.id || "";
                 const generatedPreset = generateBambuFilamentPresetSet(cardPrinterId);
                 const matchPreset = generatedPreset.find((p) => p.material.type === record.materialType);
+                const hasVerifiedParams = record.brand !== "R3D";
+                const presetsDisabled = !hasVerifiedParams;
                 const c = record.color;
                 const colorName = getLocalizedFilamentColorName(c, locale);
                 const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
@@ -721,18 +751,20 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                           ))}
                         </select>
                         <button
-                          onClick={() => { if (matchPreset) downloadJson(matchPreset.fileName, matchPreset.preset); }}
-                          disabled={!matchPreset}
+                          onClick={() => { if (matchPreset && !presetsDisabled) downloadJson(buildPresetDownloadFileName(record), matchPreset.preset); }}
+                          disabled={!matchPreset || presetsDisabled}
                           className={`shrink-0 rounded-2xl px-4 py-2.5 text-xs font-medium transition ${
-                            !matchPreset
+                            !matchPreset || presetsDisabled
                               ? "opacity-40 cursor-not-allowed " + (isDark ? "bg-white/10 text-white/40" : "bg-[#E8DFD0] text-[#8A8173]")
                               : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
                           }`}
                         >
-                          {matchPreset ? t.downloadPreset : t.noPreset}
+                          {presetsDisabled ? t.paramsPending : (matchPreset ? t.downloadPreset : t.noPreset)}
                         </button>
                       </div>
-                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>{t.presetNoGcode}</p>
+                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
+                        {presetsDisabled ? t.presetsUnavailable : t.presetNoGcode}
+                      </p>
                     </div>
 
                     <div className="mt-3 flex gap-2">

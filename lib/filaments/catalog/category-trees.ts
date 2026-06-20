@@ -17,6 +17,11 @@ export const MATERIAL_CATEGORY_TREE: CategoryNode[] = [
       { id: "pla-hs",       labelZh: "高速",   labelEn: "High Speed" },
       { id: "pla-cf",       labelZh: "碳纤",   labelEn: "CF" },
       { id: "pla-glow",     labelZh: "发光",   labelEn: "Glow" },
+      { id: "pla-tough",    labelZh: "高韧性", labelEn: "Tough" },
+      { id: "pla-metallic", labelZh: "金属质感", labelEn: "Metallic" },
+      { id: "pla-marble",   labelZh: "大理石",  labelEn: "Marble" },
+      { id: "pla-sparkle",  labelZh: "闪耀",    labelEn: "Sparkle" },
+      { id: "pla-wood",     labelZh: "木质",    labelEn: "Wood" },
     ],
   },
   {
@@ -28,6 +33,7 @@ export const MATERIAL_CATEGORY_TREE: CategoryNode[] = [
       { id: "petg-hf",      labelZh: "HF",     labelEn: "HF" },
       { id: "petg-cf",      labelZh: "碳纤",   labelEn: "CF" },
       { id: "petg-gf",      labelZh: "玻纤",   labelEn: "GF" },
+      { id: "petg-high-heat", labelZh: "高耐热", labelEn: "High Heat" },
     ],
   },
   {
@@ -102,8 +108,8 @@ export const BRAND_CATEGORY_TREE: CategoryNode[] = [
     labelZh: "Kexcelled",
     labelEn: "Kexcelled",
     children: [
+      { id: "kexcelled-pla", labelZh: "PLA", labelEn: "PLA" },
       { id: "kexcelled-petg", labelZh: "PETG", labelEn: "PETG" },
-      { id: "kexcelled-tpu",  labelZh: "TPU",  labelEn: "TPU" },
     ],
   },
   {

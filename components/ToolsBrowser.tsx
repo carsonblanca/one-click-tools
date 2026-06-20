@@ -57,7 +57,9 @@ export default function ToolsBrowser({
         name: localizedTool?.name || tool.name,
         desc: localizedTool?.desc || tool.desc || tool.description,
         category: localizedTool?.category || getCategoryLabel(categoryName),
-        href: localizedTool ? `/${locale}/tools/${tool.slug}` : `/tools/${tool.slug}`,
+        href: tool.slug === "bambu-filament-preset-generator"
+          ? isLocalized ? `/${locale}/filaments` : "/filaments"
+          : localizedTool ? `/${locale}/tools/${tool.slug}` : `/tools/${tool.slug}`,
       };
     },
     [getCategoryLabel, isLocalized, locale],

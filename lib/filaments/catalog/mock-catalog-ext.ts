@@ -1,4 +1,6 @@
 import type { CatalogColor, SpoolSpec, Finish, Transparency, ColorFamily, DigitalSwatch, PhysicalSwatch } from "./mock-colors";
+import { getAllFilamentColors } from "@/lib/filaments/colors/catalog";
+import r3dProductLines from "@/data/filaments/product-lines/r3d.json";
 
 export type CatalogRecord = {
   id: string;
@@ -58,6 +60,188 @@ function spool(
     refillable: refill, cardboardSpool: cardboard, amsFit, adapterRequired: adapter,
     spoolImagePlaceholder: img,
   };
+}
+
+const PLACEHOLDER_HEX = "#D9D9D9";
+const PLACEHOLDER_RGB = { r: 217, g: 217, b: 217 };
+
+function buildKexcelledRecords(): CatalogRecord[] {
+  const colors = getAllFilamentColors().filter((c) => c.brandId === "kexcelled");
+  return colors.map((c) => {
+    const materialTypeMap: Record<string, string> = {
+      "kexcelled-k5-pla": "PLA",
+      "kexcelled-k5-pla-m": "PLA",
+      "kexcelled-k6-pla": "PLA",
+      "kexcelled-k5-pla-p": "PLA",
+      "kexcelled-k5-petg-gf": "PETG",
+      "kexcelled-k5-pla-magic": "PLA",
+      "kexcelled-k6-pla-cf10": "PLA",
+      "kexcelled-k5-pla-cf": "PLA",
+      "kexcelled-k5-pla-sparkle": "PLA",
+      "kexcelled-k5-wood": "PLA",
+      "kexcelled-k5-pla-cc": "PLA",
+      "kexcelled-k5-pla-silk": "PLA",
+      "kexcelled-the-k5-petg": "PETG",
+      "kexcelled-the-k6-petg": "PETG",
+    };
+    const materialType = materialTypeMap[c.productLineId] || "PLA";
+    const variantMap: Record<string, string> = {
+      "kexcelled-k5-pla": "Standard",
+      "kexcelled-k5-pla-m": "Matte",
+      "kexcelled-k6-pla": "Tough",
+      "kexcelled-k5-pla-p": "Metallic",
+      "kexcelled-k5-petg-gf": "Glass Fiber Reinforced",
+      "kexcelled-k5-pla-magic": "Marble",
+      "kexcelled-k6-pla-cf10": "Carbon Fiber Reinforced",
+      "kexcelled-k5-pla-cf": "Carbon Fiber Reinforced",
+      "kexcelled-k5-pla-sparkle": "Sparkle",
+      "kexcelled-k5-wood": "Wood-filled",
+      "kexcelled-k5-pla-cc": "Glow-in-the-dark",
+      "kexcelled-k5-pla-silk": "Silk",
+      "kexcelled-the-k5-petg": "Standard",
+      "kexcelled-the-k6-petg": "High Heat",
+    };
+    const variantZhMap: Record<string, string> = {
+      "kexcelled-k5-pla": "标准",
+      "kexcelled-k5-pla-m": "哑光",
+      "kexcelled-k6-pla": "高韧性",
+      "kexcelled-k5-pla-p": "金属质感",
+      "kexcelled-k5-petg-gf": "玻纤增强",
+      "kexcelled-k5-pla-magic": "大理石",
+      "kexcelled-k6-pla-cf10": "碳纤维增强",
+      "kexcelled-k5-pla-cf": "碳纤维增强",
+      "kexcelled-k5-pla-sparkle": "闪耀",
+      "kexcelled-k5-wood": "木质",
+      "kexcelled-k5-pla-cc": "夜光",
+      "kexcelled-k5-pla-silk": "丝绸",
+      "kexcelled-the-k5-petg": "标准",
+      "kexcelled-the-k6-petg": "高耐热",
+    };
+    const productLineMap: Record<string, string> = {
+      "kexcelled-k5-pla": "THE K5 PLA",
+      "kexcelled-k5-pla-m": "THE K5 PLA M",
+      "kexcelled-k6-pla": "THE K6 PLA",
+      "kexcelled-k5-pla-p": "THE K5 PLA P",
+      "kexcelled-k5-petg-gf": "THE K5 PETG GF",
+      "kexcelled-k5-pla-magic": "THE K5 PLA Magic",
+      "kexcelled-k6-pla-cf10": "THE K6 PLA CF10",
+      "kexcelled-k5-pla-cf": "THE K5 PLA CF",
+      "kexcelled-k5-pla-sparkle": "THE K5 PLA Sparkle",
+      "kexcelled-k5-wood": "THE K5 WOOD",
+      "kexcelled-k5-pla-cc": "THE K5 PLA CC",
+      "kexcelled-k5-pla-silk": "THE K5 PLA Silk",
+      "kexcelled-the-k5-petg": "THE K5 PETG",
+      "kexcelled-the-k6-petg": "THE K6 PETG",
+    };
+    const variant = variantMap[c.productLineId] || "Standard";
+    const variantZh = variantZhMap[c.productLineId] || "标准";
+    const productLine = productLineMap[c.productLineId] || c.productLineId;
+    const materialTypeZh = materialType;
+
+    const hexStr = c.hex;
+    const hasRealHex = hexStr !== null;
+    const hexVal = hexStr || PLACEHOLDER_HEX;
+    let rVal: number, gVal: number, bVal: number;
+    if (c.rgb && Array.isArray(c.rgb) && c.rgb.length === 3) {
+      [rVal, gVal, bVal] = c.rgb;
+    } else {
+      rVal = PLACEHOLDER_RGB.r;
+      gVal = PLACEHOLDER_RGB.g;
+      bVal = PLACEHOLDER_RGB.b;
+    }
+
+    const finish = (c.finish || "semi-glossy") as Finish;
+    const transparency = (c.opacity === "translucent" ? "translucent" : "opaque") as Transparency;
+    const colorFamily = inferColorFamily(c.officialName, c.hex);
+
+    const color: CatalogColor = hasRealHex
+      ? dc(hexVal, rVal, gVal, bVal, c.displayNameZh || c.officialName, c.officialName,
+          colorFamily, finish, transparency,
+          c.officialColorCode || `KX-${c.id.split("-").pop()?.toUpperCase()}`,
+          c.colorValueSource === "official" ? "manufacturer" : "uploader")
+      : {
+          colorNameZh: c.displayNameZh || c.officialName,
+          colorNameEn: c.officialName,
+          colorFamily,
+          hex: PLACEHOLDER_HEX,
+          rgb: PLACEHOLDER_RGB,
+          finish, transparency,
+          hasDigitalSwatch: false,
+          hasPhysicalSwatch: false,
+          physicalSwatchCount: 0,
+          digitalSwatch: null,
+          physicalSwatches: [],
+        };
+
+    return {
+      id: c.id,
+      brand: "Kexcelled",
+      brandZh: "Kexcelled",
+      materialType,
+      materialTypeZh,
+      variant,
+      variantZh,
+      productLine,
+      color,
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0,
+      reviewCount: 0,
+      createdAt: "2026-06-19",
+    };
+  });
+}
+
+function inferColorFamily(name: string, hex: string | null): ColorFamily {
+  if (!hex) return "gray";
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20) {
+    if (r < 40) return "black";
+    if (r > 220) return "white";
+    return "gray";
+  }
+  if (r > g && r > b) {
+    if (Math.abs(g - b) < 30) return "red";
+    if (g > b) return "orange";
+    return "pink";
+  }
+  if (g > r && g > b) return "green";
+  if (b > r && b > g) return "blue";
+  return "gray";
+}
+
+// Variant name maps for R3D (simplified — same as displayed variant)
+function r3dVariantZh(variant: string): string {
+  var m: Record<string, string> = {
+    "Standard": "标准", "Matte": "哑光", "Tough": "高韧性", "Silk": "丝绸",
+    "Glow": "夜光", "Marble": "大理石", "Wood": "木质", "Rainbow": "彩虹",
+    "Temperature": "温变", "UV": "UV", "CF": "碳纤维", "PEBA": "PEBA",
+  };
+  return m[variant] || variant;
+}
+
+function buildR3dRecords(): CatalogRecord[] {
+  return r3dProductLines.productLines.map(function (pl) {
+    var color: CatalogColor = {
+      colorNameZh: "通用", colorNameEn: "Generic",
+      colorFamily: "gray", hex: PLACEHOLDER_HEX, rgb: PLACEHOLDER_RGB,
+      finish: "semi-glossy", transparency: "opaque",
+      hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+      digitalSwatch: null, physicalSwatches: [],
+    };
+    return {
+      id: pl.id + "-generic",
+      brand: "R3D", brandZh: "爱三迪",
+      materialType: pl.materialType, materialTypeZh: pl.materialType,
+      variant: pl.variant, variantZh: r3dVariantZh(pl.variant),
+      productLine: pl.productLine,
+      color: color,
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0, reviewCount: 0, createdAt: "2026-06-20",
+    };
+  });
 }
 
 export const CATALOG_RECORDS: CatalogRecord[] = [
@@ -172,16 +356,6 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
     rating: 4.0, reviewCount: 3200, createdAt: "2023-01-01",
   },
   {
-    id: "kexcelled-petg-hf-purple",
-    brand: "Kexcelled", brandZh: "Kexcelled",
-    materialType: "PETG", materialTypeZh: "PETG",
-    variant: "HF", variantZh: "HF",
-    productLine: "Kexcelled PETG HF",
-    color: dc("#8B5CF6", 139, 92, 246, "紫色", "Purple", "purple", "semi-glossy", "opaque", "KX-P008", "manufacturer"),
-    spool: spool(1000, 255, 1255, 205, 66, 53, "PC", true, false, "yes", false, null),
-    rating: 4.2, reviewCount: 670, createdAt: "2025-01-10",
-  },
-  {
     id: "generic-pla-basic-gray",
     brand: "Generic", brandZh: "Generic",
     materialType: "PLA", materialTypeZh: "PLA",
@@ -211,6 +385,8 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
     spool: spool(1000, 0, null, null, null, null, null, false, true, "yes", false, null),
     rating: 4.6, reviewCount: 430, createdAt: "2024-07-01",
   },
+  ...buildKexcelledRecords(),
+  ...buildR3dRecords(),
 ];
 
 export function getRecordsByBrand(brand: string): CatalogRecord[] {

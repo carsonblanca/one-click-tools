@@ -95,6 +95,7 @@ import ThreeDPrintTimeFilamentEstimatorTool from "@/components/tools/ThreeDPrint
 import SupportMaterialCostCalculatorTool from "@/components/tools/SupportMaterialCostCalculatorTool";
 import FilamentSpoolRemainingCalculatorTool from "@/components/tools/FilamentSpoolRemainingCalculatorTool";
 import BuildPlateFitCalculatorTool from "@/components/tools/BuildPlateFitCalculatorTool";
+import FilamentRedirect from "./filament-redirect";
 import type { Locale } from "@/lib/i18n";
 
 export default function ToolClient({ slug, locale = "en" }: { slug: string; locale?: Locale }) {
@@ -231,6 +232,8 @@ export default function ToolClient({ slug, locale = "en" }: { slug: string; loca
   if (slug === "filament-spool-remaining-calculator") return <FilamentSpoolRemainingCalculatorTool locale={locale} />;
 
   if (slug === "build-plate-fit-calculator") return <BuildPlateFitCalculatorTool locale={locale} />;
+
+  if (slug === "bambu-filament-preset-generator") return <FilamentRedirect locale={locale} />;
 
   return (
     <div className="mt-10 rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-red-300">

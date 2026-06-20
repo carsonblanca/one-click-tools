@@ -1,0 +1,843 @@
+{
+  "brandId": "r3d",
+  "brandName": "R3D",
+  "verifiedAt": "2026-06-20",
+  "records": [
+    {
+      "id": "r3d-pla-standard-params",
+      "productLineId": "r3d-pla-standard",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-matte-params",
+      "productLineId": "r3d-pla-matte",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-tough-params",
+      "productLineId": "r3d-pla-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-silk-params",
+      "productLineId": "r3d-pla-silk",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-glow-params",
+      "productLineId": "r3d-pla-glow",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-marble-params",
+      "productLineId": "r3d-pla-marble",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-wood-params",
+      "productLineId": "r3d-pla-wood",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-rainbow-params",
+      "productLineId": "r3d-pla-rainbow",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-temperature-params",
+      "productLineId": "r3d-pla-temperature",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pla-uv-params",
+      "productLineId": "r3d-pla-uv",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-petg-tough-params",
+      "productLineId": "r3d-petg-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-petg-matte-params",
+      "productLineId": "r3d-petg-matte",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-petg-marble-params",
+      "productLineId": "r3d-petg-marble",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-abs-tough-params",
+      "productLineId": "r3d-abs-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-asa-tough-params",
+      "productLineId": "r3d-asa-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-tpu-matte-params",
+      "productLineId": "r3d-tpu-matte",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-tpu-tough-params",
+      "productLineId": "r3d-tpu-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-pa-cf-params",
+      "productLineId": "r3d-pa-cf",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    },
+    {
+      "id": "r3d-peba-tough-params",
+      "productLineId": "r3d-peba-tough",
+      "brandId": "r3d",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "conditionSets": null,
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No print parameters independently verified. All fields pending official TDS/spec confirmation."
+    }
+  ]
+}
