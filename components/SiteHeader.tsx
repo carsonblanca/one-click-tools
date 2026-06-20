@@ -4,9 +4,17 @@ import Link from "next/link";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./ThemeProvider";
+import type { Locale } from "@/lib/i18n";
 
-export default function SiteHeader() {
+const headerLabels: Record<Locale, { tagline: string; tools: string; siteMap: string }> = {
+  en: { tagline: "Tiny utilities, neatly packed", tools: "Tools", siteMap: "Site Map" },
+  "zh-cn": { tagline: "常用工具，打开即用", tools: "工具", siteMap: "站点地图" },
+  "zh-tw": { tagline: "常用工具，打開即用", tools: "工具", siteMap: "網站地圖" },
+};
+
+export default function SiteHeader({ locale = "en" }: { locale?: Locale }) {
   const { isDark } = useTheme();
+  const labels = headerLabels[locale];
 
   return (
     <header
@@ -38,7 +46,7 @@ export default function SiteHeader() {
                 isDark ? "text-white/35" : "text-[#6B665D]"
               }`}
             >
-              Tiny utilities, neatly packed
+              {labels.tagline}
             </div>
           </div>
         </Link>
@@ -50,16 +58,16 @@ export default function SiteHeader() {
             }`}
           >
             <Link href="/#tools" className="hover:opacity-100">
-              Tools
+              {labels.tools}
             </Link>
 
             <Link href="/site-map" className="hover:opacity-100">
-              Site Map
+              {labels.siteMap}
             </Link>
           </nav>
 
           <LanguageSwitcher />
-          <ThemeToggle />
+          <ThemeToggle locale={locale} />
         </div>
       </div>
     </header>

@@ -43,6 +43,7 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     lastVerified: "Last verified",
     yes: "Yes",
     no: "No",
+    noDirectLink: "No direct web link. Use the official QR-code entry on the brand site.",
   },
   "zh-cn": {
     unknown: "暂未获得可靠公开证据",
@@ -75,6 +76,7 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     lastVerified: "最后核验",
     yes: "是",
     no: "否",
+    noDirectLink: "无直接网页链接，请使用品牌官网上的二维码入口。",
   },
   "zh-tw": {
     unknown: "暫未取得可靠公開證據",
@@ -107,6 +109,7 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     lastVerified: "最後核驗",
     yes: "是",
     no: "否",
+    noDirectLink: "無直接網頁連結，請使用品牌官網上的 QR code 入口。",
   },
 };
 
@@ -126,6 +129,26 @@ function channelBadge(channel: OfficialChannel, t: Record<string, string>) {
   return t.unknownSource;
 }
 
+function brandLocaleContent(brand: BrandProfile, locale: Locale) {
+  return brand.localized?.[locale] ?? (locale === "en" ? brand.localized?.en : undefined);
+}
+
+function localizeChannel(
+  channel: OfficialChannel,
+  content: ReturnType<typeof brandLocaleContent>,
+): OfficialChannel {
+  const override = channel.id ? content?.channels?.[channel.id] : undefined;
+  return override ? { ...channel, ...override } : channel;
+}
+
+function localizedSourceLabel(brand: BrandProfile, locale: Locale, sourceId: string, fallback: string) {
+  return brandLocaleContent(brand, locale)?.sourceLabels?.[sourceId] ?? fallback;
+}
+
+function localizedField<T>(localizedValue: T | undefined, fallback: T) {
+  return localizedValue === undefined ? fallback : localizedValue;
+}
+
 function ChannelList({ channels, t }: { channels: OfficialChannel[]; t: Record<string, string> }) {
   if (channels.length === 0) {
     return <p className="text-sm opacity-65">{t.unknown}</p>;
@@ -133,20 +156,20 @@ function ChannelList({ channels, t }: { channels: OfficialChannel[]; t: Record<s
   return (
     <div className="space-y-3">
       {channels.map((channel) => (
-        <div key={`${channel.platform}-${channel.displayName}`} className="rounded-2xl border border-current/10 p-4">
+        <div key={channel.id || `${channel.platform}-${channel.displayName}`} className="rounded-2xl border border-current/10 p-4">
           <div className="flex flex-wrap items-center gap-2">
             <strong>{channel.displayName}</strong>
             <span className="rounded-full border border-current/15 px-2 py-1 text-xs opacity-75">
               {channelBadge(channel, t)}
             </span>
           </div>
-          <p className="mt-1 text-sm opacity-70">{channel.platform} · {sourceLabel(channel.sourceType, t)}</p>
+          <p className="mt-1 text-sm opacity-70">{channel.platform} · {sourceLabel(channel.sourceType, t)} · {t.lastVerified}: {channel.verifiedAt || t.unknown}</p>
           {channel.url ? (
             <a href={channel.url} rel="noreferrer" target="_blank" className="mt-2 inline-block text-sm underline underline-offset-4">
               {t.openPage}
             </a>
           ) : (
-            <p className="mt-2 text-sm opacity-65">{t.unknown}</p>
+            <p className="mt-2 text-sm opacity-65">{t.noDirectLink}</p>
           )}
         </div>
       ))}
@@ -157,8 +180,20 @@ function ChannelList({ channels, t }: { channels: OfficialChannel[]; t: Record<s
 export default function BrandProfilePage({ brand, locale = "en" }: { brand: BrandProfile; locale?: Locale }) {
   const { isDark } = useTheme();
   const t = BRAND_LABELS[locale] || BRAND_LABELS.en;
+  const content = brandLocaleContent(brand, locale);
   const filaments = getBrandFilaments(brand.id);
   const panelClass = `rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
+  const backHref = locale === "en" ? "/tools/bambu-filament-preset-generator" : `/${locale}/tools/bambu-filament-preset-generator`;
+  const summary = content?.summary ?? brand.summary;
+  const legalEntity = localizedField(content?.legalEntity, brand.legalEntity);
+  const countryOrRegion = localizedField(content?.countryOrRegion, brand.countryOrRegion);
+  const headquarters = localizedField(content?.headquarters, brand.headquarters);
+  const productionLocations = localizedField(content?.productionLocations, brand.productionLocations);
+  const productionLocationLabel = content?.productionLocationLabel ?? t.productionLocation;
+  const factoryStatus = content?.factoryStatusLabel ?? (brand.factoryStatus === "unknown" ? t.unknown : brand.factoryStatus);
+  const website = brand.website ? localizeChannel(brand.website, content) : null;
+  const officialStores = brand.officialStores.map((channel) => localizeChannel(channel, content));
+  const socialAccounts = brand.socialAccounts.map((channel) => localizeChannel(channel, content));
 
   return (
     <section className="relative mx-auto max-w-7xl px-6 py-12">
@@ -169,11 +204,11 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
             <h1 className="text-4xl font-semibold tracking-tight">{brand.name}</h1>
           </div>
           <p className={isDark ? "mt-3 max-w-3xl text-white/60" : "mt-3 max-w-3xl text-[#6B665D]"}>
-            {brand.summary}
+            {summary}
           </p>
         </div>
         <Link
-          href="/tools/bambu-filament-preset-generator"
+          href={backHref}
           className={`rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap ${
             isDark ? "border border-white/10 text-white/70" : "border border-[#E5DED0] text-[#6B665D]"
           }`}
@@ -188,25 +223,25 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
           <dl className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-sm opacity-60">{t.legalEntity}</dt>
-              <dd className="mt-1 font-medium">{brand.legalEntity || t.unknown}</dd>
+              <dd className="mt-1 font-medium">{legalEntity || t.unknown}</dd>
             </div>
             <div>
               <dt className="text-sm opacity-60">{t.countryRegion}</dt>
-              <dd className="mt-1 font-medium">{brand.countryOrRegion || t.unknown}</dd>
+              <dd className="mt-1 font-medium">{countryOrRegion || t.unknown}</dd>
             </div>
             <div>
               <dt className="text-sm opacity-60">{t.headquarters}</dt>
-              <dd className="mt-1 font-medium">{brand.headquarters || t.unknown}</dd>
+              <dd className="mt-1 font-medium">{headquarters || t.unknown}</dd>
             </div>
             <div>
-              <dt className="text-sm opacity-60">{t.productionLocation}</dt>
+              <dt className="text-sm opacity-60">{productionLocationLabel}</dt>
               <dd className="mt-1 font-medium">
-                {brand.productionLocations.length > 0 ? brand.productionLocations.join(", ") : t.unknown}
+                {productionLocations.length > 0 ? productionLocations.join(", ") : t.unknown}
               </dd>
             </div>
             <div>
               <dt className="text-sm opacity-60">{t.factoryStatus}</dt>
-              <dd className="mt-1 font-medium">{brand.factoryStatus === "unknown" ? t.unknown : brand.factoryStatus}</dd>
+              <dd className="mt-1 font-medium">{factoryStatus}</dd>
             </div>
             <div>
               <dt className="text-sm opacity-60">{t.verificationStatus}</dt>
@@ -239,25 +274,28 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
         <div className={panelClass}>
           <h2 className="text-xl font-semibold">{t.website}</h2>
           <div className="mt-4">
-            {brand.website ? <ChannelList channels={[brand.website]} t={t} /> : <p className="text-sm opacity-65">{t.unknown}</p>}
+            {website ? <ChannelList channels={[website]} t={t} /> : <p className="text-sm opacity-65">{t.unknown}</p>}
           </div>
         </div>
         <div className={panelClass}>
           <h2 className="text-xl font-semibold">{t.stores}</h2>
-          <div className="mt-4"><ChannelList channels={brand.officialStores} t={t} /></div>
+          <div className="mt-4"><ChannelList channels={officialStores} t={t} /></div>
         </div>
         <div className={panelClass}>
           <h2 className="text-xl font-semibold">{t.social}</h2>
-          <div className="mt-4"><ChannelList channels={brand.socialAccounts} t={t} /></div>
+          <div className="mt-4"><ChannelList channels={socialAccounts} t={t} /></div>
         </div>
       </div>
 
       <div className={`${panelClass} mt-5`}>
         <h2 className="text-xl font-semibold">{t.sources}</h2>
+        {content?.sourceSummary ? (
+          <p className="mt-3 max-w-5xl text-sm leading-6 opacity-70">{content.sourceSummary}</p>
+        ) : null}
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {brand.sources.map((source) => (
             <div key={source.id} className="rounded-2xl border border-current/10 p-4">
-              <strong>{source.label}</strong>
+              <strong>{localizedSourceLabel(brand, locale, source.id, source.label)}</strong>
               <p className="mt-1 text-sm opacity-70">
                 {sourceLabel(source.sourceType, t)} · {t.crossVerified}: {source.crossVerified ? t.yes : t.no} · {t.lastVerified}: {source.lastVerifiedAt || t.unknown}
               </p>
