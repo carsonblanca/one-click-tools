@@ -1,5 +1,6 @@
 import type { CatalogColor, SpoolSpec, Finish, Transparency, ColorFamily, DigitalSwatch, PhysicalSwatch } from "./mock-colors";
 import { getAllFilamentColors } from "@/lib/filaments/colors/catalog";
+import r3dProductLines from "@/data/filaments/product-lines/r3d.json";
 
 export type CatalogRecord = {
   id: string;
@@ -211,6 +212,38 @@ function inferColorFamily(name: string, hex: string | null): ColorFamily {
   return "gray";
 }
 
+// Variant name maps for R3D (simplified — same as displayed variant)
+function r3dVariantZh(variant: string): string {
+  var m: Record<string, string> = {
+    "Standard": "标准", "Matte": "哑光", "Tough": "高韧性", "Silk": "丝绸",
+    "Glow": "夜光", "Marble": "大理石", "Wood": "木质", "Rainbow": "彩虹",
+    "Temperature": "温变", "UV": "UV", "CF": "碳纤维", "PEBA": "PEBA",
+  };
+  return m[variant] || variant;
+}
+
+function buildR3dRecords(): CatalogRecord[] {
+  return r3dProductLines.productLines.map(function (pl) {
+    var color: CatalogColor = {
+      colorNameZh: "通用", colorNameEn: "Generic",
+      colorFamily: "gray", hex: PLACEHOLDER_HEX, rgb: PLACEHOLDER_RGB,
+      finish: "semi-glossy", transparency: "opaque",
+      hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+      digitalSwatch: null, physicalSwatches: [],
+    };
+    return {
+      id: pl.id + "-generic",
+      brand: "R3D", brandZh: "爱三迪",
+      materialType: pl.materialType, materialTypeZh: pl.materialType,
+      variant: pl.variant, variantZh: r3dVariantZh(pl.variant),
+      productLine: pl.productLine,
+      color: color,
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0, reviewCount: 0, createdAt: "2026-06-20",
+    };
+  });
+}
+
 export const CATALOG_RECORDS: CatalogRecord[] = [
   {
     id: "bambu-pla-basic-black",
@@ -353,6 +386,7 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
     rating: 4.6, reviewCount: 430, createdAt: "2024-07-01",
   },
   ...buildKexcelledRecords(),
+  ...buildR3dRecords(),
 ];
 
 export function getRecordsByBrand(brand: string): CatalogRecord[] {
