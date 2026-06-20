@@ -188,6 +188,57 @@ export const filamentBrandProfiles: BrandProfile[] = [
     verificationStatus: "unverified",
     lastVerifiedAt: null,
   },
+  {
+    id: "kexcelled",
+    name: "Kexcelled",
+    legalEntity: null,
+    countryOrRegion: "CN",
+    headquarters: "Suzhou, Jiangsu, CN",
+    productionLocations: [
+      "Nantong, Jiangsu, CN (production base, 2023)",
+      "Thailand (factory, 2025)",
+    ],
+    factoryStatus: "owned",
+    summary:
+      "Kexcelled is a 3D printing materials manufacturer founded in 2013. Headquartered in Suzhou with production bases in Nantong (2023) and Thailand (2025).",
+    website: {
+      platform: "Official website",
+      displayName: "kexcelled3d.cn",
+      url: "https://www.kexcelled3d.cn/",
+      verificationStatus: "official",
+      verifiedAt: "2026-06-20",
+      sourceType: "manufacturerProvided",
+    },
+    officialStores: [
+      {
+        platform: "TMall",
+        displayName: "Kexcelled TMall store",
+        url: "https://detail.tmall.com/item.htm?id=652583113236",
+        verificationStatus: "official",
+        verifiedAt: "2026-06-20",
+        sourceType: "publicVerified",
+      },
+    ],
+    socialAccounts: [
+      { platform: "Facebook", displayName: "Kexcelled", url: "https://www.facebook.com/people/Kexcelled/100090684476972/", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "Discord", displayName: "Kexcelled", url: "https://discord.com/invite/WBkuvwm9bC", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "Instagram", displayName: "kexcelled_3d", url: "https://www.instagram.com/kexcelled_3d/", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "YouTube", displayName: "Kexcelled", url: "https://www.youtube.com/@kexcelled", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "LinkedIn", displayName: "Kexcelled 3D", url: "https://www.linkedin.com/company/kexcelled-3d", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "Douyin (TikTok CN)", displayName: "Kexcelled", url: "https://www.douyin.com/user/MS4wLjABAAAAknQWyENWlXwXd7AcLLyAxkXG6A2OJZnXJCx46XRrHyA", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "Xiaohongshu (RED)", displayName: "Kexcelled", url: "https://www.xiaohongshu.com/user/profile/6262e2ff0000000021026c52", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "Bilibili", displayName: "Kexcelled", url: "https://space.bilibili.com/1916825928", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "WeChat Official Account", displayName: "Kexcelled (QR code on official site)", url: null, verificationStatus: "pending", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { platform: "WeChat Video Channel", displayName: "Kexcelled (QR code on official site)", url: null, verificationStatus: "pending", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+    ],
+    sources: [
+      { id: "kexcelled-about", sourceType: "manufacturerProvided", label: "Kexcelled official About page (kexcelled3d.cn/about-us)", url: "https://www.kexcelled3d.cn/about-us", lastVerifiedAt: "2026-06-20", crossVerified: true },
+      { id: "kexcelled-linkedin", sourceType: "publicVerified", label: "Kexcelled LinkedIn company page", url: "https://www.linkedin.com/company/kexcelled-3d", lastVerifiedAt: "2026-06-20", crossVerified: true },
+      { id: "kexcelled-social", sourceType: "publicVerified", label: "Official website footer social media links", url: "https://www.kexcelled3d.cn/", lastVerifiedAt: "2026-06-20", crossVerified: false },
+    ],
+    verificationStatus: "partial",
+    lastVerifiedAt: "2026-06-20",
+  },
 ];
 
 const tag = (
