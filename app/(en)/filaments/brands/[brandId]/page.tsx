@@ -24,7 +24,7 @@ export async function generateMetadata({
 
   return {
     title: `${brand.name} Filament Brand Profile | OneClick Tools`,
-    description: `Static prototype brand profile for ${brand.name}, including official channels, production facts, and verification status.`,
+    description: brand.summary || `Verified brand profile for ${brand.name}.`,
     alternates: {
       canonical: `https://one-click-tools.com/filaments/brands/${brand.id}`,
     },
