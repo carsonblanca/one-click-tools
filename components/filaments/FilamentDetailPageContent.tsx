@@ -61,6 +61,8 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     printerDownload: "Printer selection and preset download",
     downloadPreset: "Download preset",
     noPreset: "No preset available",
+    paramsPending: "Parameters Pending",
+    presetsUnavailable: "Verified print parameters are not yet available.",
     retractionSource: "Retraction source",
     inheritedPrinter: "Inherited from selected printer template",
     nozzleTempShort: "Nozzle temperature",
@@ -147,6 +149,8 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     printerDownload: "打印机选择与预设下载",
     downloadPreset: "下载预设",
     noPreset: "暂无可用预设",
+    paramsPending: "参数待补充",
+    presetsUnavailable: "该系列缺少可验证打印参数，暂不可生成预设。",
     retractionSource: "回抽来源",
     inheritedPrinter: "继承自所选打印机模板",
     nozzleTempShort: "喷嘴温度",
@@ -233,6 +237,8 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     printerDownload: "印表機選擇與預設下載",
     downloadPreset: "下載預設",
     noPreset: "暫無可用預設",
+    paramsPending: "參數待補充",
+    presetsUnavailable: "該系列缺少可驗證列印參數，暫不可產生預設。",
     retractionSource: "回抽來源",
     inheritedPrinter: "繼承自所選印表機模板",
     nozzleTempShort: "噴嘴溫度",
@@ -283,6 +289,26 @@ function downloadJson(fileName: string, data: unknown) {
   const link = document.createElement("a");
   link.href = url; link.download = fileName; link.click();
   URL.revokeObjectURL(url);
+}
+
+function slugifyPresetFileName(value: string) {
+  return value
+    .replace(/[\/:*?"<>|\\]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function buildPresetDownloadFileName(record: { brand: string; productLine: string; variant: string }) {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const dateStr = yy + mm + dd;
+  const brand = slugifyPresetFileName(record.brand);
+  const line = slugifyPresetFileName(record.productLine);
+  const variant = slugifyPresetFileName(record.variant);
+  return "OneClick-" + brand + "-" + line + "-" + variant + "-" + dateStr + ".json";
 }
 
 function DetailSection({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
@@ -453,16 +479,16 @@ export default function FilamentDetailPageContent({
                 </select>
                 <button
                   onClick={() => {
-                    if (generated) downloadJson(generated.fileName, generated.preset);
+                    if (generated && record.brand !== "R3D") downloadJson(buildPresetDownloadFileName(record), generated.preset);
                   }}
-                  disabled={!generated}
+                  disabled={!generated || record.brand === "R3D"}
                   className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
-                    !generated
+                    !generated || record.brand === "R3D"
                       ? "opacity-40 cursor-not-allowed"
                       : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
                   }`}
                 >
-                  {generated ? t.downloadPreset : t.noPreset}
+                  {record.brand === "R3D" ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
                 </button>
               </div>
               {generated && (
