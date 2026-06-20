@@ -79,6 +79,7 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "PLA",
       "kexcelled-k5-wood": "PLA",
       "kexcelled-k5-pla-cc": "PLA",
+      "kexcelled-k5-pla-silk": "PLA",
       "kexcelled-the-k5-petg": "PETG",
       "kexcelled-the-k6-petg": "PETG",
     };
@@ -95,6 +96,7 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "Sparkle",
       "kexcelled-k5-wood": "Wood-filled",
       "kexcelled-k5-pla-cc": "Glow-in-the-dark",
+      "kexcelled-k5-pla-silk": "Silk",
       "kexcelled-the-k5-petg": "Standard",
       "kexcelled-the-k6-petg": "High Heat",
     };
@@ -110,6 +112,7 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "闪耀",
       "kexcelled-k5-wood": "木质",
       "kexcelled-k5-pla-cc": "夜光",
+      "kexcelled-k5-pla-silk": "丝绸",
       "kexcelled-the-k5-petg": "标准",
       "kexcelled-the-k6-petg": "高耐热",
     };
@@ -125,6 +128,7 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k5-pla-sparkle": "THE K5 PLA Sparkle",
       "kexcelled-k5-wood": "THE K5 WOOD",
       "kexcelled-k5-pla-cc": "THE K5 PLA CC",
+      "kexcelled-k5-pla-silk": "THE K5 PLA Silk",
       "kexcelled-the-k5-petg": "THE K5 PETG",
       "kexcelled-the-k6-petg": "THE K6 PETG",
     };

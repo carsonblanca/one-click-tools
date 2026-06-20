@@ -3,8 +3,9 @@ import type { FilamentParameterRecord } from "./types";
 import esun from "@/data/filaments/parameters/esun.json";
 import sunlu from "@/data/filaments/parameters/sunlu.json";
 import kexcelled from "@/data/filaments/parameters/kexcelled.json";
+import r3d from "@/data/filaments/parameters/r3d.json";
 
-const BRAND_FILES = [esun, sunlu, kexcelled] as const;
+const BRAND_FILES = [esun, sunlu, kexcelled, r3d] as const;
 
 function loadAll(): FilamentParameterRecord[] {
   const all: FilamentParameterRecord[] = [];

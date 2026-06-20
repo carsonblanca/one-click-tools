@@ -450,6 +450,40 @@
         "spoolSpecsUrl": "https://kexcelled3d.com/zh/products/the-k6-petg",
         "presetDataUrl": null
       }
+    },
+    {
+      "id": "kexcelled-k5-pla-silk",
+      "brandId": "kexcelled",
+      "brandName": "Kexcelled",
+      "brandNameZh": null,
+      "aliases": [
+        "K5 PLA Silk",
+        "kexcelled silk pla"
+      ],
+      "materialType": "PLA",
+      "series": null,
+      "variant": "Silk",
+      "productLine": "THE K5 PLA Silk",
+      "displayName": "Kexcelled THE K5 PLA Silk",
+      "officialProductUrl": "https://detail.tmall.com/item.htm?id=652583113236",
+      "technicalDataUrl": null,
+      "officialStoreUrl": null,
+      "countryOrRegion": "CN",
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-20",
+      "knownColorCount": null,
+      "hasOfficialColorChart": false,
+      "hasTechnicalDataSheet": false,
+      "hasSpoolSpecs": false,
+      "hasPresetData": false,
+      "presetDataSource": null,
+      "sourceNotes": "TMall evidence pack 20260620. Silk/丝绸 variant. Print parameters not independently verified. Evidence pack: /Users/a1/Documents/OpenCode/evidence-packs/20260620-batch45/",
+      "evidence": {
+        "officialColorChartUrl": null,
+        "technicalDataUrl": null,
+        "spoolSpecsUrl": null,
+        "presetDataUrl": null
+      }
     }
   ]
 }

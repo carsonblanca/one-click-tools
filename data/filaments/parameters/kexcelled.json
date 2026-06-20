@@ -169,10 +169,10 @@
         "recommended": {
           "operator": "range",
           "value": null,
-          "min": null,
+          "min": 25,
           "max": 60,
           "unit": "C",
-          "raw": "常温-60°C"
+          "raw": "room temp to 60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -887,6 +887,49 @@
       "parameterStatus": "partial",
       "lastVerifiedAt": "2026-06-19",
       "sourceNotes": "Primary official params: nozzle 250-270C, bed 80-100C, speed 40-80mm/s. Conflicting evidence: another product image shows 225-245C/70-80C (may belong to K5 PETG base; requires manual verification). Missing: chamber temp, min nozzle, cooling fan, retraction, drying, build plate, max volumetric speed."
+    },
+    {
+      "id": "kexcelled-k5-pla-silk-params",
+      "productLineId": "kexcelled-k5-pla-silk",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620. No official print parameters found. Silk PLA variant."
     }
   ]
 }
