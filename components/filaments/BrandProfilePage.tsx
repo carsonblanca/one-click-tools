@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import {
-  getBrandFilaments,
   type BrandProfile,
   type OfficialChannel,
   type SourceType,
 } from "@/lib/filaments/catalog/mock-filament-catalog";
+import { getRecordsByBrand } from "@/lib/filaments/catalog/mock-catalog-ext";
 import BrandLogo from "./BrandLogo";
 import type { Locale } from "@/lib/i18n";
 
@@ -181,7 +181,7 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
   const { isDark } = useTheme();
   const t = BRAND_LABELS[locale] || BRAND_LABELS.en;
   const content = brandLocaleContent(brand, locale);
-  const filaments = getBrandFilaments(brand.id);
+  const filaments = getRecordsByBrand(brand.name);
   const panelClass = `rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
   const backHref = locale === "en" ? "/tools/bambu-filament-preset-generator" : `/${locale}/tools/bambu-filament-preset-generator`;
   const summary = content?.summary ?? brand.summary;
@@ -262,8 +262,8 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
                 href={`/filaments/${item.id}`}
                 className="block rounded-2xl border border-current/10 p-4 transition hover:opacity-80"
               >
-                <strong>{item.shortName}</strong>
-                <p className="mt-1 text-sm opacity-70">{item.materialType} · {item.category} · {t.rating} {item.score}/100</p>
+                <strong>{item.productLine}</strong>
+                <p className="mt-1 text-sm opacity-70">{item.materialType} · {item.variant} · {t.rating} {Math.round(item.rating * 20)}/100</p>
               </Link>
             )) : <p className="text-sm opacity-65">{t.unknown}</p>}
           </div>

@@ -23,6 +23,7 @@ import {
   getLocalizedFinishLabel,
   getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
+  hasPresetParameters,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { Locale } from "@/lib/i18n";
@@ -33,6 +34,7 @@ type MaterialVariantMap = Record<string, string[]>;
 const MATERIAL_VARIANTS: MaterialVariantMap = {
   PLA: ["Basic", "Matte", "Silk", "High Speed", "Tough", "Aero", "CF", "Glow", "Wood", "Marble"],
   PETG: ["Basic", "HF", "CF", "GF", "Translucent", "ESD"],
+  PET: ["CF"],
   TPU: ["85A", "90A", "95A", "98A", "AMS Compatible"],
   ABS: ["Basic"],
   ASA: ["Basic"],
@@ -41,10 +43,12 @@ const MATERIAL_VARIANTS: MaterialVariantMap = {
   PVA: ["Basic"],
   HIPS: ["Basic"],
   Support: ["Basic"],
+  PEEK: ["Basic"],
+  PEI: ["Basic"],
   Other: ["Basic"],
 };
 
-const MATERIAL_TYPES = ["PLA", "PETG", "TPU", "ABS", "ASA", "PA", "PC", "PVA", "HIPS", "Support", "Other"];
+const MATERIAL_TYPES = ["PLA", "PETG", "PET", "TPU", "ABS", "ASA", "PA", "PC", "PEEK", "PEI", "PVA", "HIPS", "Support", "Other"];
 
 function downloadJson(fileName: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -381,8 +385,9 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(typeof reader.result === "string" ? reader.result : null);
-      const next = CATALOG_RECORDS[Math.floor(Math.random() * CATALOG_RECORDS.length)];
-      setSearchHex(next.color.hex);
+      const searchableRecords = CATALOG_RECORDS.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
+      const next = searchableRecords[Math.floor(Math.random() * searchableRecords.length)];
+      if (next?.color.hex) setSearchHex(next.color.hex);
     };
     reader.readAsDataURL(file);
   };
@@ -676,7 +681,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                 const cardPrinterId = cardPrinters[record.id] || printerOptions[0]?.id || "";
                 const generatedPreset = generateBambuFilamentPresetSet(cardPrinterId);
                 const matchPreset = generatedPreset.find((p) => p.material.type === record.materialType);
-                const hasVerifiedParams = record.brand !== "R3D";
+                const hasVerifiedParams = hasPresetParameters(record);
                 const presetsDisabled = !hasVerifiedParams;
                 const c = record.color;
                 const colorName = getLocalizedFilamentColorName(c, locale);
@@ -690,10 +695,16 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                     }`}
                   >
                     <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 gap-y-2">
-                      <div
-                        className="h-11 w-11 rounded-xl border border-current/10"
-                        style={{ backgroundColor: c.hex }}
-                      />
+                      {c.hasDigitalSwatch && c.hex ? (
+                        <div
+                          className="h-11 w-11 rounded-xl border border-current/10"
+                          style={{ backgroundColor: c.hex }}
+                        />
+                      ) : (
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>
+                          --
+                        </div>
+                      )}
 
                       <div className="min-w-0">
                         <h3 className="line-clamp-2 text-base font-semibold leading-snug">
@@ -708,7 +719,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
 
                       <div className="min-w-0 self-center">
                         <div className={`truncate text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
-                          {getDisplayBrand(record.brand)}{" \u00B7 "}{record.materialType} {record.variant}
+                          {getDisplayBrand(record.brand)}{" \u00B7 "}{record.productLine}
                         </div>
                         <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                           <Stars value={record.rating} />
@@ -721,8 +732,14 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                       <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
                         <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.colorCode}</div>
-                        <div className={isDark ? "text-white/80" : "text-[#18181B]"}>HEX: {c.hex}</div>
-                        <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>RGB: {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</div>
+                        {c.hasDigitalSwatch && c.hex && c.rgb ? (
+                          <>
+                            <div className={isDark ? "text-white/80" : "text-[#18181B]"}>HEX: {c.hex}</div>
+                            <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>RGB: {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</div>
+                          </>
+                        ) : (
+                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{colorName}</div>
+                        )}
                       </div>
                       <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
                         <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.physicalReference}</div>

@@ -16,7 +16,7 @@ const root = resolve(__dirname, "..");
 const dataDir = resolve(root, "data", "filaments", "product-lines");
 
 const ALLOWED_MATERIAL_TYPES = [
-  "PLA", "PETG", "TPU", "ABS", "ASA", "PA", "PC",
+  "PLA", "PET", "PETG", "TPU", "ABS", "ASA", "PA", "PC",
   "PP", "PE", "POM", "PVA", "HIPS", "TPE",
   "Support", "Composite", "Other",
 ];

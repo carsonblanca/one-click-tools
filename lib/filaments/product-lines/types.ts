@@ -61,6 +61,7 @@ export const ALLOWED_MATERIAL_TYPES = [
   "TPE",
   "Support",
   "Composite",
+  "PET",
   "Other",
 ] as const;
 

@@ -10,8 +10,8 @@ export type Transparency = "opaque" | "translucent" | "transparent";
 export type SwatchSourceType = "manufacturer" | "uploader" | "community" | "unknown";
 
 export type DigitalSwatch = {
-  hex: string;
-  rgb: { r: number; g: number; b: number };
+  hex: string | null;
+  rgb: { r: number; g: number; b: number } | null;
   officialColorCode: string;
   sourceType: SwatchSourceType;
   lastVerifiedAt: string | null;
@@ -45,8 +45,8 @@ export type CatalogColor = {
   colorNameZh: string;
   colorNameEn: string;
   colorFamily: ColorFamily;
-  hex: string;
-  rgb: { r: number; g: number; b: number };
+  hex: string | null;
+  rgb: { r: number; g: number; b: number } | null;
   finish: Finish;
   transparency: Transparency;
   hasDigitalSwatch: boolean;

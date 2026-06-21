@@ -41,6 +41,28 @@ export const PRODUCT_VARIANTS: { id: ProductVariant; zh: string; en: string; tes
   { id: "hf",         zh: "HF",      en: "HF",          test: (r) => r.variant === "HF" },
 ];
 
+const pendingParameterKeys = new Set([
+  "nozzleTemperature",
+  "bedTemperature",
+  "maxVolumetricSpeed",
+  "flowRatio",
+  "density",
+  "dryingRecommended",
+  "enclosureRecommended",
+  "hardenedNozzleRequired",
+  "supportedPrinterPresets",
+]);
+
+export function hasPresetParameters(record: CatalogRecord) {
+  if (record.brand === "R3D") return false;
+  if (record.brand === "Kexcelled" && record.parameterStatus === "missing") return false;
+  return true;
+}
+
+export function parameterStatusLabel(record: CatalogRecord) {
+  return hasPresetParameters(record) ? "Available" : "Parameters pending";
+}
+
 function firstValue(record: Record<string, unknown>, key: string) {
   const value = record[key];
   if (Array.isArray(value)) return value.join(" / ");
@@ -84,12 +106,17 @@ export function getCatalogMaterials() {
 export function getCatalogColorFamilies() {
   const families = new Map<ColorFamily, number>();
   for (const record of CATALOG_RECORDS) {
+    if (!record.color.hasDigitalSwatch) continue;
     families.set(record.color.colorFamily, (families.get(record.color.colorFamily) || 0) + 1);
   }
   return [...families.entries()].map(([family, count]) => ({ family, count })).sort((first, second) => first.family.localeCompare(second.family));
 }
 
 export function getCompareValue(record: CatalogRecord, key: string) {
+  if (!hasPresetParameters(record) && pendingParameterKeys.has(key)) {
+    return "Not in mock catalog";
+  }
+
   const material = templateFor(record);
   switch (key) {
     case "brand": return record.brand;
@@ -111,8 +138,8 @@ export function getCompareValue(record: CatalogRecord, key: string) {
     case "toughness": return record.materialType === "PETG" || record.materialType === "TPU" ? "High" : "Medium";
     case "heatResistance": return record.materialType === "ASA" || record.materialType.includes("PA") ? "High" : "Medium";
     case "surfaceFinish": return `${record.color.finish} / ${record.color.transparency}`;
-    case "verificationLevel": return record.color.digitalSwatch?.sourceType === "manufacturer" ? "Digital swatch from manufacturer mock" : "Uploader mock, unverified";
-    case "evidenceCount": return String((record.color.hasDigitalSwatch ? 1 : 0) + record.color.physicalSwatchCount);
+    case "verificationLevel": return hasPresetParameters(record) ? (record.color.digitalSwatch?.sourceType === "manufacturer" ? "Digital swatch from manufacturer mock" : "Uploader mock, unverified") : "Parameters pending";
+    case "evidenceCount": return hasPresetParameters(record) ? String((record.color.hasDigitalSwatch ? 1 : 0) + record.color.physicalSwatchCount) : "0";
     case "score": return `${Math.round(record.rating * 20)} / 100`;
     case "supportedPrinterPresets": return bambuPrinterTemplates.map((printer) => printer.name).join(", ");
     default: return "Not in mock catalog";
@@ -154,7 +181,7 @@ export function filterCatalogRecords({
     records = records.filter((record) => record.brand === selectedBrand);
   }
   if (selectedColorFamily) {
-    records = records.filter((record) => record.color.colorFamily === selectedColorFamily);
+    records = records.filter((record) => record.color.hasDigitalSwatch && record.color.colorFamily === selectedColorFamily);
   }
   if (minRating > 0) {
     records = records.filter((record) => record.rating >= minRating);
@@ -177,9 +204,11 @@ export function filterCatalogRecords({
     );
   }
   if (searchHex) {
-    records = records.sort((first, second) =>
-      approximateColorDistance(searchHex, first.color.hex) - approximateColorDistance(searchHex, second.color.hex),
-    );
+    records = records
+      .filter((record) => record.color.hasDigitalSwatch && record.color.hex)
+      .sort((first, second) =>
+        approximateColorDistance(searchHex, first.color.hex || "") - approximateColorDistance(searchHex, second.color.hex || ""),
+      );
   }
   return records;
 }
