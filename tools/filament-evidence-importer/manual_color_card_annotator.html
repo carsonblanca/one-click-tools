@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>人工色卡标注工具</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #1a1a1a; color: #ddd; overflow: hidden; height: 100vh;
+  display: flex; flex-direction: column;
+}
+/* toolbar */
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 8px 12px; background: #252525; border-bottom: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+.toolbar button, .toolbar label { font-size: 13px; }
+.toolbar button {
+  padding: 5px 14px; border: 1px solid #555; border-radius: 4px;
+  background: #3a3a3a; color: #ddd; cursor: pointer; white-space: nowrap;
+}
+.toolbar button:hover { background: #4a4a4a; }
+.toolbar button:active { background: #555; }
+.toolbar button.export-btn { background: #1a6b3c; border-color: #2a8a4e; color: #fff; }
+.toolbar button.export-btn:hover { background: #258a4e; }
+.toolbar input[type=text] {
+  padding: 4px 8px; border: 1px solid #555; border-radius: 4px;
+  background: #333; color: #ddd; font-size: 13px; width: 100px;
+}
+.toolbar select {
+  padding: 4px 8px; border: 1px solid #555; border-radius: 4px;
+  background: #333; color: #ddd; font-size: 13px;
+}
+.toolbar .sep { width: 1px; height: 20px; background: #444; margin: 0 4px; }
+/* body */
+.main { display: flex; flex: 1; overflow: hidden; }
+.left { flex: 1; background: #222; position: relative; overflow: hidden; }
+.left canvas { display: block; position: absolute; top: 0; left: 0; }
+.left .placeholder {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  color: #666; font-size: 16px; text-align: center; pointer-events: none;
+  line-height: 1.8;
+}
+/* right panel */
+.right {
+  width: 340px; flex-shrink: 0; background: #1e1e1e; border-left: 1px solid #3a3a3a;
+  display: flex; flex-direction: column; padding: 10px;
+}
+.right h3 { font-size: 13px; color: #aaa; margin-bottom: 6px; font-weight: 600; }
+.right .listbox {
+  flex: 1; overflow-y: auto; border: 1px solid #3a3a3a; border-radius: 4px;
+  background: #2a2a2a; font-size: 11px; font-family: Monaco, monospace;
+  padding: 4px; margin-bottom: 8px; line-height: 1.6;
+}
+.right .listbox .item { padding: 2px 4px; cursor: pointer; border-radius: 2px; }
+.right .listbox .item:hover { background: #3a3a3a; }
+.right .listbox .item.selected { background: #1a4a7a; }
+.right .btn-row { display: flex; gap: 6px; }
+.right .btn-row button { flex: 1; }
+/* status */
+.status {
+  padding: 6px 12px; background: #2a2a2a; border-top: 1px solid #3a3a3a;
+  font-size: 12px; color: #999; flex-shrink: 0;
+}
+/* dialog overlay */
+.dialog-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); display: flex; align-items: center;
+  justify-content: center; z-index: 999;
+}
+.dialog-box {
+  background: #2a2a2a; border: 1px solid #555; border-radius: 8px;
+  padding: 20px 24px; min-width: 280px; color: #ddd;
+}
+.dialog-box h3 { margin: 0 0 14px; font-size: 15px; }
+.dialog-box label { display: block; margin: 8px 0 4px; font-size: 13px; color: #aaa; }
+.dialog-box input[type=number] {
+  width: 100%; padding: 6px 8px; border: 1px solid #555; border-radius: 4px;
+  background: #333; color: #ddd; font-size: 14px;
+}
+.dialog-box .dbtn-row { display: flex; gap: 8px; margin-top: 16px; }
+.dialog-box .dbtn-row button { flex: 1; padding: 7px; border-radius: 4px; border: 1px solid #555; cursor: pointer; font-size: 13px; }
+.dialog-box .dbtn-row .ok { background: #1a6b3c; color: #fff; border-color: #2a8a4e; }
+.toolbar .zoom-pct { font-size: 12px; color: #aaa; min-width: 42px; text-align: center; }
+.toolbar .hint-text { font-size: 11px; color: #666; margin: 0 8px; }
+.binding-bar {
+  display: none; padding: 6px 12px; background: #17324d; border-bottom: 1px solid #315678;
+  color: #d9ecff; font-size: 12px;
+}
+.binding-bar strong { color: #fff; }
+.binding-bar .warning { color: #ffd166; margin-left: 12px; }
+</style>
+</head>
+<body>
+
+<div class="binding-bar" id="bindingBar">
+  当前目标：<strong id="bindingSummary">未绑定</strong>
+  <span class="warning" id="bindingWarning"></span>
+</div>
+<div class="toolbar">
+  <label for="fileInput" class="file-label">
+    <button type="button" onclick="document.getElementById('fileInput').click()">打开图片</button>
+  </label>
+  <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this)">
+  <span class="sep"></span>
+  <button id="zoomOutBtn" onclick="zoomBy(-0.25)">缩小</button>
+  <span class="zoom-pct" id="zoomPct">100%</span>
+  <button id="zoomInBtn" onclick="zoomBy(+0.25)">放大</button>
+  <button onclick="resetView()">重置视图</button>
+  <span class="sep"></span>
+  <span style="font-size:12px;color:#999">布局:</span>
+  <input type="text" id="layoutInput" value="5,5,5,2" title="行布局: 例如 5,5,5,2">
+  <span style="font-size:12px;color:#999">行内对齐:</span>
+  <select id="alignmentSelect">
+    <option value="auto">自动</option>
+    <option value="left">左对齐</option>
+    <option value="center">居中</option>
+    <option value="right">右对齐</option>
+  </select>
+  <span style="font-size:12px;color:#999">裁切:</span>
+  <select id="cropStrategy">
+    <option value="adaptive">按行空白间隙自适应</option>
+    <option value="standard">标准网格</option>
+    <option value="safe">实验·安全裁切</option>
+  </select>
+  <span class="sep"></span>
+  <span style="font-size:12px;color:#999">标注模式:</span>
+  <select id="modeSelect">
+    <option value="grid">网格区域</option>
+    <option value="manual">单张色卡</option>
+    <option value="title">标题区域</option>
+  </select>
+  <span class="sep"></span>
+  <button onclick="addSelected()">添加已选区域</button>
+  <button onclick="clearSelection()">清除选框</button>
+  <button onclick="clearCards()">清空色卡</button>
+  <span style="flex:1"></span>
+  <span class="hint-text" id="hintText">滚轮=缩放 · Alt/中键拖拽=平移 · 左键拖拽=框选 · 重置视图=恢复适配窗口</span>
+  <button class="export-btn" onclick="doExport()">导出标注包</button>
+  <button class="export-btn" id="saveDraftBtn" onclick="saveEvidenceDraft()" style="display:none">保存证据草稿</button>
+</div>
+
+<div class="main">
+  <div class="left" id="leftPane">
+    <div class="placeholder" id="placeholder">
+      请选择官方色卡图片后开始框选<br>
+      支持 PNG、JPG、JPEG、WEBP<br>
+      <small style="color:#555">可直接粘贴截图（Cmd+V）或拖入图片</small><br>
+      <small style="color:#555">滚轮缩放 · Alt/中键拖拽平移 · 普通拖拽框选</small>
+    </div>
+    <canvas id="mainCanvas"></canvas>
+  </div>
+
+  <div class="right">
+    <h3>待导出色卡 (<span id="cardCount">0</span>)</h3>
+    <div class="listbox" id="listbox" ondblclick="removeSelectedCard()"></div>
+    <div class="btn-row">
+      <button onclick="removeSelectedCard()">删除所选</button>
+      <button onclick="clearCards()">全部清空</button>
+    </div>
+    <div style="border-top:1px solid #3a3a3a;margin-top:10px;padding-top:10px">
+      <h3 style="font-size:12px">标题区域</h3>
+      <input type="file" id="titleOcrInput" accept=".json" style="display:none" onchange="handleTitleOcrFile(this)">
+      <div style="font-size:11px;color:#999;margin:4px 0">状态: <span id="titleStatusDisplay">未设置</span></div>
+      <div style="font-size:11px;color:#ff9800;margin:4px 0;word-break:break-all">OCR候选: <span id="ocrCandidateText">(暂无)</span></div>
+      <input type="text" id="confirmTitleInput" placeholder="输入已确认标题" style="width:100%;padding:4px 6px;margin:4px 0;border:1px solid #555;border-radius:3px;background:#333;color:#ddd;font-size:11px;box-sizing:border-box" onchange="var changed=true">
+      <div class="btn-row" style="margin-top:4px">
+        <button onclick="confirmTitle()" style="flex:1;font-size:11px;padding:4px 6px">确认标题</button>
+        <button onclick="clearTitle()" style="flex:1;font-size:11px;padding:4px 6px">清除</button>
+        <button onclick="importTitleOcrResult()" style="flex:1;font-size:11px;padding:4px 6px">导入OCR</button>
+      </div>
+      <div style="font-size:10px;color:#666;margin-top:4px">标题 OCR 仅作候选，导出以已确认标题为准。</div>
+    </div>
+  </div>
+</div>
+
+<div class="status" id="statusBar">就绪 — 点击「打开图片」选择色卡图片</div>
+
+<script>
+// ── state ──
+const canvas = document.getElementById("mainCanvas");
+const ctx = canvas.getContext("2d");
+const placeholderEl = document.getElementById("placeholder");
+const statusBar = document.getElementById("statusBar");
+const leftPane = document.getElementById("leftPane");
+
+let sourceImg = null;
+let sourceFileName = "";
+let sourceType = "file_upload";     // file_upload | clipboard_screenshot | drag_drop_file
+let sourceOrigin = "local_file";   // local_file | clipboard | drag_drop
+let zoom = 1;
+let panX = 0, panY = 0;       // image draw offset within viewport (positive = image shifted right/down)
+let baseScale = 1;            // 1:1 fit scale
+let dispScale = 1;            // baseScale * zoom
+
+let spaceDown = false;
+let dragStart = null;          // {x, y} in original image coords
+let panStart = null;           // {sx, sy, px, py} screen coords + pan start
+let selectionRect = null;      // {x, y, w, h} in original image coords
+let cards = [];
+let titleRegion = null;        // {x, y, w, h} in original image coords (orange box)
+let titleStatus = "not_available"; // not_available | region_selected | ocr_candidate | human_confirmed
+let ocrCandidate = "";
+let ocrRawText = "";
+let confirmedTitle = "";
+let targetBinding = null;
+let sourceImageDataUrl = "";
+let trustedParentOrigin = "";
+
+// ── coordinate transforms: canvas is viewport-fixed, image drawn at (panX,panY) scaled ──
+function origToCanvas(ox, oy) {
+  return { x: panX + ox * dispScale, y: panY + oy * dispScale };
+}
+function canvasToOrig(cx, cy) {
+  var ox = (cx - panX) / dispScale;
+  var oy = (cy - panY) / dispScale;
+  if (sourceImg) {
+    ox = Math.max(0, Math.min(sourceImg.naturalWidth, Math.round(ox)));
+    oy = Math.max(0, Math.min(sourceImg.naturalHeight, Math.round(oy)));
+  }
+  return { x: Math.round(ox), y: Math.round(oy) };
+}
+
+// ── view ──
+function updateZoomDisplay() {
+  document.getElementById("zoomPct").textContent = Math.round(zoom * 100) + "%";
+}
+
+function resizeCanvas() {
+  var pw = leftPane.clientWidth;
+  var ph = leftPane.clientHeight;
+  if (pw < 10) pw = 900;
+  if (ph < 10) ph = 600;
+  canvas.width = pw;
+  canvas.height = ph;
+  canvas.style.width = pw + "px";
+  canvas.style.height = ph + "px";
+}
+
+function resetView() {
+  if (!sourceImg) return;
+  var pw = leftPane.clientWidth;
+  var ph = leftPane.clientHeight;
+  var iw = sourceImg.naturalWidth;
+  var ih = sourceImg.naturalHeight;
+  if (iw === 0 || ih === 0) return;
+  baseScale = Math.min(pw / iw, ph / ih);
+  zoom = 1;
+  dispScale = baseScale;
+  // Center the image
+  panX = Math.round((pw - iw * dispScale) / 2);
+  panY = Math.round((ph - ih * dispScale) / 2);
+  updateZoomDisplay();
+  resizeCanvas();
+  placeholderEl.style.display = "none";
+  renderAll();
+}
+
+function zoomBy(delta) {
+  if (!sourceImg) return;
+  var oldZoom = zoom;
+  zoom = Math.max(0.1, Math.min(8, zoom + delta));
+  if (zoom === oldZoom) return;
+  // Keep viewport center fixed
+  var pw = leftPane.clientWidth, ph = leftPane.clientHeight;
+  var cx = pw / 2, cy = ph / 2;
+  // World point at viewport center = (cx - panX) / oldDisp
+  var oldDisp = baseScale * oldZoom;
+  var wx = (cx - panX) / oldDisp;
+  var wy = (cy - panY) / oldDisp;
+  dispScale = baseScale * zoom;
+  panX = Math.round(cx - wx * dispScale);
+  panY = Math.round(cy - wy * dispScale);
+  updateZoomDisplay();
+  renderAll();
+}
+
+function zoomAt(vpx, vpy, factor) {
+  // vpx, vpy are viewport coords (mouse pos within leftPane)
+  if (!sourceImg || factor <= 0) return;
+  var oldZoom = zoom;
+  zoom = Math.max(0.1, Math.min(8, oldZoom * factor));
+  if (zoom === oldZoom) return;
+  var oldDisp = baseScale * oldZoom;
+  var wx = (vpx - panX) / oldDisp;
+  var wy = (vpy - panY) / oldDisp;
+  dispScale = baseScale * zoom;
+  panX = Math.round(vpx - wx * dispScale);
+  panY = Math.round(vpy - wy * dispScale);
+  updateZoomDisplay();
+  renderAll();
+}
+
+function clampPan() {
+  if (!sourceImg) return;
+  var pw = leftPane.clientWidth, ph = leftPane.clientHeight;
+  var iw = sourceImg.naturalWidth * dispScale;
+  var ih = sourceImg.naturalHeight * dispScale;
+  panX = Math.min(pw * 0.4, Math.max(-iw + pw * 0.6, panX));
+  panY = Math.min(ph * 0.4, Math.max(-ih + ph * 0.6, panY));
+}
+
+// ── unified image loading ──
+// metadata: { fileName, sourceType, sourceOrigin }
+function loadImageSource(blob, metadata) {
+  if (!blob) return;
+
+  // Confirm before replacing current image with unsaved cards
+  if (sourceImg && cards.length > 0) {
+    if (!confirm("当前已有 " + cards.length + " 张待导出色卡，载入新图片将清空所有色卡。是否继续？")) return;
+    cards = [];
+    refreshList();
+  }
+
+  var name = metadata.fileName || "image.png";
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      sourceImg = img;
+      sourceFileName = name;
+      sourceType = metadata.sourceType || "file_upload";
+      sourceOrigin = metadata.sourceOrigin || "local_file";
+      sourceImageDataUrl = e.target.result;
+      selectionRect = null;
+      resetView();
+      refreshList();
+      var label = "";
+      if (sourceType === "clipboard_screenshot") label = "已从剪贴板载入截图";
+      else if (sourceType === "drag_drop_file") label = "已载入拖入图片";
+      else label = "已加载";
+      setStatus(label + ": " + name + " | " + img.naturalWidth + "\u00D7" + img.naturalHeight);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(blob);
+}
+
+function handleFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  loadImageSource(file, { fileName: file.name, sourceType: "file_upload", sourceOrigin: "local_file" });
+}
+
+// ── render ──
+function renderAll() {
+  if (!sourceImg) return;
+  var cw = canvas.width, ch = canvas.height;
+  ctx.clearRect(0, 0, cw, ch);
+
+  // Draw image at (panX, panY) with full scaled size
+  var iw = sourceImg.naturalWidth * dispScale;
+  var ih = sourceImg.naturalHeight * dispScale;
+  ctx.imageSmoothingEnabled = (dispScale <= 2);
+  ctx.drawImage(sourceImg, panX, panY, iw, ih);
+
+  // Card rectangles (green=safe, orange=needs review)
+  for (var i = 0; i < cards.length; i++) {
+    var card = cards[i];
+    if (card.sourceImage !== sourceFileName) continue;
+    var c = card.crop;
+    var p1 = origToCanvas(c.x, c.y);
+    var p2 = origToCanvas(c.x + c.width, c.y + c.height);
+    var isNeedsReview = (card.cropStatus === "needs_manual_review");
+    var color = isNeedsReview ? "#ff9800" : "#00e676";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isNeedsReview ? Math.max(2, Math.round(dispScale * 0.7)) : Math.max(2, Math.round(dispScale * 0.5));
+    if (isNeedsReview) ctx.setLineDash([Math.max(3, Math.round(4 * Math.min(zoom,3))), Math.max(2, Math.round(3 * Math.min(zoom,3)))]);
+    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+    ctx.setLineDash([]);
+    var label = card.row + "-" + card.col;
+    if (isNeedsReview) label += " \u26A0";
+    ctx.fillStyle = color;
+    ctx.font = Math.max(11, Math.round(12 * Math.min(zoom, 3))) + "px monospace";
+    ctx.fillText(label, p1.x + 3, p1.y + Math.max(12, Math.round(13 * Math.min(zoom, 3))));
+  }
+
+  // Blue selection rectangle
+  if (selectionRect && selectionRect.w > 0 && selectionRect.h > 0) {
+    var sr = selectionRect;
+    var sp1 = origToCanvas(sr.x, sr.y);
+    var sp2 = origToCanvas(sr.x + sr.w, sr.y + sr.h);
+    var color = (document.getElementById("modeSelect").value === "title") ? "#ff9800" : "#2196f3";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(3, Math.round(dispScale * 0.6));
+    ctx.setLineDash([Math.max(4, Math.round(6 * Math.min(zoom, 3))), Math.max(2, Math.round(3 * Math.min(zoom, 3)))]);
+    ctx.strokeRect(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);
+    ctx.setLineDash([]);
+  }
+
+  // Orange solid rectangle for existing title region
+  if (titleRegion && titleRegion.w > 0 && titleRegion.h > 0) {
+    var tp1 = origToCanvas(titleRegion.x, titleRegion.y);
+    var tp2 = origToCanvas(titleRegion.x + titleRegion.w, titleRegion.y + titleRegion.h);
+    ctx.strokeStyle = "#ff9800";
+    ctx.lineWidth = Math.max(2, Math.round(dispScale * 0.5));
+    ctx.setLineDash([]);
+    ctx.strokeRect(tp1.x, tp1.y, tp2.x - tp1.x, tp2.y - tp1.y);
+    ctx.fillStyle = "#ff9800";
+    ctx.font = Math.max(11, Math.round(12 * Math.min(zoom, 3))) + "px monospace";
+    ctx.fillText("标题", tp1.x + 3, tp1.y + Math.max(12, Math.round(13 * Math.min(zoom, 3))));
+  }
+}
+
+// ── pointer handlers: selection vs pan ──
+function getViewportPos(e) {
+  var r = leftPane.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+var activeInteract = null; // "pan" | "select"
+
+canvas.addEventListener("pointerdown", function(e) {
+  if (!sourceImg) { setStatus("请先打开图片再框选。"); return; }
+  var isPan = (e.button === 1 || e.altKey || spaceDown);
+  console.log("[annotator] pointerdown button=" + e.button + " alt=" + e.altKey + " space=" + spaceDown + " pan=" + isPan);
+
+  if (isPan) {
+    e.preventDefault();
+    activeInteract = "pan";
+    panStart = { sx: e.screenX, sy: e.screenY, px: panX, py: panY };
+    canvas.style.cursor = "grabbing";
+    canvas.setPointerCapture(e.pointerId);
+    console.log("[annotator] pan start px=" + panX + " py=" + panY);
+    return;
+  }
+
+  if (e.button === 0) {
+    e.preventDefault();
+    activeInteract = "select";
+    var vp = getViewportPos(e);
+    var o = canvasToOrig(vp.x, vp.y);
+    dragStart = o;
+    selectionRect = { x: o.x, y: o.y, w: 0, h: 0 };
+    canvas.setPointerCapture(e.pointerId);
+    console.log("[annotator] select start orig=(" + o.x + "," + o.y + ") dispScale=" + dispScale.toFixed(3) + " pan=(" + panX + "," + panY + ")");
+  }
+});
+
+canvas.addEventListener("pointermove", function(e) {
+  if (activeInteract === "pan" && panStart) {
+    var dx = e.screenX - panStart.sx;
+    var dy = e.screenY - panStart.sy;
+    panX = panStart.px + dx;
+    panY = panStart.py + dy;
+    clampPan();
+    renderAll();
+    return;
+  }
+  if (activeInteract === "select" && dragStart) {
+    var vp = getViewportPos(e);
+    var o = canvasToOrig(vp.x, vp.y);
+    var x1 = Math.min(dragStart.x, o.x), y1 = Math.min(dragStart.y, o.y);
+    var x2 = Math.max(dragStart.x, o.x), y2 = Math.max(dragStart.y, o.y);
+    selectionRect = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+    renderAll();
+  }
+});
+
+canvas.addEventListener("pointerup", function(e) {
+  if (activeInteract === "pan") {
+    panStart = null;
+    activeInteract = null;
+    canvas.style.cursor = "crosshair";
+    canvas.releasePointerCapture(e.pointerId);
+    console.log("[annotator] pan end pan=(" + panX + "," + panY + ")");
+    return;
+  }
+  if (activeInteract === "select" && dragStart) {
+    var vp = getViewportPos(e);
+    var o = canvasToOrig(vp.x, vp.y);
+    var x1 = Math.min(dragStart.x, o.x), y1 = Math.min(dragStart.y, o.y);
+    var x2 = Math.max(dragStart.x, o.x), y2 = Math.max(dragStart.y, o.y);
+    selectionRect = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+    dragStart = null;
+    activeInteract = null;
+    canvas.releasePointerCapture(e.pointerId);
+    renderAll();
+    if (selectionRect.w >= 5 && selectionRect.h >= 5) {
+      console.log("[annotator] select end orig=(" + selectionRect.x + "," + selectionRect.y + "," + selectionRect.w + "," + selectionRect.h + ")");
+      setStatus("已框选 — 点击「添加已选区域」");
+    } else {
+      selectionRect = null;
+      renderAll();
+      setStatus("框选区域太小，请重新拖拽。");
+    }
+  }
+});
+
+canvas.addEventListener("pointercancel", function(e) {
+  panStart = null; dragStart = null; activeInteract = null;
+  canvas.releasePointerCapture(e.pointerId);
+  canvas.style.cursor = "crosshair";
+});
+
+// Prevent middle-click autoscroll and context menu
+leftPane.addEventListener("pointerdown", function(e) { if (e.button === 1) e.preventDefault(); });
+leftPane.addEventListener("contextmenu", function(e) { e.preventDefault(); });
+
+// ── wheel zoom ──
+leftPane.addEventListener("wheel", function(e) {
+  if (!sourceImg) return;
+  e.preventDefault();
+  var vp = getViewportPos(e);
+  zoomAt(vp.x, vp.y, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+}, { passive: false });
+
+// ── keyboard ──
+window.addEventListener("keydown", function(e) {
+  if (e.code === "Space" && !e.repeat) {
+    e.preventDefault(); spaceDown = true;
+    if (sourceImg) canvas.style.cursor = "grab";
+    document.getElementById("hintText").textContent = "\u270B Alt/中键=平移模式 · 拖拽=平移 · 松开恢复框选";
+  }
+  if (e.code === "AltLeft" || e.code === "AltRight") {
+    if (sourceImg) canvas.style.cursor = "grab";
+  }
+});
+window.addEventListener("keyup", function(e) {
+  if (e.code === "Space") {
+    e.preventDefault(); spaceDown = false;
+    if (!e.altKey) canvas.style.cursor = "crosshair";
+    document.getElementById("hintText").textContent = "\u2699 滚轮=缩放 · Alt/中键拖拽=平移 · 左键拖拽=框选 · 重置视图=恢复适配窗口";
+  }
+  if (e.code === "AltLeft" || e.code === "AltRight") {
+    if (!spaceDown) canvas.style.cursor = "crosshair";
+  }
+});
+window.addEventListener("blur", function() { spaceDown = false; canvas.style.cursor = "crosshair"; });
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) { spaceDown = false; canvas.style.cursor = "crosshair"; }
+});
+
+// ── clipboard paste (Cmd+V) ──
+window.addEventListener("paste", function(e) {
+  // Don't intercept paste when user is typing in an input/textarea
+  var activeEl = document.activeElement;
+  if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) return;
+  if (!e.clipboardData || !e.clipboardData.items) return;
+
+  for (var i = 0; i < e.clipboardData.items.length; i++) {
+    var item = e.clipboardData.items[i];
+    if (item.type.indexOf("image/") === 0) {
+      e.preventDefault();
+      var blob = item.getAsFile();
+      var ts = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-");
+      loadImageSource(blob, { fileName: "clipboard-paste-" + ts + ".png", sourceType: "clipboard_screenshot", sourceOrigin: "clipboard" });
+      return;
+    }
+  }
+});
+
+// ── drag and drop ──
+var dragCounter = 0;
+var dropOverlay = null;
+
+function showDropOverlay() {
+  if (!dropOverlay) {
+    dropOverlay = document.createElement("div");
+    dropOverlay.id = "dropOverlay";
+    dropOverlay.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;" +
+      "background:rgba(30,100,200,0.25);border:3px dashed #4a90d9;z-index:100;" +
+      "display:flex;align-items:center;justify-content:center;pointer-events:none;";
+    dropOverlay.innerHTML = '<span style="font-size:24px;color:#4a90d9;font-weight:bold;">松开以载入图片</span>';
+    leftPane.appendChild(dropOverlay);
+  }
+  dropOverlay.style.display = "flex";
+}
+function hideDropOverlay() {
+  if (dropOverlay) dropOverlay.style.display = "none";
+}
+
+leftPane.addEventListener("dragenter", function(e) {
+  e.preventDefault(); e.stopPropagation();
+  dragCounter++;
+  if (dragCounter === 1) showDropOverlay();
+});
+leftPane.addEventListener("dragleave", function(e) {
+  e.preventDefault(); e.stopPropagation();
+  dragCounter--;
+  if (dragCounter <= 0) { dragCounter = 0; hideDropOverlay(); }
+});
+leftPane.addEventListener("dragover", function(e) {
+  e.preventDefault(); e.stopPropagation();
+});
+leftPane.addEventListener("drop", function(e) {
+  e.preventDefault(); e.stopPropagation();
+  dragCounter = 0;
+  hideDropOverlay();
+  var files = e.dataTransfer.files;
+  if (!files.length) return;
+  var imgFile = null;
+  for (var i = 0; i < files.length; i++) {
+    if (/^image\/(png|jpeg|webp)$/i.test(files[i].type) || /\.(png|jpg|jpeg|webp)$/i.test(files[i].name)) {
+      imgFile = files[i]; break;
+    }
+  }
+  if (!imgFile) {
+    setStatus("图片格式不支持，请使用 PNG、JPG、JPEG 或 WEBP。");
+    return;
+  }
+  if (files.length > 1) setStatus("当前一次仅支持载入一张图片，请逐张标注。");
+  loadImageSource(imgFile, { fileName: imgFile.name, sourceType: "drag_drop_file", sourceOrigin: "drag_drop" });
+});
+
+// ── resize ──
+window.addEventListener("resize", function() {
+  if (sourceImg) { resizeCanvas(); renderAll(); }
+});
+
+// ── helpers ──
+function setStatus(msg) { statusBar.textContent = msg; }
+function updateCardCount() { document.getElementById("cardCount").textContent = cards.length; }
+
+// ── layout parser ──
+function parseLayout() {
+  const raw = document.getElementById("layoutInput").value.trim();
+  if (!raw) throw new Error("请输入 Layout，例如 5,5,5,2");
+  const parts = raw.split(",").map(function(v) { return parseInt(v.trim(), 10); });
+  if (parts.some(function(v) { return isNaN(v) || v <= 0; })) {
+    throw new Error("Layout 格式错误，例如 5,5,5,2");
+  }
+  return parts;
+}
+
+// ── adaptive blank-gap detection ──
+function detectCardColumns(img, regionX, regionY, regionW, regionH, rowIndex, totalRows, expectedCount) {
+  // Extract row band: split the selected region vertically by totalRows
+  var rowY = Math.round(regionY + (regionH / totalRows) * rowIndex);
+  var rowH = Math.round(regionH / totalRows);
+  // Allow up to 8% expansion without crossing adjacent rows
+  var expand = Math.round(rowH * 0.08);
+  var ry1 = Math.max(regionY, rowY - expand);
+  var ry2 = Math.min(regionY + regionH, rowY + rowH + expand);
+  var rh = ry2 - ry1;
+  if (rh < 4) rh = rowH;
+
+  // Extract pixel strip — sample from the main canvas (which has the original image drawn at full res)
+  // Use an offscreen canvas sized to the region for sampling
+  var sc = document.createElement("canvas");
+  sc.width = regionW;
+  sc.height = rh;
+  var sctx = sc.getContext("2d");
+  // Draw only the row band portion
+  sctx.drawImage(sourceImg,
+    regionX, ry1, regionW, rh,
+    0, 0, regionW, rh
+  );
+  var imageData = sctx.getImageData(0, 0, regionW, rh);
+  var pixels = imageData.data;
+
+  // Build three independent projections. Stable gaps must remain blank through
+  // the color body, not only through labels or border noise.
+  var cols = regionW;
+  var bands = [[0.25, 0.43], [0.45, 0.66], [0.68, 0.88]];
+  var blankByBand = bands.map(function(band) {
+    var fromY = Math.max(0, Math.floor(rh * band[0]));
+    var toY = Math.min(rh, Math.ceil(rh * band[1]));
+    var result = new Uint8Array(cols);
+    for (var x = 0; x < cols; x++) {
+      var dark = 0, samples = 0;
+      for (var sy = fromY; sy < toY; sy += Math.max(1, Math.floor((toY - fromY) / 10))) {
+        var idx = (sy * cols + x) * 4;
+        var brightness = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+        if (brightness < 232) dark++;
+        samples++;
+      }
+      result[x] = samples && dark / samples < 0.18 ? 1 : 0;
+    }
+    return result;
+  });
+  var stableBlank = new Uint8Array(cols);
+  for (var bx = 0; bx < cols; bx++) {
+    var votes = blankByBand[0][bx] + blankByBand[1][bx] + blankByBand[2][bx];
+    stableBlank[bx] = votes >= 2 ? 1 : 0;
+  }
+
+  var expectedW = regionW / expectedCount;
+  var minGap = Math.max(3, Math.round(expectedW * 0.035));
+  var runs = [];
+  var runStart = -1;
+  for (var gx = 0; gx <= cols; gx++) {
+    if (gx < cols && stableBlank[gx]) {
+      if (runStart < 0) runStart = gx;
+    } else if (runStart >= 0) {
+      var runW = gx - runStart;
+      if (runW >= minGap) runs.push({ start: runStart, end: gx, width: runW, center: (runStart + gx) / 2 });
+      runStart = -1;
+    }
+  }
+
+  // Ignore border whitespace when scoring internal separators.
+  var internal = runs.filter(function(run) {
+    return run.center > expectedW * 0.35 && run.center < cols - expectedW * 0.35;
+  });
+  var boundaries = [];
+  var idealStep = regionW / expectedCount;
+  for (var bi = 1; bi < expectedCount; bi++) {
+    var ideal = bi * idealStep;
+    var best = null;
+    internal.forEach(function(run) {
+      var distance = Math.abs(run.center - ideal);
+      if (distance <= idealStep * 0.42 && (!best || distance < best.distance)) {
+        best = { center: run.center, distance: distance, width: run.width };
+      }
+    });
+    boundaries.push(best ? best.center : ideal);
+  }
+
+  var leadingRun = runs.length && runs[0].start === 0 ? runs[0] : null;
+  var trailingRun = runs.length && runs[runs.length - 1].end === cols ? runs[runs.length - 1] : null;
+  var rowStartX = leadingRun && leadingRun.width < expectedW * 1.8 ? leadingRun.end : 0;
+  var rowEndX = trailingRun && trailingRun.width < expectedW * 1.8 ? trailingRun.start : cols;
+  // Preserve genuine indentation for short rows; full rows use the selected region.
+  if (rowEndX - rowStartX < expectedW * expectedCount * 0.72) {
+    rowStartX = 0; rowEndX = cols;
+  }
+
+  var normalizedBoundaries = [rowStartX];
+  for (var ni = 1; ni < expectedCount; ni++) {
+    var scaledIdeal = rowStartX + (rowEndX - rowStartX) * ni / expectedCount;
+    var detected = boundaries[ni - 1];
+    normalizedBoundaries.push(Math.abs(detected - scaledIdeal) <= expectedW * 0.32 ? detected : scaledIdeal);
+  }
+  normalizedBoundaries.push(rowEndX);
+
+  var filtered = [];
+  for (var fi = 0; fi < expectedCount; fi++) {
+    filtered.push({
+      x: Math.round(normalizedBoundaries[fi]),
+      w: Math.max(1, Math.round(normalizedBoundaries[fi + 1] - normalizedBoundaries[fi])),
+      inferred: !internal.some(function(run) { return Math.abs(run.center - normalizedBoundaries[fi + 1]) < minGap * 2; })
+    });
+  }
+  var widths = filtered.map(function(segment) { return segment.w; }).slice().sort(function(a,b) { return a-b; });
+  var medianW = widths[Math.floor(widths.length / 2)] || expectedW;
+  var tailBoundaryCorrected = false;
+  if (filtered.length >= 2) {
+    var penultimate = filtered[filtered.length - 2];
+    var last = filtered[filtered.length - 1];
+    if (Math.abs(penultimate.w - medianW) / medianW > 0.18 || Math.abs(last.w - medianW) / medianW > 0.18) {
+      var tailStart = Math.max(rowStartX, rowEndX - medianW * 2);
+      penultimate.x = Math.round(tailStart);
+      penultimate.w = Math.round((rowEndX - tailStart) / 2);
+      last.x = penultimate.x + penultimate.w;
+      last.w = Math.max(1, Math.round(rowEndX - last.x));
+      penultimate.tailBoundaryCorrected = true;
+      last.tailBoundaryCorrected = true;
+      tailBoundaryCorrected = true;
+    }
+  }
+
+  var result = {
+    segments: filtered,
+    rowDetectedStartX: rowStartX,
+    rowDetectedEndX: rowEndX,
+    gapCount: internal.length,
+    detectedCount: filtered.length,
+    expectedCount: expectedCount,
+    confidence: 0,
+    fallback: false,
+    needsReview: false,
+    tailBoundaryCorrected: tailBoundaryCorrected
+  };
+
+  result.confidence = internal.length >= expectedCount - 1 ? 0.9 : (internal.length >= Math.max(1, expectedCount - 3) ? 0.72 : 0.55);
+
+  return result;
+}
+function addSelected() {
+  if (!sourceImg) { alert("请先打开图片并框选。"); return; }
+  if (!selectionRect || selectionRect.w < 5 || selectionRect.h < 5) {
+    alert("请先拖拽出足够的框选区域。"); return;
+  }
+  const mode = document.getElementById("modeSelect").value;
+  const rect = selectionRect;
+
+  // Title mode
+  if (mode === "title") {
+    titleRegion = { x: rect.x, y: rect.y, w: rect.w, h: rect.h };
+    titleStatus = "region_selected";
+    ocrCandidate = "";
+    updateTitleUI();
+    selectionRect = null;
+    renderAll();
+    setStatus("标题区域已设定。可导出 ZIP 后运行 OCR 脚本，或直接输入已确认标题。");
+    return;
+  }
+
+  if (mode === "manual") {
+    showManualDialog(function(row, col) {
+      if (!row || !col) return;
+      const dup = cards.find(function(c) { return c.row === row && c.col === col; });
+      if (dup) { alert("第" + row + "行 第" + col + "列 已存在，请换一个位置。"); return; }
+      cards.push({
+        row: row, col: col,
+        sourceImage: sourceFileName,
+        crop: { x: rect.x, y: rect.y, width: rect.w, height: rect.h },
+        mode: "manual_card",
+        file: ""
+      });
+      selectionRect = null;
+      refreshList();
+      renderAll();
+      setStatus("已添加单张色卡 " + row + "-" + col + "。");
+    });
+  } else {
+    var layout;
+    try { layout = parseLayout(); } catch (err) { alert(err.message); return; }
+
+    var strategy = document.getElementById("cropStrategy").value;
+    var align = document.getElementById("alignmentSelect").value;
+    var maxCols = Math.max.apply(null, layout);
+    var cellW = rect.w / maxCols;
+    var cellH = rect.h / layout.length;
+    var added = 0;
+    var needsReviewCount = 0;
+
+    // ── Run adaptive detection per row if strategy is adaptive ──
+    var rowDetections = [];
+    if (strategy === "adaptive" && sourceImg) {
+      for (var ri = 0; ri < layout.length; ri++) {
+        var det = detectCardColumns(sourceImg, rect.x, rect.y, rect.w, rect.h, ri, layout.length, layout[ri]);
+        rowDetections.push(det);
+        if (det.needsReview) needsReviewCount += layout[ri];
+      }
+    }
+
+    for (var ri = 0; ri < layout.length; ri++) {
+      var colCount = layout[ri];
+      var offset = 0;
+      var useAdaptive = (strategy === "adaptive" && rowDetections.length > ri && !rowDetections[ri].fallback);
+      var cardsW = cellW; // individual card width (overridden by adaptive)
+      var rowStartX = offset; // row-level x offset (overridden by adaptive)
+
+      // Standard alignment offset for short rows (used by both standard + adaptive fallback)
+      if (!useAdaptive && colCount < maxCols) {
+        if (align === "center" || align === "auto") {
+          offset = Math.round((maxCols - colCount) * cellW / 2);
+        } else if (align === "right") {
+          offset = Math.round((maxCols - colCount) * cellW);
+        }
+      }
+
+      if (useAdaptive) {
+        var det2 = rowDetections[ri];
+        rowStartX = det2.rowDetectedStartX;
+        var segs = det2.segments;
+        // Use detected segments, clamping to colCount
+        var segCount = Math.min(segs.length, colCount);
+        for (var si = 0; si < segCount; si++) {
+          var row = ri + 1;
+          var col = si + 1;
+          var dup = cards.find(function(c) { return c.row === row && c.col === col; });
+          if (dup) continue;
+          var s = segs[si];
+          var cx2 = Math.round(rect.x + s.x);
+          var cy2 = Math.round(rect.y + ri * cellH);
+          var cw2 = Math.round(rect.x + s.x + s.w) - cx2;
+          var ch2 = Math.round(rect.y + (ri + 1) * cellH) - cy2;
+          var widthDeviation = Math.abs(s.w - (det2.rowDetectedEndX - det2.rowDetectedStartX) / colCount) /
+            ((det2.rowDetectedEndX - det2.rowDetectedStartX) / colCount);
+          var needsRev = det2.needsReview || widthDeviation > (si >= colCount - 2 ? 0.18 : 0.15);
+          cards.push({
+            row: row, col: col,
+            visualColumn: Math.round((s.x + s.w/2) / cellW) + 1,
+            sourceImage: sourceFileName,
+            crop: { x: cx2, y: cy2, width: cw2, height: ch2 },
+            mode: "grid_manual_region",
+            cropStrategy: "adaptive_blank_gap",
+            cropStatus: needsRev ? "needs_manual_review" : "auto_safe",
+            tailBoundaryCorrected: !!s.tailBoundaryCorrected,
+            logicalCardBounds: { x: s.x, y: 0, width: s.w, height: cellH },
+            safeCropBounds: { x: cx2, y: cy2, width: cw2, height: ch2 },
+            gapDetection: {
+              rowDetectedStartX: det2.rowDetectedStartX,
+              rowDetectedEndX: det2.rowDetectedEndX,
+              gapCount: det2.gapCount,
+              detectedSegments: segs.length,
+              confidence: det2.confidence
+            },
+            file: ""
+          });
+          added++;
+        }
+        // If fewer segments than expected, fill remaining from standard grid
+        for (var ci2 = segCount; ci2 < colCount; ci2++) {
+          var cx3 = Math.round(rect.x + offset + ci2 * cellW);
+          var cy3 = Math.round(rect.y + ri * cellH);
+          var cw3 = Math.round(rect.x + offset + (ci2 + 1) * cellW) - cx3;
+          var ch3 = Math.round(rect.y + (ri + 1) * cellH) - cy3;
+          var r3 = ri + 1, c3 = ci2 + 1;
+          var d3 = cards.find(function(c) { return c.row === r3 && c.col === c3; });
+          if (d3) continue;
+          cards.push({
+            row: r3, col: c3, visualColumn: Math.round(offset/cellW) + ci2 + 1,
+            sourceImage: sourceFileName,
+            crop: { x: cx3, y: cy3, width: cw3, height: ch3 },
+            mode: "grid_manual_region",
+            cropStrategy: "standard_grid",
+            cropStatus: "needs_manual_review",
+            logicalCardBounds: null, safeCropBounds: null, gapDetection: null,
+            file: ""
+          });
+          added++;
+        }
+      } else {
+        // Standard grid
+        for (var ci = 0; ci < colCount; ci++) {
+          var row = ri + 1;
+          var col = ci + 1;
+          var visualCol = Math.round(offset / cellW) + ci + 1;
+          var dup = cards.find(function(c) { return c.row === row && c.col === col; });
+          if (dup) continue;
+          var cx = Math.round(rect.x + offset + ci * cellW);
+          var cy = Math.round(rect.y + ri * cellH);
+          var cw = Math.round(rect.x + offset + (ci + 1) * cellW) - cx;
+          var ch = Math.round(rect.y + (ri + 1) * cellH) - cy;
+          cards.push({
+            row: row, col: col,
+            visualColumn: visualCol,
+            sourceImage: sourceFileName,
+            crop: { x: cx, y: cy, width: cw, height: ch },
+            mode: "grid_manual_region",
+            cropStrategy: "standard_grid",
+            cropStatus: "auto_standard",
+            file: ""
+          });
+          added++;
+        }
+      }
+    }
+    selectionRect = null;
+    refreshList();
+    renderAll();
+    var msg = "已添加 " + added + " 张网格色卡";
+    if (strategy === "adaptive") {
+      if (needsReviewCount > 0) msg += "（" + needsReviewCount + " 张需人工检查）";
+      else msg += "（自适应）";
+    }
+    setStatus(msg + "。");
+  }
+}
+
+function clearTitle() {
+  titleRegion = null;
+  titleStatus = "not_available";
+  ocrCandidate = "";
+  ocrRawText = "";
+  // Don't clear confirmedTitle — intentional
+  updateTitleUI();
+  renderAll();
+  setStatus("标题区域已清除。");
+}
+
+function importTitleOcrResult() {
+  var input = document.getElementById("titleOcrInput");
+  input.value = "";
+  input.click();
+}
+
+function handleTitleOcrFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (data.ocrCandidate) {
+        ocrCandidate = data.ocrCandidate;
+        document.getElementById("ocrCandidateText").textContent = ocrCandidate;
+      }
+      if (data.ocrRawText) ocrRawText = data.ocrRawText;
+      if (titleStatus === "region_selected" || titleStatus === "not_available") {
+        titleStatus = "ocr_candidate";
+      }
+      updateTitleUI();
+      setStatus("已导入 OCR 候选标题，请人工确认后填写到下方输入框。");
+    } catch (ex) {
+      alert("无法解析 title-ocr-result.json：" + ex.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function confirmTitle() {
+  var val = document.getElementById("confirmTitleInput").value.trim();
+  if (!val) { alert("请先输入已确认标题。"); return; }
+  confirmedTitle = val;
+  titleStatus = "human_confirmed";
+  updateTitleUI();
+  updateBindingUI();
+  setStatus("已确认标题: " + val);
+}
+
+function updateTitleUI() {
+  var statusMap = {
+    "not_available": "未设置",
+    "region_selected": "已框选，待 OCR",
+    "ocr_candidate": "OCR 候选待确认",
+    "human_confirmed": "已人工确认",
+  };
+  document.getElementById("titleStatusDisplay").textContent = statusMap[titleStatus] || titleStatus;
+  document.getElementById("ocrCandidateText").textContent = ocrCandidate || "(暂无 OCR 候选)";
+  document.getElementById("confirmTitleInput").value = confirmedTitle || "";
+}
+
+function showManualDialog(callback) {
+  const old = document.querySelector(".dialog-overlay");
+  if (old) old.remove();
+  const overlay = document.createElement("div");
+  overlay.className = "dialog-overlay";
+  overlay.innerHTML =
+    '<div class="dialog-box"><h3>输入色卡位置</h3>' +
+    '<label>行号:</label><input type="number" id="dlgRow" min="1" value="1">' +
+    '<label>列号:</label><input type="number" id="dlgCol" min="1" value="1">' +
+    '<div class="dbtn-row">' +
+    '<button class="cancel">取消</button>' +
+    '<button class="ok">确定</button></div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector(".cancel").onclick = function() { overlay.remove(); };
+  overlay.querySelector(".ok").onclick = function() {
+    const r = parseInt(document.getElementById("dlgRow").value, 10);
+    const c = parseInt(document.getElementById("dlgCol").value, 10);
+    overlay.remove();
+    callback(r, c);
+  };
+  overlay.addEventListener("click", function(e) { if (e.target === overlay) overlay.remove(); });
+}
+
+function clearSelection() { selectionRect = null; renderAll(); setStatus("选框已清除。"); }
+function clearCards() {
+  if (cards.length && !confirm("确认删除全部 " + cards.length + " 张待导出色卡？")) return;
+  cards = [];
+  refreshList();
+  renderAll();
+  setStatus("全部色卡已清空。");
+}
+
+function refreshList() {
+  const lb = document.getElementById("listbox");
+  lb.innerHTML = "";
+  updateCardCount();
+  const sorted = cards.slice().sort(function(a, b) {
+    return a.row - b.row || a.col - b.col || a.sourceImage.localeCompare(b.sourceImage);
+  });
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    var statusTag = "";
+    if (c.cropStatus === "needs_manual_review") statusTag = " ⚠需检查";
+    else if (c.cropStatus === "auto_safe") statusTag = " ✓";
+    if (c.tailBoundaryCorrected) statusTag += " 行尾边界已校正";
+    const text = String(i+1).padStart(2,"0") + " | " + c.row + "-" + c.col +
+      " | " + c.sourceImage + " | " + c.crop.x + "," + c.crop.y + "," + c.crop.width + "," + c.crop.height +
+      " | " + (c.cropStrategy || c.mode) + statusTag;
+    const div = document.createElement("div");
+    div.className = "item";
+    if (c.cropStatus === "needs_manual_review") div.style.color = "#ff9800";
+    div.textContent = text;
+    div.onclick = function() { div.classList.toggle("selected"); };
+    lb.appendChild(div);
+  }
+}
+
+function removeSelectedCard() {
+  const items = document.querySelectorAll("#listbox .item.selected");
+  if (!items.length) return;
+  const toRemove = new Set();
+  for (const item of items) {
+    const idx = parseInt(item.textContent.split("|")[0].trim(), 10);
+    if (!isNaN(idx)) toRemove.add(idx - 1);
+  }
+  const sorted = cards.slice().sort(function(a, b) {
+    return a.row - b.row || a.col - b.col || a.sourceImage.localeCompare(b.sourceImage);
+  });
+  cards = cards.filter(function(card) {
+    const origIdx = sorted.indexOf(card);
+    return !toRemove.has(origIdx);
+  });
+  refreshList();
+  renderAll();
+  setStatus("已删除所选色卡。");
+}
+
+// ── EXPORT: inline ZIP builder ──
+function buildZip(files) {
+  const encoder = new TextEncoder();
+  const localHeaders = [];
+  const centralEntries = [];
+  let offset = 0;
+  for (const file of files) {
+    const data = file.data instanceof Uint8Array ? file.data : new Uint8Array(file.data);
+    const nameBytes = encoder.encode(file.name);
+    const crc = crc32(data);
+    const lh = new ArrayBuffer(30 + nameBytes.length);
+    const lv = new DataView(lh);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0x0800, true);
+    lv.setUint16(8, 0, true); lv.setUint16(10, 0, true); lv.setUint16(12, 0, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, data.length, true);
+    lv.setUint32(22, data.length, true);
+    lv.setUint16(26, nameBytes.length, true);
+    lv.setUint16(28, 0, true);
+    const lhArr = new Uint8Array(lh);
+    lhArr.set(nameBytes, 30);
+    localHeaders.push(lhArr);
+    const cd = new ArrayBuffer(46 + nameBytes.length);
+    const cv = new DataView(cd);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true); cv.setUint16(12, 0, true); cv.setUint16(14, 0, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true); cv.setUint16(32, 0, true);
+    cv.setUint16(34, 0, true); cv.setUint16(36, 0, true);
+    cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    const cdArr = new Uint8Array(cd);
+    cdArr.set(nameBytes, 46);
+    centralEntries.push(cdArr);
+    offset += lhArr.length + data.length;
+  }
+  const cdOffset = offset;
+  let cdSize = 0;
+  for (const ce of centralEntries) cdSize += ce.length;
+  const eocd = new ArrayBuffer(22);
+  const ev = new DataView(eocd);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true); ev.setUint16(6, 0, true);
+  ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, cdOffset, true);
+  ev.setUint16(20, 0, true);
+  const totalSize = offset + cdSize + 22;
+  const result = new Uint8Array(totalSize);
+  let pos = 0;
+  for (let i = 0; i < files.length; i++) {
+    result.set(localHeaders[i], pos); pos += localHeaders[i].length;
+    const d = files[i].data instanceof Uint8Array ? files[i].data : new Uint8Array(files[i].data);
+    result.set(d, pos); pos += d.length;
+  }
+  for (const ce of centralEntries) { result.set(ce, pos); pos += ce.length; }
+  result.set(new Uint8Array(eocd), pos);
+  return result.buffer;
+}
+
+function crc32(data) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) {
+    c ^= data[i];
+    for (let j = 0; j < 8; j++) c = (c >>> 1) ^ (c & 1 ? 0xEDB88320 : 0);
+  }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+async function doExport() {
+  if (!cards.length) { alert("没有可导出的色卡。"); return; }
+  const seen = new Set();
+  for (const c of cards) {
+    const key = c.row + ":" + c.col;
+    if (seen.has(key)) { alert("色卡位置重复: " + c.row + "-" + c.col); return; }
+    seen.add(key);
+  }
+  setStatus("正在导出...");
+  const sorted = cards.slice().sort(function(a, b) {
+    return a.row - b.row || a.col - b.col || a.sourceImage.localeCompare(b.sourceImage);
+  });
+  const zipFiles = [];
+  const annotationCards = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const card = sorted[i];
+    const cw = Math.max(1, card.crop.width);
+    const ch = Math.max(1, card.crop.height);
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = cw;
+    cropCanvas.height = ch;
+    const cropCtx = cropCanvas.getContext("2d");
+    cropCtx.drawImage(sourceImg, card.crop.x, card.crop.y, cw, ch, 0, 0, cw, ch);
+    const blob = await new Promise(function(resolve) { cropCanvas.toBlob(function(b) { resolve(b); }, "image/png"); });
+    const buf = await blob.arrayBuffer();
+    const filename = "card-r" + String(card.row).padStart(2, "0") + "-c" + String(card.col).padStart(2, "0") + ".png";
+    const relPath = "color-cards/" + filename;
+    zipFiles.push({ name: relPath, data: buf });
+    card.file = relPath;
+    annotationCards.push({
+      row: card.row, column: card.col,
+      sourceImage: card.sourceImage,
+      sourceCrop: { x: card.crop.x, y: card.crop.y, width: card.crop.width, height: card.crop.height },
+      mode: card.mode, file: relPath,
+      logicalCardBounds: card.logicalCardBounds || null,
+      safeCropBounds: card.safeCropBounds || null,
+      cropStatus: card.cropStatus || "manual",
+      cropStrategy: card.cropStrategy || card.mode,
+      gapDetection: card.gapDetection || null,
+      tailBoundaryCorrected: !!card.tailBoundaryCorrected
+    });
+  }
+  // contact sheet
+  const maxCol = Math.max.apply(null, sorted.map(function(c) { return c.col; }));
+  const maxRow = Math.max.apply(null, sorted.map(function(c) { return c.row; }));
+  const cardImages = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const card = sorted[i];
+    const cw = Math.max(1, card.crop.width);
+    const ch = Math.max(1, card.crop.height);
+    const cc = document.createElement("canvas");
+    cc.width = cw; cc.height = ch;
+    const cctx = cc.getContext("2d");
+    cctx.drawImage(sourceImg, card.crop.x, card.crop.y, cw, ch, 0, 0, cw, ch);
+    const imgEl = new Image();
+    imgEl.src = cc.toDataURL("image/png");
+    cardImages.push({ img: imgEl, card: card });
+    await new Promise(function(r) { imgEl.onload = r; });
+  }
+  const cellW = Math.max.apply(null, cardImages.map(function(ci) { return ci.img.naturalWidth; })) + 24;
+  const cellH = Math.max.apply(null, cardImages.map(function(ci) { return ci.img.naturalHeight; })) + 40;
+  const sheetCanvas = document.createElement("canvas");
+  sheetCanvas.width = maxCol * cellW;
+  sheetCanvas.height = maxRow * cellH;
+  const sctx = sheetCanvas.getContext("2d");
+  sctx.fillStyle = "#ffffff";
+  sctx.fillRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+  sctx.fillStyle = "#000000";
+  sctx.font = "12px monospace";
+  for (const ci of cardImages) {
+    const col = ci.card.col - 1;
+    const row = ci.card.row - 1;
+    const x = col * cellW + Math.round((cellW - ci.img.naturalWidth) / 2);
+    const y = row * cellH + 4;
+    sctx.drawImage(ci.img, x, y);
+    sctx.fillText(ci.card.row + "-" + ci.card.col + " [" + ci.card.mode + "]", col * cellW + 5, row * cellH + ci.img.naturalHeight + 20);
+  }
+  const sheetBlob = await new Promise(function(r) { sheetCanvas.toBlob(function(b) { r(b); }, "image/png"); });
+  const sheetBuf = await sheetBlob.arrayBuffer();
+  zipFiles.push({ name: "contact-sheet.png", data: sheetBuf });
+
+  // ── title evidence ──
+  var titleEvidence = {
+    status: titleStatus,
+    sourceImageName: sourceFileName,
+    sourceType: sourceType,
+    sourceCrop: titleRegion || { x: 0, y: 0, width: 0, height: 0 },
+    ocrCandidate: ocrCandidate,
+    ocrRawText: ocrRawText,
+    confirmedTitle: confirmedTitle || "",
+    confirmedBy: confirmedTitle ? "manual" : "",
+    reviewedAt: confirmedTitle ? new Date().toISOString() : ""
+  };
+
+  if (titleRegion && titleRegion.w > 0 && titleRegion.h > 0) {
+    var tc = document.createElement("canvas");
+    tc.width = Math.max(1, titleRegion.w);
+    tc.height = Math.max(1, titleRegion.h);
+    var tctx = tc.getContext("2d");
+    tctx.drawImage(sourceImg, titleRegion.x, titleRegion.y, titleRegion.w, titleRegion.h, 0, 0, tc.width, tc.height);
+    var tBlob = await new Promise(function(r) { tc.toBlob(function(b) { r(b); }, "image/png"); });
+    var tBuf = await tBlob.arrayBuffer();
+    zipFiles.push({ name: "title-evidence/title-crop.png", data: tBuf });
+  }
+
+  var annotations = {
+    schemaVersion: "1.0",
+    annotationMethod: "manual_human_marked",
+    sourceType: sourceType,
+    sourceOrigin: sourceOrigin,
+    sourceImageName: sourceFileName,
+    targetBinding: targetBinding,
+    colorCount: annotationCards.length,
+    titleEvidence: titleEvidence,
+    cards: annotationCards,
+    notes: [
+      "Card location and source-image assignment were selected manually.",
+      "This file contains crop geometry only. It does not infer color names, codes, HEX or RGB.",
+      "Run OCR and human review separately before using any extracted text as canonical data.",
+      "Title OCR is provided as candidate only. Export classification uses confirmedTitle."
+    ]
+  };
+  if (confirmedTitle) {
+    annotations.exportTitleSlug = slugify(confirmedTitle);
+    annotations.confirmedTitle = confirmedTitle;
+  }
+
+  var zipName;
+  if (confirmedTitle) {
+    zipName = slugify(confirmedTitle).slice(0, 60) + "-color-annotation.zip";
+  } else {
+    var ts = new Date().toISOString().replace(/[-:]/g,"").replace(/\..+/,"").replace("T","-");
+    zipName = "untitled-color-annotation-" + ts + ".zip";
+  }
+
+  var jsonBytes = new TextEncoder().encode(JSON.stringify(annotations, null, 2));
+  zipFiles.push({ name: "manual-color-card-annotations.json", data: jsonBytes });
+  const zipData = buildZip(zipFiles);
+  const zipBlob = new Blob([zipData], { type: "application/zip" });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = zipName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus("已导出 " + annotationCards.length + " 张色卡" + (confirmedTitle ? "（标题: " + confirmedTitle + "）" : "") + "。请继续 OCR 与人工核对。");
+}
+
+function updateBindingUI() {
+  var bar = document.getElementById("bindingBar");
+  var save = document.getElementById("saveDraftBtn");
+  if (!targetBinding) { bar.style.display = "none"; save.style.display = "none"; return; }
+  bar.style.display = "block";
+  save.style.display = "inline-block";
+  document.getElementById("bindingSummary").textContent =
+    [targetBinding.brandLabel, targetBinding.productLineLabel, targetBinding.materialType, targetBinding.evidenceTypeLabel].filter(Boolean).join(" / ");
+  var confirmed = (confirmedTitle || "").toLowerCase();
+  var expected = (targetBinding.productLineLabel || "").toLowerCase();
+  document.getElementById("bindingWarning").textContent =
+    confirmed && expected && confirmed.indexOf(expected) < 0 && expected.indexOf(confirmed) < 0
+      ? "OCR 标题与当前目标可能不一致，请人工确认。" : "";
+}
+
+async function saveEvidenceDraft() {
+  if (!targetBinding || !targetBinding.brandId || !(targetBinding.productLineId || targetBinding.filamentId) ||
+      !targetBinding.materialType || !targetBinding.evidenceType) {
+    alert("目标绑定不完整，请返回后台选择品牌、产品、材料和证据类型。"); return;
+  }
+  if (!sourceImg || !sourceImageDataUrl) { alert("请先载入原始图片。"); return; }
+  if (!cards.length) { alert("请先完成色卡标注。"); return; }
+  var payload = {
+    type: "filament-evidence:save",
+    version: 1,
+    targetBinding: targetBinding,
+    sourceImageName: sourceFileName,
+    sourceType: sourceType,
+    sourceOrigin: sourceOrigin,
+    sourceImageDataUrl: sourceImageDataUrl,
+    titleEvidence: {
+      status: titleStatus, sourceImageName: sourceFileName, sourceType: sourceType,
+      sourceCrop: titleRegion || { x:0, y:0, width:0, height:0 },
+      ocrCandidate: ocrCandidate, ocrRawText: ocrRawText,
+      confirmedTitle: confirmedTitle, confirmedBy: confirmedTitle ? "manual" : ""
+    },
+    annotations: cards.map(function(card) {
+      return {
+        row: card.row, column: card.col, sourceImage: card.sourceImage,
+        sourceCrop: card.crop, logicalCardBounds: card.logicalCardBounds || null,
+        safeCropBounds: card.safeCropBounds || null, cropStatus: card.cropStatus || "manual",
+        cropStrategy: card.cropStrategy || card.mode, gapDetection: card.gapDetection || null,
+        tailBoundaryCorrected: !!card.tailBoundaryCorrected
+      };
+    }),
+    cardCount: cards.length
+  };
+  window.parent.postMessage(payload, trustedParentOrigin || window.location.origin);
+  setStatus("正在保存证据草稿...");
+}
+
+window.addEventListener("message", function(event) {
+  if (event.origin !== window.location.origin || !event.data) return;
+  if (event.data.type === "filament-evidence:init") {
+    trustedParentOrigin = event.origin;
+    targetBinding = event.data.targetBinding || null;
+    updateBindingUI();
+  } else if (event.data.type === "filament-evidence:saved") {
+    setStatus("已保存为待审核证据草稿：" + event.data.draftId);
+  } else if (event.data.type === "filament-evidence:save-error") {
+    setStatus("保存失败：" + event.data.message);
+  }
+});
+
+function slugify(s) {
+  return (s || "").replace(/[\\/:*?\"<>|]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80) || "untitled";
+}
+
+setStatus("就绪 — 点击「打开图片」选择官方色卡图片");
+</script>
+</body>
+</html>
