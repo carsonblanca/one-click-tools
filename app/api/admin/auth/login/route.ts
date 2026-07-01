@@ -71,7 +71,10 @@ export async function POST(request: NextRequest) {
   }
 
   const { token, session } = createAdminSessionToken(auth.actorId, "admin");
-  const response = NextResponse.json({ ok: true, redirectTo: "/admin" });
+  const response = NextResponse.json({
+    ok: true,
+    redirectTo: "/admin/filament-evidence",
+  });
   attachAdminSessionCookie(response, token, session.expiresAt);
 
   await adminAudit.append({

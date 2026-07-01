@@ -10,7 +10,7 @@ export const metadata = {
 export default async function AdminLoginPage() {
   const session = await readAdminSession();
   if (session) {
-    redirect("/admin");
+    redirect("/admin/filament-evidence");
   }
   const config = getBootstrapAdminConfig();
 
