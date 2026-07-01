@@ -511,7 +511,9 @@ export function isChineseLocale(locale: Locale): locale is ChineseLocale {
 }
 
 export function getLocalized3dTools(locale: ChineseLocale) {
-  return localized3dToolSlugs.map((slug) => localized3dTools[locale][slug]);
+  return localized3dToolSlugs
+    .map((slug) => localized3dTools[locale][slug])
+    .filter((tool): tool is LocalizedTool => tool != null);
 }
 
 export function getLocalized3dTool(locale: ChineseLocale, slug: string) {
