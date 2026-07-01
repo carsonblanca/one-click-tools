@@ -45,7 +45,7 @@ export default async function FilamentEvidenceDraftPage({
             <div key={`${String(annotation.row)}-${String(annotation.column)}-${index}`} className="border border-[#D9E0E7] p-3 text-sm">
               <p className="font-medium">{String(annotation.row)}-{String(annotation.column)}</p>
               <p className="mt-1 text-[#667281]">{String(annotation.cropStatus || "manual")}</p>
-              {annotation.tailBoundaryCorrected && <p className="mt-1 text-[#1F5FAF]">行尾边界已校正</p>}
+              {Boolean(annotation.tailBoundaryCorrected) && <p className="mt-1 text-[#1F5FAF]">行尾边界已校正</p>}
             </div>
           ))}
         </div>

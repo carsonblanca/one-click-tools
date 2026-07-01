@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import type { AdminSession } from "@/lib/admin/types";
 import LogoutButton from "./LogoutButton";
+import AdminSidebar from "./AdminSidebar";
 
 export default function AdminShell({
-  session,
+  role,
+  sessionId,
   children,
 }: {
-  session: AdminSession;
+  role: string;
+  sessionId: string;
   children: ReactNode;
 }) {
   return (
@@ -17,19 +18,18 @@ export default function AdminShell({
           <div>
             <p className="text-lg font-semibold">OneClick Tools 管理后台</p>
             <p className="mt-1 text-xs text-[#667281]">
-              当前角色：{session.role} · 会话 ID：{session.sessionId.slice(0, 8)}
+              当前角色：{role} · 会话 ID：{sessionId}
             </p>
-            <nav className="mt-3 flex flex-wrap gap-3 text-xs text-[#1F5FAF]">
-              <Link href="/admin/filaments" className="hover:underline">耗材管理</Link>
-              <Link href="/admin/filament-import" className="hover:underline">耗材包上传</Link>
-              <Link href="/admin/filament-evidence" className="hover:underline">证据采集</Link>
-              <Link href="/admin/brands" className="hover:underline">品牌管理</Link>
-            </nav>
           </div>
           <LogoutButton />
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-5 py-8">{children}</main>
+      <div className="mx-auto flex max-w-7xl gap-6 px-5 py-6">
+        <aside className="hidden w-44 shrink-0 md:block">
+          <AdminSidebar />
+        </aside>
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
     </div>
   );
 }
