@@ -3,9 +3,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import {
   DeleteObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export type R2Config = {
   accountId: string;
@@ -87,6 +89,16 @@ function safeImportFilename(originalFilename: string) {
   return `${stem || "import-package"}${extension || ".zip"}`;
 }
 
+function safeObjectSegment(value: string, fallback: string) {
+  const normalized = value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+  return normalized || fallback;
+}
+
 export async function uploadImportPackageToR2(input: {
   bytes: Uint8Array;
   originalFilename: string;
@@ -136,6 +148,66 @@ export async function uploadEvidencePackageToR2(input: {
     originalFilename: input.originalFilename,
     contentType,
     size: input.bytes.byteLength,
+  };
+}
+
+export async function createEvidencePackageUploadUrl(input: {
+  importId: string;
+  sourceRunId: string;
+  brandId: string;
+  originalFilename: string;
+  contentType: string;
+  expiresInSeconds?: number;
+}) {
+  const config = getR2Config();
+  const brandId = safeObjectSegment(input.brandId, "unknown-brand");
+  const sourceRunId = safeObjectSegment(input.sourceRunId, "unknown-run");
+  const objectKey = [
+    "imports",
+    "evidence",
+    brandId,
+    sourceRunId,
+    input.importId,
+    safeImportFilename(input.originalFilename),
+  ].join("/");
+  const contentType = input.contentType || "application/zip";
+  const uploadUrl = await getSignedUrl(
+    getR2Client(),
+    new PutObjectCommand({
+      Bucket: config.importsBucket,
+      Key: objectKey,
+      ContentType: contentType,
+    }),
+    { expiresIn: input.expiresInSeconds ?? 15 * 60 },
+  );
+
+  return {
+    bucket: config.importsBucket,
+    objectKey,
+    uploadUrl,
+    contentType,
+  };
+}
+
+export async function headImportObjectFromR2(input: {
+  bucket: string;
+  objectKey: string;
+}) {
+  const config = getR2Config();
+  if (
+    input.bucket !== config.importsBucket
+    || !input.objectKey.startsWith("imports/evidence/")
+  ) {
+    throw new Error("invalid_import_object_reference");
+  }
+
+  const result = await getR2Client().send(new HeadObjectCommand({
+    Bucket: input.bucket,
+    Key: input.objectKey,
+  }));
+  return {
+    contentLength: result.ContentLength ?? null,
+    contentType: result.ContentType ?? null,
   };
 }
 

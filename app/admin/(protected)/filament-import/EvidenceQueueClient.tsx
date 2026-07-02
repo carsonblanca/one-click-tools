@@ -11,6 +11,33 @@ type QueuedEvidenceImport = {
   createdAt: string;
 };
 
+type UploadIntent = {
+  uploadUrl: string;
+  objectKey: string;
+  sourceRunId: string;
+  contentType: string;
+  intentToken: string;
+};
+
+async function readResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  let payload: { error?: string } & Partial<T> = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text) as { error?: string } & Partial<T>;
+    } catch {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${text.slice(0, 160)}`);
+      }
+      throw new Error(`HTTP ${response.status}: 服务器返回了无效响应。`);
+    }
+  }
+  if (!response.ok) {
+    throw new Error(payload.error || `HTTP ${response.status}: 请求失败。`);
+  }
+  return payload as T;
+}
+
 export default function EvidenceQueueClient({
   initialImports,
 }: {
@@ -52,15 +79,52 @@ export default function EvidenceQueueClient({
     let queued = 0;
     try {
       for (const file of selected) {
-        const body = new FormData();
-        body.append("file", file);
-        body.append("brandId", brandId);
-        const response = await fetch("/api/admin/filament-import/evidence-queue", {
-          method: "POST",
-          body,
+        const contentType = file.type || "application/zip";
+        const intentResponse = await fetch(
+          "/api/admin/filament-import/evidence-queue/intent",
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              brandId,
+              originalFilename: file.name,
+              size: file.size,
+              contentType,
+            }),
+          },
+        );
+        const intent = await readResponse<UploadIntent>(intentResponse);
+        const uploadResponse = await fetch(intent.uploadUrl, {
+          method: "PUT",
+          headers: { "content-type": intent.contentType },
+          body: file,
         });
-        const payload = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(payload.error || `${file.name} 上传失败。`);
+        if (!uploadResponse.ok) {
+          const detail = (await uploadResponse.text()).slice(0, 160);
+          throw new Error(
+            `R2 上传失败（HTTP ${uploadResponse.status}）${detail ? `：${detail}` : ""}`,
+          );
+        }
+
+        const finalizeResponse = await fetch(
+          "/api/admin/filament-import/evidence-queue/finalize",
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              brandId,
+              objectKey: intent.objectKey,
+              originalFilename: file.name,
+              size: file.size,
+              contentType: intent.contentType,
+              sourceRunId: intent.sourceRunId,
+              intentToken: intent.intentToken,
+            }),
+          },
+        );
+        await readResponse<{ import: QueuedEvidenceImport }>(
+          finalizeResponse,
+        );
         queued += 1;
       }
       setMessage(`已上传 ${queued} 个文件，等待解析。`);
