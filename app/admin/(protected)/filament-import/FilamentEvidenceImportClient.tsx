@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { strFromU8, unzipSync } from "fflate";
+import {
+  readJsonApiResponse,
+  validateUploadFipStructure,
+} from "./filament-import-upload";
 
 type FipImportStatus = "draft" | "ready_for_review" | "blocked" | "invalid";
 type DraftAction = "draft" | "new" | "update" | "skip";
@@ -438,6 +442,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
       setBatchItems((prev) => prev.map((bi, j) => j === i ? { ...bi, status: "uploading" } : bi));
 
       try {
+        await validateUploadFipStructure(selected[i]);
         const body = new FormData();
         body.append("files", selected[i]);
         body.append("brandId", uploadBrandId);
@@ -445,25 +450,47 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
           method: "POST",
           body,
         });
-        const payload = (await response.json()) as {
-          results?: KexcelledEvidenceImportResult[];
+        const payload = await readJsonApiResponse<{
+          success?: boolean;
+          importId?: string;
+          draftIds?: string[];
+          redirectTo?: string;
+          summary?: {
+            productLine?: string;
+            materialType?: string;
+            colorCount?: number;
+            parameterCount?: number;
+            assetCount?: number;
+          };
           error?: string;
-        };
+          code?: string;
+          details?: string;
+        }>(response);
         if (!response.ok) throw new Error(payload.error || "导入失败");
-
-        const result = payload.results?.[0];
-        if (!result) throw new Error("服务器未返回结果");
-
-        const batchStatus: BatchUploadItem["status"] =
-          result.status === "imported_draft" ? "success"
-          : result.status === "unsupported" ? "needs_review"
-          : "failed";
-
-        if (batchStatus === "success" || batchStatus === "needs_review") succeededCount++;
-        else failedCount++;
+        if (!payload.success || !payload.redirectTo) throw new Error("服务器未返回草稿入口");
+        succeededCount++;
+        const result: KexcelledEvidenceImportResult = {
+          fileName: selected[i].name,
+          recognizedBrand: "KEXCELLED",
+          productLine: payload.summary?.productLine || "",
+          materialType: payload.summary?.materialType || "",
+          colorCount: payload.summary?.colorCount || 0,
+          availableSkuCount: 0,
+          disabledSkuCount: 0,
+          imageCandidateCount: payload.summary?.assetCount || 0,
+          sharedImageCandidateCount: 0,
+          parameterStatus: (payload.summary?.parameterCount || 0) > 0 ? "official_partial" : "missing",
+          status: "imported_draft",
+          adminDraftStatus: "imported_to_admin_draft",
+          runId: payload.redirectTo.split("/").pop() || "",
+          draftPath: payload.redirectTo,
+          summaryPath: "",
+          error: "",
+          publicationStatus: "draft",
+        };
 
         setBatchItems((prev) => prev.map((bi, j) => j === i
-          ? { ...bi, status: batchStatus, result } : bi));
+          ? { ...bi, status: "success", result } : bi));
 
         // Merge into the persistent results list
         setKexcelledResults((current) => {
@@ -471,6 +498,8 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
           next.set(draftKey(result), result);
           return Array.from(next.values());
         });
+        window.location.assign(payload.redirectTo);
+        return;
       } catch (err) {
         failedCount++;
         setBatchItems((prev) => prev.map((bi, j) => j === i

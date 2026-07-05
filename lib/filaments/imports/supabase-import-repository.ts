@@ -133,3 +133,86 @@ export async function appendAdminAuditLog(input: {
 
   if (error) throw repositoryError("append_audit_log");
 }
+
+export type CreateFilamentDraftInput = {
+  id: string;
+  importId: string;
+  draftKey: string;
+  sourceRunId: string;
+  productIndex: number;
+  brandId: string;
+  productLineName: string | null;
+  materialType: string | null;
+  variant: string | null;
+  draftData: JsonValue;
+  actorId: string;
+};
+
+export async function createFilamentDrafts(inputs: CreateFilamentDraftInput[]) {
+  if (!inputs.length) return [];
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .insert(inputs.map((input) => ({
+      id: input.id,
+      import_id: input.importId,
+      draft_key: input.draftKey,
+      source_run_id: input.sourceRunId,
+      product_index: input.productIndex,
+      status: "draft",
+      review_status: "pending_review",
+      publication_status: "draft",
+      brand_id: input.brandId,
+      product_line_name: input.productLineName,
+      material_type: input.materialType,
+      variant: input.variant,
+      draft_data: input.draftData,
+      created_by: input.actorId,
+      updated_by: input.actorId,
+    })))
+    .select("id,draft_key,source_run_id,product_index");
+  if (error || !data) throw repositoryError("create_drafts");
+  return data as Array<{
+    id: string;
+    draft_key: string;
+    source_run_id: string;
+    product_index: number;
+  }>;
+}
+
+export async function deleteFilamentImport(id: string) {
+  const { error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .delete()
+    .eq("id", id);
+  if (error) throw repositoryError("delete_import");
+}
+
+export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at",
+    )
+    .eq("source_run_id", sourceRunId)
+    .order("product_index", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw repositoryError("get_draft");
+  return data as {
+    id: string;
+    import_id: string;
+    draft_key: string;
+    source_run_id: string;
+    product_index: number;
+    status: string;
+    review_status: string;
+    publication_status: string;
+    brand_id: string;
+    product_line_name: string | null;
+    material_type: string | null;
+    variant: string | null;
+    draft_data: JsonValue;
+    created_at: string;
+    updated_at: string;
+  } | null;
+}

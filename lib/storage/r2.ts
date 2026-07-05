@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -123,6 +124,82 @@ export async function uploadImportPackageToR2(input: {
     contentType,
     size: input.bytes.byteLength,
   };
+}
+
+export async function uploadFipPackageToR2(input: {
+  importId: string;
+  brandId: string;
+  bytes: Uint8Array;
+  originalFilename: string;
+  contentType: string;
+}): Promise<R2ImportUpload> {
+  const config = getR2Config();
+  const brandId = safeObjectSegment(input.brandId, "unknown-brand");
+  const objectKey = `imports/fip/${brandId}/${input.importId}/${safeImportFilename(input.originalFilename)}`;
+  const contentType = input.contentType || "application/zip";
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: config.importsBucket,
+    Key: objectKey,
+    Body: input.bytes,
+    ContentType: contentType,
+  }));
+  return {
+    bucket: config.importsBucket,
+    objectKey,
+    originalFilename: input.originalFilename,
+    contentType,
+    size: input.bytes.byteLength,
+  };
+}
+
+export async function uploadFipAssetToR2(input: {
+  importId: string;
+  brandId: string;
+  packagePath: string;
+  bytes: Uint8Array;
+  contentType: string;
+}) {
+  const config = getR2Config();
+  const brandId = safeObjectSegment(input.brandId, "unknown-brand");
+  const packagePath = input.packagePath
+    .split("/")
+    .map((segment) => safeObjectSegment(segment, "asset"))
+    .join("/");
+  const objectKey = `filament-imports/${brandId}/${input.importId}/${packagePath}`;
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: config.assetsBucket,
+    Key: objectKey,
+    Body: input.bytes,
+    ContentType: input.contentType,
+  }));
+  return { bucket: config.assetsBucket, objectKey };
+}
+
+export async function readFipAssetFromR2(objectKey: string) {
+  const config = getR2Config();
+  if (!objectKey.startsWith("filament-imports/")) {
+    throw new Error("invalid_fip_asset_key");
+  }
+  const result = await getR2Client().send(new GetObjectCommand({
+    Bucket: config.assetsBucket,
+    Key: objectKey,
+  }));
+  if (!result.Body) throw new Error("fip_asset_not_found");
+  return {
+    bytes: await result.Body.transformToByteArray(),
+    contentType: result.ContentType || "application/octet-stream",
+  };
+}
+
+export async function deleteFipAssetFromR2(objectKey: string) {
+  const config = getR2Config();
+  if (!objectKey.startsWith("filament-imports/")) {
+    throw new Error("invalid_fip_asset_key");
+  }
+  await getR2Client().send(new DeleteObjectCommand({
+    Bucket: config.assetsBucket,
+    Key: objectKey,
+  }));
 }
 
 export async function uploadEvidencePackageToR2(input: {
