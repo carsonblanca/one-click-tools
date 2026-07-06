@@ -690,7 +690,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
       .filter((r) => isImportableStatus(r) && selectedImportKeys.has(draftKey(r)))
       .slice(0, 20);
     if (importable.length === 0) {
-      setKexcelledMessage("未选择可导入的 KEXCELLED Evidence Pack 草稿。");
+      setKexcelledMessage("未选择可导入的 KEXCELLED FIP 草稿。");
       return;
     }
 
@@ -856,7 +856,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
         <p className="text-xs font-medium text-[#667281]">Role: {role} · Session {sessionId}</p>
         <h1 className="mt-1 text-2xl font-semibold text-[#18202A]">耗材包上传</h1>
         <p className="mt-1 max-w-4xl text-sm text-[#667281]">
-          上传 KEXCELLED Evidence Pack 或本地 FIP 后，系统会自动创建或更新完整耗材草稿，不会自动发布。
+          仅支持 .filament-import.zip FIP 文件。原始证据 ZIP 需先在本地生成 FIP，上传完成后将直接创建草稿，不会自动发布。
         </p>
       </div>
 
@@ -881,13 +881,13 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
           id="kexcelled-evidence-zips"
           className="mt-3 block w-full rounded-lg border border-[#CBD3DC] bg-white px-3 py-2 text-sm"
           type="file"
-          accept=".zip,.filament-import.zip,application/zip"
+          accept=".filament-import.zip,application/zip"
           multiple
           disabled={batchProcessing}
           onChange={(event) => void handleKexcelledEvidenceFiles(event.target.files)}
         />
         <p className="mt-2 text-xs text-[#667281]">
-          支持一次选择 1–10 个 ZIP / FIP 包。逐包上传，一个失败不影响其他包。
+          支持一次选择 1–10 个 FIP 文件。逐包上传，一个失败不影响其他文件。
         </p>
         {/* Batch progress cards */}
         {batchItems.length > 0 ? (
@@ -1113,7 +1113,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
         <label className="block text-sm font-medium text-[#18202A]" htmlFor="fip-zips">上传 FIP ZIP</label>
         <input id="fip-zips" className="mt-3 block w-full rounded-lg border border-[#CBD3DC] bg-white px-3 py-2 text-sm" type="file" accept=".filament-import.zip,application/zip" multiple onChange={(event) => void handleFiles(event.target.files)} />
         <p className="mt-2 text-xs text-[#667281]">
-          支持一次上传 1–10 个 FIP。原始 Evidence Pack ZIP 不作为后台上传入口；请运行 `tools/filament-evidence-importer/build_filament_import_packages.py`。
+          支持一次上传 1–10 个 FIP。原始证据 ZIP 不作为后台上传入口；请先使用本地工具生成 FIP。
         </p>
         {message ? <p className="mt-3 rounded-lg bg-[#F4F6F8] px-3 py-2 text-sm text-[#18202A]">{message}</p> : null}
       </div>

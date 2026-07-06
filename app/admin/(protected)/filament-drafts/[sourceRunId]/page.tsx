@@ -18,6 +18,19 @@ function text(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
+function textArray(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+    : [];
+}
+
+function safeLink(value: unknown) {
+  const href = text(value);
+  return href.startsWith("https://") || href.startsWith("http://") || href.startsWith("/")
+    ? href
+    : "";
+}
+
 export default async function FilamentDraftPage({
   params,
 }: {
@@ -33,6 +46,15 @@ export default async function FilamentDraftPage({
   const parameters = objectValue(objectValue(data.parameters).fields);
   const canonicalColors = arrayValue(data.canonicalColors);
   const colors = canonicalColors.length ? canonicalColors : arrayValue(data.colors);
+  const images = arrayValue(data.images);
+  const evidence = arrayValue(data.evidence);
+  const assetLinks = new Map(images.flatMap((image) => {
+    const assetId = text(image.assetId);
+    const objectKey = text(image.r2ObjectKey);
+    return assetId && objectKey
+      ? [[assetId, `/api/admin/filament-import/kexcelled-evidence/asset?key=${encodeURIComponent(objectKey)}`] as const]
+      : [];
+  }));
 
   return (
     <main className="space-y-6">
@@ -85,6 +107,54 @@ export default async function FilamentDraftPage({
               </article>
             );
           })}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="font-semibold">证据候选（{evidence.length}）</h2>
+        <div className="mt-4 space-y-3">
+          {evidence.map((item, index) => {
+            const sourceType = text(item.sourceType);
+            const extractionMethod = text(item.extractionMethod);
+            const summary = text(item.title)
+              || text(item.summary)
+              || text(item.ocrText)
+              || text(item.notes);
+            const sourcePath = text(item.sourceRelativePath);
+            const bindings = textArray(item.fieldBindings);
+            const associations = [
+              text(item.productId),
+              text(item.colorId),
+              text(item.parameterField),
+              ...bindings,
+            ].filter(Boolean);
+            const sourceUrl = safeLink(item.sourceUrl);
+            const assetUrl = assetLinks.get(text(item.extractedAssetId)) || "";
+            return (
+              <article className="rounded border border-slate-200 p-3" key={text(item.evidenceId) || index}>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium">
+                    {[sourceType, extractionMethod].filter(Boolean).join(" · ") || "证据类型未标注"}
+                  </p>
+                  {text(item.evidenceId) ? (
+                    <p className="text-xs text-slate-500">{text(item.evidenceId)}</p>
+                  ) : null}
+                </div>
+                {summary ? <p className="mt-2 text-sm text-slate-700">{summary}</p> : null}
+                {associations.length ? (
+                  <p className="mt-2 text-sm text-slate-600">关联：{associations.join(" · ")}</p>
+                ) : null}
+                {sourcePath ? <p className="mt-2 text-xs text-slate-500">{sourcePath}</p> : null}
+                {sourceUrl || assetUrl ? (
+                  <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                    {sourceUrl ? <a className="text-blue-700 hover:underline" href={sourceUrl}>原始链接</a> : null}
+                    {assetUrl ? <a className="text-blue-700 hover:underline" href={assetUrl}>资产链接</a> : null}
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+          {!evidence.length ? <p className="text-sm text-slate-500">暂无证据候选</p> : null}
         </div>
       </section>
     </main>
