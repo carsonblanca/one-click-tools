@@ -16,6 +16,7 @@ export const locales: Array<{
 
 export const localized3dToolSlugs = [
   "filament-cost-calculator",
+  "bambu-filament-preset-generator",
   "print-time-cost-calculator",
   "filament-length-calculator",
   "3d-print-weight-calculator",
@@ -88,7 +89,10 @@ export function getLanguageSwitchTarget(pathname: string, targetLocale: Locale) 
     };
   }
 
-  if (!localizedBasePaths.has(basePath)) {
+  const isSimplifiedChineseBrandProfile =
+    targetLocale === "zh-cn" && basePath.startsWith("/filaments/brands/") && basePath.split("/").length === 4;
+
+  if (!localizedBasePaths.has(basePath) && !isSimplifiedChineseBrandProfile) {
     return {
       path: currentPath,
       available: false,

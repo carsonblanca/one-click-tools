@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
+import type { Locale } from "@/lib/i18n";
 import {
   ToolButton,
   ToolInput,
@@ -20,8 +21,116 @@ const feedbackTypes = [
 
 type FeedbackType = (typeof feedbackTypes)[number];
 
-export default function FloatingFeedback() {
+const feedbackCopy: Record<Locale, {
+  button: string;
+  openLabel: string;
+  title: string;
+  intro: string;
+  closeLabel: string;
+  close: string;
+  type: string;
+  email: string;
+  message: string;
+  messagePlaceholder: string;
+  currentUrl: string;
+  send: string;
+  cancel: string;
+  privacy: string;
+  emptyMessage: string;
+  sent: string;
+  notProvided: string;
+  userAgentUnknown: string;
+}> = {
+  en: {
+    button: "Feedback",
+    openLabel: "Open feedback dialog",
+    title: "Send feedback",
+    intro: "Report a bug, suggest a tool, or tell us what feels wrong.",
+    closeLabel: "Close feedback dialog",
+    close: "Close",
+    type: "Feedback type",
+    email: "Your email optional",
+    message: "Message",
+    messagePlaceholder: "Describe the issue or suggestion...",
+    currentUrl: "Current URL:",
+    send: "Send feedback",
+    cancel: "Cancel",
+    privacy: "This feedback opens your email app. Your message is not sent through OneClick Tools servers.",
+    emptyMessage: "Please enter a message before sending feedback.",
+    sent: "Your email app should open now.",
+    notProvided: "Not provided",
+    userAgentUnknown: "Unknown",
+  },
+  "zh-cn": {
+    button: "反馈",
+    openLabel: "打开反馈窗口",
+    title: "发送反馈",
+    intro: "报告问题、建议工具，或告诉我们哪里不顺手。",
+    closeLabel: "关闭反馈窗口",
+    close: "关闭",
+    type: "反馈类型",
+    email: "你的邮箱（可选）",
+    message: "反馈内容",
+    messagePlaceholder: "请描述问题或建议...",
+    currentUrl: "当前页面：",
+    send: "发送反馈",
+    cancel: "取消",
+    privacy: "此反馈会打开你的邮件应用。你的消息不会通过 OneClick Tools 服务器发送。",
+    emptyMessage: "请先填写反馈内容。",
+    sent: "邮件应用应该已经打开。",
+    notProvided: "未提供",
+    userAgentUnknown: "未知",
+  },
+  "zh-tw": {
+    button: "回饋",
+    openLabel: "開啟回饋視窗",
+    title: "傳送回饋",
+    intro: "回報問題、建議工具，或告訴我們哪裡不順手。",
+    closeLabel: "關閉回饋視窗",
+    close: "關閉",
+    type: "回饋類型",
+    email: "你的電子郵件（選填）",
+    message: "回饋內容",
+    messagePlaceholder: "請描述問題或建議...",
+    currentUrl: "目前頁面：",
+    send: "傳送回饋",
+    cancel: "取消",
+    privacy: "此回饋會開啟你的郵件應用程式。你的訊息不會透過 OneClick Tools 伺服器送出。",
+    emptyMessage: "請先填寫回饋內容。",
+    sent: "郵件應用程式應該已經開啟。",
+    notProvided: "未提供",
+    userAgentUnknown: "未知",
+  },
+};
+
+const feedbackTypeLabels: Record<Locale, Record<FeedbackType, string>> = {
+  en: {
+    Bug: "Bug",
+    Suggestion: "Suggestion",
+    "Wrong result": "Wrong result",
+    "UI issue": "UI issue",
+    Other: "Other",
+  },
+  "zh-cn": {
+    Bug: "错误",
+    Suggestion: "建议",
+    "Wrong result": "结果不正确",
+    "UI issue": "界面问题",
+    Other: "其他",
+  },
+  "zh-tw": {
+    Bug: "錯誤",
+    Suggestion: "建議",
+    "Wrong result": "結果不正確",
+    "UI issue": "介面問題",
+    Other: "其他",
+  },
+};
+
+export default function FloatingFeedback({ locale = "en" }: { locale?: Locale }) {
   const { isDark } = useTheme();
+  const copy = feedbackCopy[locale];
+  const typeLabels = feedbackTypeLabels[locale];
   const dialogRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("Bug");
@@ -68,16 +177,16 @@ export default function FloatingFeedback() {
     const trimmedMessage = message.trim();
 
     if (!trimmedMessage) {
-      setError("Please enter a message before sending feedback.");
+      setError(copy.emptyMessage);
       setSentNotice("");
       return;
     }
 
-    const userAgent = navigator.userAgent || "Unknown";
+    const userAgent = navigator.userAgent || copy.userAgentUnknown;
     const subject = `OneClick Tools Feedback - ${feedbackType}`;
     const body = [
       `Feedback type: ${feedbackType}`,
-      `User email: ${email.trim() || "Not provided"}`,
+      `User email: ${email.trim() || copy.notProvided}`,
       `Current URL: ${currentUrl || window.location.href}`,
       `User agent: ${userAgent}`,
       "",
@@ -89,7 +198,7 @@ export default function FloatingFeedback() {
       subject,
     )}&body=${encodeURIComponent(body)}`;
     setError("");
-    setSentNotice("Your email app should open now.");
+    setSentNotice(copy.sent);
   };
 
   const selectClass = `w-full rounded-2xl border px-4 py-4 outline-none transition ${
@@ -102,7 +211,7 @@ export default function FloatingFeedback() {
     <>
       <button
         type="button"
-        aria-label="Open feedback dialog"
+        aria-label={copy.openLabel}
         onClick={openDialog}
         className={`fixed right-3 bottom-20 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold shadow-lg transition sm:right-6 sm:bottom-28 sm:h-auto sm:w-auto sm:min-h-12 sm:gap-2 sm:px-4 sm:py-3 ${
           isDark
@@ -111,7 +220,7 @@ export default function FloatingFeedback() {
         }`}
       >
         <span aria-hidden="true">?</span>
-        <span className="hidden sm:inline">Feedback</span>
+        <span className="hidden sm:inline">{copy.button}</span>
       </button>
 
       {isOpen ? (
@@ -135,19 +244,19 @@ export default function FloatingFeedback() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="feedback-title" className="text-2xl font-semibold">
-                  Send feedback
+                  {copy.title}
                 </h2>
                 <p
                   className={`mt-2 text-sm leading-6 ${
                     isDark ? "text-white/55" : "text-[#6B665D]"
                   }`}
                 >
-                  Report a bug, suggest a tool, or tell us what feels wrong.
+                  {copy.intro}
                 </p>
               </div>
               <button
                 type="button"
-                aria-label="Close feedback dialog"
+                aria-label={copy.closeLabel}
                 onClick={closeDialog}
                 className={`rounded-full border px-3 py-2 text-sm transition ${
                   isDark
@@ -155,13 +264,13 @@ export default function FloatingFeedback() {
                     : "border-[#E5DED0] bg-[#F5F2EA] text-[#6B665D] hover:text-[#18181B]"
                 }`}
               >
-                Close
+                {copy.close}
               </button>
             </div>
 
             <div className="mt-5 grid gap-4">
               <div>
-                <ToolLabel>Feedback type</ToolLabel>
+                <ToolLabel>{copy.type}</ToolLabel>
                 <select
                   value={feedbackType}
                   onChange={(event) => setFeedbackType(event.target.value as FeedbackType)}
@@ -169,14 +278,14 @@ export default function FloatingFeedback() {
                 >
                   {feedbackTypes.map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {typeLabels[type]}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <ToolLabel>Your email optional</ToolLabel>
+                <ToolLabel>{copy.email}</ToolLabel>
                 <ToolInput
                   value={email}
                   onChange={setEmail}
@@ -186,12 +295,12 @@ export default function FloatingFeedback() {
               </div>
 
               <div>
-                <ToolLabel>Message</ToolLabel>
+                <ToolLabel>{copy.message}</ToolLabel>
                 <ToolTextarea
                   value={message}
                   onChange={setMessage}
                   rows={6}
-                  placeholder="Describe the issue or suggestion..."
+                  placeholder={copy.messagePlaceholder}
                 />
               </div>
 
@@ -202,7 +311,7 @@ export default function FloatingFeedback() {
                     : "border-[#E5DED0] bg-[#F5F2EA] text-[#6B665D]"
                 }`}
               >
-                <span className="font-semibold">Current URL:</span>{" "}
+                <span className="font-semibold">{copy.currentUrl}</span>{" "}
                 <span className="break-all">{currentUrl}</span>
               </div>
 
@@ -211,9 +320,9 @@ export default function FloatingFeedback() {
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <ToolButton onClick={sendFeedback}>Send feedback</ToolButton>
+              <ToolButton onClick={sendFeedback}>{copy.send}</ToolButton>
               <ToolButton onClick={closeDialog} variant="secondary">
-                Cancel
+                {copy.cancel}
               </ToolButton>
             </div>
 
@@ -222,8 +331,7 @@ export default function FloatingFeedback() {
                 isDark ? "text-white/45" : "text-[#8A8173]"
               }`}
             >
-              This feedback opens your email app. Your message is not sent through
-              OneClick Tools servers.
+              {copy.privacy}
             </p>
           </div>
         </div>

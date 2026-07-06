@@ -1,6 +1,7 @@
 import type { CatalogColor, SpoolSpec, Finish, Transparency, ColorFamily, DigitalSwatch, PhysicalSwatch } from "./mock-colors";
 import { getAllFilamentColors } from "@/lib/filaments/colors/catalog";
 import r3dProductLines from "@/data/filaments/product-lines/r3d.json";
+import kexcelledProductLines from "@/data/filaments/product-lines/kexcelled.json";
 
 export type CatalogRecord = {
   id: string;
@@ -11,6 +12,8 @@ export type CatalogRecord = {
   variant: string;
   variantZh: string;
   productLine: string;
+  productLineId?: string;
+  parameterStatus?: "complete" | "partial" | "missing";
   color: CatalogColor;
   spool: SpoolSpec;
   rating: number;
@@ -62,9 +65,6 @@ function spool(
   };
 }
 
-const PLACEHOLDER_HEX = "#D9D9D9";
-const PLACEHOLDER_RGB = { r: 217, g: 217, b: 217 };
-
 function buildKexcelledRecords(): CatalogRecord[] {
   const colors = getAllFilamentColors().filter((c) => c.brandId === "kexcelled");
   return colors.map((c) => {
@@ -74,6 +74,15 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "PLA",
       "kexcelled-k5-pla-p": "PLA",
       "kexcelled-k5-petg-gf": "PETG",
+      "kexcelled-k5-petg-m": "PETG",
+      "kexcelled-k8-tpu": "TPU",
+      "kexcelled-k7-tpu": "TPU",
+      "kexcelled-k11-pei": "PEI",
+      "kexcelled-k10-pei": "PEI",
+      "kexcelled-k10-peek": "PEEK",
+      "kexcelled-k8-pc": "PC",
+      "kexcelled-k8-pa-cf": "PA",
+      "kexcelled-k7-pet-cf10": "PET",
       "kexcelled-k5-pla-magic": "PLA",
       "kexcelled-k6-pla-cf10": "PLA",
       "kexcelled-k5-pla-cf": "PLA",
@@ -91,6 +100,15 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "Tough",
       "kexcelled-k5-pla-p": "Metallic",
       "kexcelled-k5-petg-gf": "Glass Fiber Reinforced",
+      "kexcelled-k5-petg-m": "Matte",
+      "kexcelled-k8-tpu": "Multi (64D-95A)",
+      "kexcelled-k7-tpu": "Standard (64D)",
+      "kexcelled-k11-pei": "PEI (Ultem 9085)",
+      "kexcelled-k10-pei": "PEI (Ultem 1010)",
+      "kexcelled-k10-peek": "PEEK",
+      "kexcelled-k8-pc": "Standard",
+      "kexcelled-k8-pa-cf": "CF",
+      "kexcelled-k7-pet-cf10": "CF",
       "kexcelled-k5-pla-magic": "Marble",
       "kexcelled-k6-pla-cf10": "Carbon Fiber Reinforced",
       "kexcelled-k5-pla-cf": "Carbon Fiber Reinforced",
@@ -107,6 +125,15 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "高韧性",
       "kexcelled-k5-pla-p": "金属质感",
       "kexcelled-k5-petg-gf": "玻纤增强",
+      "kexcelled-k5-petg-m": "哑光",
+      "kexcelled-k8-tpu": "多硬度 (64D-95A)",
+      "kexcelled-k7-tpu": "标准 (64D)",
+      "kexcelled-k11-pei": "PEI (Ultem 9085)",
+      "kexcelled-k10-pei": "PEI (Ultem 1010)",
+      "kexcelled-k10-peek": "PEEK",
+      "kexcelled-k8-pc": "标准",
+      "kexcelled-k8-pa-cf": "碳纤维增强",
+      "kexcelled-k7-pet-cf10": "碳纤维增强",
       "kexcelled-k5-pla-magic": "大理石",
       "kexcelled-k6-pla-cf10": "碳纤维增强",
       "kexcelled-k5-pla-cf": "碳纤维增强",
@@ -123,6 +150,15 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-k6-pla": "THE K6 PLA",
       "kexcelled-k5-pla-p": "THE K5 PLA P",
       "kexcelled-k5-petg-gf": "THE K5 PETG GF",
+      "kexcelled-k5-petg-m": "THE K5 PETG M",
+      "kexcelled-k8-tpu": "THE K8 TPU",
+      "kexcelled-k7-tpu": "THE K7 TPU",
+      "kexcelled-k11-pei": "THE K11 PEI",
+      "kexcelled-k10-pei": "THE K10 PEI",
+      "kexcelled-k10-peek": "THE K10 PEEK",
+      "kexcelled-k8-pc": "THE K8 PC",
+      "kexcelled-k8-pa-cf": "THE K8 PA CF",
+      "kexcelled-k7-pet-cf10": "THE K7 PET CF10",
       "kexcelled-k5-pla-magic": "THE K5 PLA Magic",
       "kexcelled-k6-pla-cf10": "THE K6 PLA CF10",
       "kexcelled-k5-pla-cf": "THE K5 PLA CF",
@@ -140,14 +176,14 @@ function buildKexcelledRecords(): CatalogRecord[] {
 
     const hexStr = c.hex;
     const hasRealHex = hexStr !== null;
-    const hexVal = hexStr || PLACEHOLDER_HEX;
+    const hexVal = hexStr || "";
     let rVal: number, gVal: number, bVal: number;
     if (c.rgb && Array.isArray(c.rgb) && c.rgb.length === 3) {
       [rVal, gVal, bVal] = c.rgb;
     } else {
-      rVal = PLACEHOLDER_RGB.r;
-      gVal = PLACEHOLDER_RGB.g;
-      bVal = PLACEHOLDER_RGB.b;
+      rVal = 0;
+      gVal = 0;
+      bVal = 0;
     }
 
     const finish = (c.finish || "semi-glossy") as Finish;
@@ -163,8 +199,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
           colorNameZh: c.displayNameZh || c.officialName,
           colorNameEn: c.officialName,
           colorFamily,
-          hex: PLACEHOLDER_HEX,
-          rgb: PLACEHOLDER_RGB,
+          hex: null,
+          rgb: null,
           finish, transparency,
           hasDigitalSwatch: false,
           hasPhysicalSwatch: false,
@@ -182,11 +218,68 @@ function buildKexcelledRecords(): CatalogRecord[] {
       variant,
       variantZh,
       productLine,
+      productLineId: c.productLineId,
+      parameterStatus: getKexcelledParameterStatus(c.productLineId),
       color,
       spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
       rating: 0,
       reviewCount: 0,
       createdAt: "2026-06-19",
+    };
+  });
+}
+
+function getKexcelledParameterStatus(productLineId: string): "complete" | "partial" | "missing" {
+  const record = (kexcelledProductLines.productLines as Array<{ id: string }>).find((line) => line.id === productLineId);
+  if (!record) return "missing";
+  const knownMissing = new Set([
+    "kexcelled-k7-pet-cf10",
+    "kexcelled-k8-pa-cf",
+    "kexcelled-k8-pc",
+    "kexcelled-k10-peek",
+    "kexcelled-k10-pei",
+    "kexcelled-k11-pei",
+    "kexcelled-k7-tpu",
+    "kexcelled-k8-tpu",
+    "kexcelled-k5-petg-m",
+  ]);
+  return knownMissing.has(productLineId) ? "missing" : "partial";
+}
+
+function buildKexcelledPlaceholderRecords(existingRecords: CatalogRecord[]): CatalogRecord[] {
+  const existingIds = new Set(existingRecords.map((record) => record.productLineId));
+  return (kexcelledProductLines.productLines as Array<{ id: string; productLine: string; materialType: string; variant: string }>).filter((line) => !existingIds.has(line.id)).map((line) => {
+    const materialType = line.id === "kexcelled-k10-peek" ? "PEEK" : line.id === "kexcelled-k10-pei" || line.id === "kexcelled-k11-pei" ? "PEI" : line.materialType;
+    const color: CatalogColor = {
+      colorNameZh: "颜色信息待补充",
+      colorNameEn: "Color information pending",
+      colorFamily: "gray",
+      hex: null,
+      rgb: null,
+      finish: "semi-glossy",
+      transparency: "opaque",
+      hasDigitalSwatch: false,
+      hasPhysicalSwatch: false,
+      physicalSwatchCount: 0,
+      digitalSwatch: null,
+      physicalSwatches: [],
+    };
+    return {
+      id: line.id + "-generic",
+      brand: "Kexcelled",
+      brandZh: "Kexcelled",
+      materialType,
+      materialTypeZh: materialType,
+      variant: line.variant || "Standard",
+      variantZh: line.variant || "标准",
+      productLine: line.productLine,
+      productLineId: line.id,
+      parameterStatus: getKexcelledParameterStatus(line.id),
+      color,
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0,
+      reviewCount: 0,
+      createdAt: "2026-06-20",
     };
   });
 }
@@ -225,8 +318,8 @@ function r3dVariantZh(variant: string): string {
 function buildR3dRecords(): CatalogRecord[] {
   return r3dProductLines.productLines.map(function (pl) {
     var color: CatalogColor = {
-      colorNameZh: "通用", colorNameEn: "Generic",
-      colorFamily: "gray", hex: PLACEHOLDER_HEX, rgb: PLACEHOLDER_RGB,
+      colorNameZh: "颜色信息待补充", colorNameEn: "Color information pending",
+      colorFamily: "gray", hex: null, rgb: null,
       finish: "semi-glossy", transparency: "opaque",
       hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
       digitalSwatch: null, physicalSwatches: [],
@@ -243,6 +336,8 @@ function buildR3dRecords(): CatalogRecord[] {
     };
   });
 }
+
+const kexcelledColorRecords = buildKexcelledRecords();
 
 export const CATALOG_RECORDS: CatalogRecord[] = [
   {
@@ -385,7 +480,8 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
     spool: spool(1000, 0, null, null, null, null, null, false, true, "yes", false, null),
     rating: 4.6, reviewCount: 430, createdAt: "2024-07-01",
   },
-  ...buildKexcelledRecords(),
+  ...kexcelledColorRecords,
+  ...buildKexcelledPlaceholderRecords(kexcelledColorRecords),
   ...buildR3dRecords(),
 ];
 
@@ -398,7 +494,7 @@ export function getRecordsByMaterial(materialType: string): CatalogRecord[] {
 }
 
 export function getRecordsByColorFamily(family: string): CatalogRecord[] {
-  return CATALOG_RECORDS.filter((r) => r.color.colorFamily === family);
+  return CATALOG_RECORDS.filter((r) => r.color.hasDigitalSwatch && r.color.colorFamily === family);
 }
 
 export function getUniqueBrands(): { brand: string; brandZh: string }[] {
@@ -409,9 +505,9 @@ export function getUniqueBrands(): { brand: string; brandZh: string }[] {
   return [...map.values()];
 }
 
-export const DECLARED_COLORS = CATALOG_RECORDS.map((r) => ({
+export const DECLARED_COLORS = CATALOG_RECORDS.filter((r) => r.color.hasDigitalSwatch && r.color.hex).map((r) => ({
   id: r.id,
-  hex: r.color.hex,
+  hex: r.color.hex || "",
   colorNameZh: r.color.colorNameZh,
   colorNameEn: r.color.colorNameEn,
   colorFamily: r.color.colorFamily,

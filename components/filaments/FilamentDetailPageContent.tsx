@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
-import { getCatalogRecord, getCompareValue } from "@/lib/filaments/catalog/catalog-view-model";
+import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
 import { getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
 import {
@@ -332,6 +332,13 @@ function FieldRow({ label, value, unknownLabel = DETAIL_LABELS.en.unknown }: { l
   );
 }
 
+function brandProfileIdForBrand(brand: string) {
+  if (brand === "Bambu Lab") return "bambu-lab";
+  if (brand === "Kexcelled") return "kexcelled";
+  if (brand === "R3D") return "generic-profiles";
+  return "generic-profiles";
+}
+
 export default function FilamentDetailPageContent({
   filamentId,
   locale = "en",
@@ -356,9 +363,7 @@ export default function FilamentDetailPageContent({
     );
   }
 
-  const brandProfile = getBrandProfile(
-    record.brand === "Bambu Lab" ? "bambu-lab" : "generic-profiles",
-  );
+  const brandProfile = getBrandProfile(brandProfileIdForBrand(record.brand));
   const brandData = brandProfile || null;
   const c = record.color;
   const colorName = getLocalizedFilamentColorName(c, locale);
@@ -367,6 +372,7 @@ export default function FilamentDetailPageContent({
   const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
   const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
+  const hasVerifiedParams = hasPresetParameters(record);
 
   const printerOptsThis = getBambuPrinterOptions();
   const generated = useMemo(() => {
@@ -393,7 +399,11 @@ export default function FilamentDetailPageContent({
         <div className="space-y-6">
           <DetailSection title={t.productInfo}>
             <div className="flex items-start gap-4 mb-5">
-              <div className="h-14 w-14 shrink-0 rounded-2xl border border-current/10" style={{ backgroundColor: c.hex }} />
+              {c.hasDigitalSwatch && c.hex ? (
+                <div className="h-14 w-14 shrink-0 rounded-2xl border border-current/10" style={{ backgroundColor: c.hex }} />
+              ) : (
+                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-dashed text-xs ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>--</div>
+              )}
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <BrandLogo brand={record.brand} size={24} />
@@ -413,8 +423,8 @@ export default function FilamentDetailPageContent({
               <FieldRow label={t.materialType} value={record.materialType} unknownLabel={t.unknown} />
               <FieldRow label={t.category} value={variantLabel} unknownLabel={t.unknown} />
               <FieldRow label={t.colorName} value={colorName} unknownLabel={t.unknown} />
-              <FieldRow label="HEX" value={c.hex} unknownLabel={t.unknown} />
-              <FieldRow label="RGB" value={`${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b}`} unknownLabel={t.unknown} />
+              <FieldRow label="HEX" value={c.hasDigitalSwatch && c.hex ? c.hex : t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label="RGB" value={c.hasDigitalSwatch && c.rgb ? `${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b}` : t.unknown} unknownLabel={t.unknown} />
               <FieldRow label={t.officialColorCode} value={c.digitalSwatch?.officialColorCode || t.unknown} unknownLabel={t.unknown} />
               <FieldRow label={t.colorFamily} value={familyLabel} unknownLabel={t.unknown} />
               <FieldRow label={t.finish} value={finishLabel} unknownLabel={t.unknown} />
@@ -424,8 +434,14 @@ export default function FilamentDetailPageContent({
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className={`rounded-xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-[#E5DED0] bg-[#F5F2EA]"}`}>
                 <div className={`text-sm font-medium mb-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.digitalSwatch}</div>
-                <p className="font-mono text-sm">HEX {c.hex}</p>
-                <p className="font-mono text-sm">RGB {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</p>
+                {c.hasDigitalSwatch && c.hex && c.rgb ? (
+                  <>
+                    <p className="font-mono text-sm">HEX {c.hex}</p>
+                    <p className="font-mono text-sm">RGB {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</p>
+                  </>
+                ) : (
+                  <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>
+                )}
                 {c.digitalSwatch && (
                   <p className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
                     {t.source}: {c.digitalSwatch.sourceType === "manufacturer" ? t.manufacturerData : t.userUpload} · {t.lastVerified}: {c.digitalSwatch.lastVerifiedAt || t.notVerified}
@@ -479,16 +495,16 @@ export default function FilamentDetailPageContent({
                 </select>
                 <button
                   onClick={() => {
-                    if (generated && record.brand !== "R3D") downloadJson(buildPresetDownloadFileName(record), generated.preset);
+                    if (generated && hasVerifiedParams) downloadJson(buildPresetDownloadFileName(record), generated.preset);
                   }}
-                  disabled={!generated || record.brand === "R3D"}
+                  disabled={!generated || !hasVerifiedParams}
                   className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
-                    !generated || record.brand === "R3D"
+                    !generated || !hasVerifiedParams
                       ? "opacity-40 cursor-not-allowed"
                       : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
                   }`}
                 >
-                  {record.brand === "R3D" ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
+                  {!hasVerifiedParams ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
                 </button>
               </div>
               {generated && (

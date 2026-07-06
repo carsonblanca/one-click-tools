@@ -1,0 +1,30 @@
+{
+  "brandId": "kexcelled",
+  "brandName": "Kexcelled",
+  "verifiedAt": "2026-06-20",
+  "colors": [
+    {
+      "id": "kexcelled-k8-pa-cf-blk",
+      "productLineId": "kexcelled-k8-pa-cf",
+      "brandId": "kexcelled",
+      "officialName": "Black",
+      "displayNameZh": "黑色",
+      "aliases": [],
+      "officialColorCode": "BLK",
+      "hex": null,
+      "rgb": null,
+      "finish": null,
+      "opacity": "opaque",
+      "officialProductUrl": null,
+      "officialColorSourceUrl": null,
+      "officialImageUrl": null,
+      "colorValueSource": "unknown",
+      "hasOfficialColorChart": false,
+      "hasPhysicalSwatch": false,
+      "verificationStatus": "partial",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "Color SKU recovered from TMall page.html evidence pack. No official HEX. colorReferenceType: visual_only. ",
+      "completenessStatus": "unknown"
+    }
+  ]
+}

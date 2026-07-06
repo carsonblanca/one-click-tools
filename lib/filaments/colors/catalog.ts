@@ -36,6 +36,15 @@ import k5wood from "@/data/filaments/colors/kexcelled/k5-wood.json";
 import k5placc from "@/data/filaments/colors/kexcelled/k5-pla-cc.json";
 import k5petg from "@/data/filaments/colors/kexcelled/k5-petg.json";
 import k6petg from "@/data/filaments/colors/kexcelled/k6-petg.json";
+import k5plasilk from "@/data/filaments/colors/kexcelled/k5-pla-silk.json";
+import k7petcf10 from "@/data/filaments/colors/kexcelled/k7-pet-cf10.json";
+import k8pacf from "@/data/filaments/colors/kexcelled/k8-pa-cf.json";
+import k8pc from "@/data/filaments/colors/kexcelled/k8-pc.json";
+import k10peek from "@/data/filaments/colors/kexcelled/k10-peek.json";
+import k10pei from "@/data/filaments/colors/kexcelled/k10-pei.json";
+import k11pei from "@/data/filaments/colors/kexcelled/k11-pei.json";
+import k7tpu from "@/data/filaments/colors/kexcelled/k7-tpu.json";
+import k8tpu from "@/data/filaments/colors/kexcelled/k8-tpu.json";
 
 const COLOR_FILES = [
   plaBasic,
@@ -74,6 +83,15 @@ const COLOR_FILES = [
   k5placc,
   k5petg,
   k6petg,
+  k5plasilk,
+  k7petcf10,
+  k8pacf,
+  k8pc,
+  k10peek,
+  k10pei,
+  k11pei,
+  k7tpu,
+  k8tpu,
 ] as const;
 
 function loadAll(): FilamentColorSku[] {

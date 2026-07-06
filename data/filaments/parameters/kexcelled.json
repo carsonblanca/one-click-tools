@@ -930,6 +930,393 @@
       "parameterStatus": "missing",
       "lastVerifiedAt": "2026-06-20",
       "sourceNotes": "TMall evidence pack 20260620. No official print parameters found. Silk PLA variant."
+    },
+    {
+      "id": "kexcelled-k7-pet-cf10-params",
+      "productLineId": "kexcelled-k7-pet-cf10",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K7 PET CF10."
+    },
+    {
+      "id": "kexcelled-k8-pa-cf-params",
+      "productLineId": "kexcelled-k8-pa-cf",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 PA CF."
+    },
+    {
+      "id": "kexcelled-k8-pc-params",
+      "productLineId": "kexcelled-k8-pc",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 PC."
+    },
+    {
+      "id": "kexcelled-k10-peek-params",
+      "productLineId": "kexcelled-k10-peek",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K10 PEEK."
+    },
+    {
+      "id": "kexcelled-k10-pei-params",
+      "productLineId": "kexcelled-k10-pei",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K10 PEI."
+    },
+    {
+      "id": "kexcelled-k11-pei-params",
+      "productLineId": "kexcelled-k11-pei",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K11 PEI."
+    },
+    {
+      "id": "kexcelled-k7-tpu-params",
+      "productLineId": "kexcelled-k7-tpu",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K7 TPU."
+    },
+    {
+      "id": "kexcelled-k8-tpu-params",
+      "productLineId": "kexcelled-k8-tpu",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 TPU."
+    },
+    {
+      "id": "kexcelled-k5-petg-m-params",
+      "productLineId": "kexcelled-k5-petg-m",
+      "brandId": "kexcelled",
+      "nozzleTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "bedTemperature": {
+        "initialLayer": null,
+        "otherLayers": null,
+        "recommended": null
+      },
+      "maxVolumetricSpeedMm3s": null,
+      "recommendedPrintSpeed": null,
+      "dryingRecommendation": {
+        "temperatureC": null,
+        "durationHours": null,
+        "notes": null
+      },
+      "hardenedNozzleRequired": null,
+      "enclosureRecommended": null,
+      "spoolSpecs": {
+        "refillable": null,
+        "cardboardSpool": null,
+        "outerDiameterMm": null,
+        "widthMm": null,
+        "hubHoleDiameterMm": null,
+        "emptySpoolWeightG": null,
+        "spoolMaterial": null
+      },
+      "amsCompatibility": {
+        "amsFit": null,
+        "adapterRequired": null,
+        "notes": null
+      },
+      "sources": [],
+      "sourceStatus": "not_found",
+      "parameterStatus": "missing",
+      "lastVerifiedAt": "2026-06-20",
+      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K5 PETG M."
     }
   ]
 }

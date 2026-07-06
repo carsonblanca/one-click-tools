@@ -40,7 +40,7 @@ export default function SimplifiedChineseRootLayout({
         <ThemeProvider>
           {children}
           <LanguageSuggestion />
-          <FloatingFeedback />
+          <FloatingFeedback locale="zh-cn" />
         </ThemeProvider>
       </body>
     </html>

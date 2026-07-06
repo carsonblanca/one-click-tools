@@ -11,7 +11,18 @@ import type { Locale } from "@/lib/i18n";
 
 type CardSize = "small" | "medium" | "large";
 
-function SwatchCircle({ hex, size = 32 }: { hex: string; size?: number }) {
+function SwatchCircle({ hex, size = 32, isDark = false }: { hex: string | null; size?: number; isDark?: boolean }) {
+  if (!hex) {
+    return (
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-full border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}
+        style={{ width: size, height: size }}
+      >
+        --
+      </div>
+    );
+  }
+
   return (
     <div
       className="shrink-0 rounded-full border border-white/20"
@@ -60,7 +71,7 @@ export default function FilamentCatalogCard({
       } ${sz.panel} ${onClick ? "select-none" : ""}`}
     >
       <div className="flex items-start gap-4">
-        <SwatchCircle hex={c.hex} size={size === "large" ? 48 : 36} />
+        <SwatchCircle hex={c.hasDigitalSwatch ? c.hex : null} size={size === "large" ? 48 : 36} isDark={isDark} />
         <div className="min-w-0 flex-1">
           <div className={`font-semibold truncate ${sz.title}`}>
             {getLocalizedFilamentColorName(record.color, locale)}

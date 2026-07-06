@@ -29,12 +29,19 @@ const localeLabels: Record<Locale, Record<Locale, string>> = {
   },
 };
 
+const switcherLabels: Record<Locale, { label: string; aria: string }> = {
+  en: { label: "Language", aria: "Select language" },
+  "zh-cn": { label: "语言", aria: "选择语言" },
+  "zh-tw": { label: "語言", aria: "選擇語言" },
+};
+
 export default function LanguageSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
   const { isDark } = useTheme();
   const [notice, setNotice] = useState("");
   const currentLocale = getLocaleFromPath(pathname || "/");
+  const labels = switcherLabels[currentLocale];
 
   useEffect(() => {
     if (!notice) {
@@ -73,9 +80,9 @@ export default function LanguageSwitcher() {
   return (
     <div className="relative flex items-center">
       <label className="flex items-center">
-        <span className="sr-only">Language</span>
+        <span className="sr-only">{labels.label}</span>
         <select
-          aria-label="Select language"
+          aria-label={labels.aria}
           value={currentLocale}
           onChange={(event) => switchLanguage(event.target.value as Locale)}
           className={`h-10 rounded-full border px-3 text-sm outline-none transition sm:px-4 ${

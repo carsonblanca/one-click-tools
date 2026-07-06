@@ -1,5 +1,6 @@
 import { bambuFilamentMaterials } from "@/lib/filaments/presets/bambu/material-templates";
 import { bambuPrinterTemplates } from "@/lib/filaments/presets/bambu/printers";
+import type { Locale } from "@/lib/i18n";
 
 export type SourceType =
   | "manufacturerProvided"
@@ -34,12 +35,27 @@ export type EvidenceSource = {
 };
 
 export type OfficialChannel = {
+  id?: string;
   platform: string;
   displayName: string;
   url: string | null;
   verificationStatus: ChannelVerificationStatus;
   verifiedAt: string | null;
   sourceType: SourceType;
+};
+
+
+export type LocalizedBrandProfileContent = {
+  legalEntity?: string | null;
+  countryOrRegion?: string | null;
+  headquarters?: string | null;
+  productionLocations?: string[];
+  productionLocationLabel?: string;
+  factoryStatusLabel?: string;
+  summary?: string;
+  sourceSummary?: string;
+  channels?: Record<string, Partial<Pick<OfficialChannel, "platform" | "displayName">>>;
+  sourceLabels?: Record<string, string>;
 };
 
 export type BrandProfile = {
@@ -57,6 +73,7 @@ export type BrandProfile = {
   sources: EvidenceSource[];
   verificationStatus: "verified" | "partial" | "unverified";
   lastVerifiedAt: string | null;
+  localized?: Partial<Record<Locale, LocalizedBrandProfileContent>>;
 };
 
 export type RatingSummary = {
@@ -187,6 +204,108 @@ export const filamentBrandProfiles: BrandProfile[] = [
     sources: [unknownSource],
     verificationStatus: "unverified",
     lastVerifiedAt: null,
+  },
+  {
+    id: "kexcelled",
+    name: "Kexcelled",
+    legalEntity: null,
+    countryOrRegion: "CN",
+    headquarters: "Suzhou, Jiangsu, CN",
+    productionLocations: [
+      "Nantong, Jiangsu, CN (production base, 2023)",
+      "Thailand (factory, 2025)",
+    ],
+    factoryStatus: "owned",
+    summary:
+      "Kexcelled is a 3D printing materials manufacturer founded in 2013. Headquartered in Suzhou with production bases in Nantong (2023) and Thailand (2025).",
+    website: {
+      id: "kexcelled-website",
+      platform: "Official website",
+      displayName: "kexcelled3d.cn",
+      url: "https://www.kexcelled3d.cn/",
+      verificationStatus: "official",
+      verifiedAt: "2026-06-20",
+      sourceType: "manufacturerProvided",
+    },
+    officialStores: [
+      {
+        id: "kexcelled-tmall-store",
+        platform: "TMall",
+        displayName: "Kexcelled TMall store",
+        url: "https://detail.tmall.com/item.htm?id=652583113236",
+        verificationStatus: "official",
+        verifiedAt: "2026-06-20",
+        sourceType: "publicVerified",
+      },
+    ],
+    socialAccounts: [
+      { id: "kexcelled-facebook", platform: "Facebook", displayName: "Kexcelled", url: "https://www.facebook.com/people/Kexcelled/100090684476972/", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-discord", platform: "Discord", displayName: "Kexcelled", url: "https://discord.com/invite/WBkuvwm9bC", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-instagram", platform: "Instagram", displayName: "kexcelled_3d", url: "https://www.instagram.com/kexcelled_3d/", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-youtube", platform: "YouTube", displayName: "Kexcelled", url: "https://www.youtube.com/@kexcelled", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-linkedin", platform: "LinkedIn", displayName: "Kexcelled 3D", url: "https://www.linkedin.com/company/kexcelled-3d", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-douyin", platform: "Douyin (TikTok CN)", displayName: "Kexcelled", url: "https://www.douyin.com/user/MS4wLjABAAAAknQWyENWlXwXd7AcLLyAxkXG6A2OJZnXJCx46XRrHyA", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-xiaohongshu", platform: "Xiaohongshu (RED)", displayName: "Kexcelled", url: "https://www.xiaohongshu.com/user/profile/6262e2ff0000000021026c52", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-bilibili", platform: "Bilibili", displayName: "Kexcelled", url: "https://space.bilibili.com/1916825928", verificationStatus: "official", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-wechat-account", platform: "WeChat Official Account", displayName: "Official QR-code entry", url: null, verificationStatus: "pending", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+      { id: "kexcelled-wechat-video", platform: "WeChat Video Channel", displayName: "Official QR-code entry", url: null, verificationStatus: "pending", verifiedAt: "2026-06-20", sourceType: "manufacturerProvided" },
+    ],
+    sources: [
+      { id: "kexcelled-about", sourceType: "manufacturerProvided", label: "Kexcelled official About page (kexcelled3d.cn/about-us)", url: "https://www.kexcelled3d.cn/about-us", lastVerifiedAt: "2026-06-20", crossVerified: true },
+      { id: "kexcelled-linkedin", sourceType: "publicVerified", label: "Kexcelled LinkedIn company page", url: "https://www.linkedin.com/company/kexcelled-3d", lastVerifiedAt: "2026-06-20", crossVerified: true },
+      { id: "kexcelled-social", sourceType: "publicVerified", label: "Official website footer social media links", url: "https://www.kexcelled3d.cn/", lastVerifiedAt: "2026-06-20", crossVerified: false },
+    ],
+    verificationStatus: "partial",
+    lastVerifiedAt: "2026-06-20",
+    localized: {
+      en: {
+        legalEntity: "Official brand pages reviewed did not show a full legal entity name; pending further verification.",
+        countryOrRegion: "China",
+        headquarters: "Suzhou, Jiangsu, China",
+        productionLocationLabel: "Publicly disclosed production layout",
+        productionLocations: [
+          "Nantong, Jiangsu, China production base, disclosed as launched in 2023",
+          "Thailand factory, disclosed as launched in 2025",
+        ],
+        factoryStatusLabel:
+          "The brand website discloses production bases and factory layout. Actual manufacturing location for each SKU should be confirmed from packaging, labels, product pages, or batch information.",
+        sourceSummary:
+          "This page summarizes information from the brand website, public brand pages, and official-site-linked channels. It reflects publicly accessible information at the time of review and is not an independent guarantee of brand identity, legal entity, production location, product quality, or current business status. For legal entity, actual manufacturing location, certifications, and specific batch details, refer to product packaging, labels, official documents, or relevant registrations.",
+        channels: {
+          "kexcelled-website": { platform: "Official website" },
+          "kexcelled-tmall-store": { platform: "TMall", displayName: "Kexcelled TMall store" },
+          "kexcelled-wechat-account": { displayName: "Official QR-code entry" },
+          "kexcelled-wechat-video": { displayName: "Official QR-code entry" },
+        },
+      },
+      "zh-cn": {
+        legalEntity: "官方品牌页面未见完整法定主体名称，待进一步核验。",
+        countryOrRegion: "中国",
+        headquarters: "中国江苏苏州",
+        productionLocationLabel: "公开披露生产布局",
+        productionLocations: [
+          "中国江苏南通生产基地，2023 年投产",
+          "泰国工厂，2025 年投产",
+        ],
+        factoryStatusLabel:
+          "品牌官网披露其拥有生产基地与工厂布局；具体产品实际生产地应以包装、标签、产品页或批次信息为准。",
+        summary:
+          "Kexcelled 是 2013 年成立的 3D 打印材料品牌，总部位于中国江苏苏州。公开资料显示，其生产布局包括 2023 年投产的江苏南通生产基地，以及 2025 年投产的泰国工厂。",
+        sourceSummary:
+          "本页内容整理自品牌官方网站、公开品牌页面及官网关联渠道。信息反映核验时可公开查阅的内容，不构成对品牌、企业主体、生产地点、产品质量或当前经营状态的独立保证。涉及法定主体、实际生产地点、认证资质及特定批次信息，请以产品包装、标签、官方文件或相关登记信息为准。",
+        channels: {
+          "kexcelled-website": { platform: "官方网站", displayName: "kexcelled3d.cn" },
+          "kexcelled-tmall-store": { platform: "天猫", displayName: "Kexcelled 天猫店" },
+          "kexcelled-wechat-account": { platform: "微信公众号", displayName: "官网二维码入口" },
+          "kexcelled-wechat-video": { platform: "微信视频号", displayName: "官网二维码入口" },
+        },
+        sourceLabels: {
+          "kexcelled-about": "Kexcelled 官方关于页面（kexcelled3d.cn/about-us）",
+          "kexcelled-linkedin": "Kexcelled LinkedIn 公司页面",
+          "kexcelled-social": "官方网站页脚社交媒体链接",
+        },
+      },
+    },
   },
 ];
 

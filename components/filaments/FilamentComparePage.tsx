@@ -182,7 +182,13 @@ export default function FilamentComparePage({ ids, locale = "en" }: { ids: strin
               className={`block rounded-2xl border p-4 ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}
             >
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 shrink-0 rounded-xl border border-current/10" style={{ backgroundColor: item.color.hex }} />
+                {item.color.hasDigitalSwatch && item.color.hex ? (
+                  <div className="h-8 w-8 shrink-0 rounded-xl border border-current/10" style={{ backgroundColor: item.color.hex }} />
+                ) : (
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>
+                    --
+                  </div>
+                )}
                 <div>
                   <div className="font-semibold">{item.brand} {item.productLine}</div>
                   <div className={`text-sm opacity-60 ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>{getLocalizedFilamentColorName(item.color, locale)} · {item.materialType} {item.variant}</div>
