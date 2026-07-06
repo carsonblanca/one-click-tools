@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
@@ -31,6 +32,17 @@ function safeLink(value: unknown) {
     : "";
 }
 
+function draftLookupFailure(error: unknown) {
+  const message = error instanceof Error ? error.message : "unknown_error";
+  if (message.startsWith("missing_supabase_")) {
+    return { category: "supabase_config", summary: message };
+  }
+  if (message === "supabase_get_draft_failed") {
+    return { category: "supabase_query", summary: message };
+  }
+  return { category: "unknown", summary: "unexpected_draft_lookup_failure" };
+}
+
 export default async function FilamentDraftPage({
   params,
 }: {
@@ -38,7 +50,21 @@ export default async function FilamentDraftPage({
 }) {
   await requireAdminScope("candidate.view");
   const { sourceRunId } = await params;
-  const draft = await getFilamentDraftBySourceRunId(sourceRunId);
+  const requestId = randomUUID();
+  let draft;
+  try {
+    draft = await getFilamentDraftBySourceRunId(sourceRunId);
+  } catch (error) {
+    const failure = draftLookupFailure(error);
+    console.error("filament_draft_detail_failed", {
+      requestId,
+      stage: "draft_lookup",
+      category: failure.category,
+      error: failure.summary,
+      sourceRunIdSuffix: sourceRunId.slice(-8),
+    });
+    throw new Error(`filament_draft_detail_failed:${requestId}`, { cause: error });
+  }
   if (!draft) notFound();
 
   const data = objectValue(draft.draft_data);
