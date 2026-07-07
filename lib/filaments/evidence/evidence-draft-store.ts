@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const ROOT = path.join(process.cwd(), "data/filaments/evidence-drafts");
@@ -27,6 +27,9 @@ export type FilamentEvidenceDraft = {
   sourceOrigin: string;
   sourceImageName: string;
   sourceImageAssetId: string;
+  sourceImageHash: string;
+  titleCropAssetId: string;
+  cardAssetIds: string[];
   createdAt: string;
   createdBy: string;
   titleEvidence: Record<string, unknown>;
@@ -36,6 +39,18 @@ export type FilamentEvidenceDraft = {
   reviewedAt: string;
   reviewedBy: string;
   reviewNotes: string;
+};
+
+export type EvidenceColorCard = Record<string, unknown> & {
+  row: number;
+  column: number;
+  chineseName?: string;
+  englishName?: string;
+  officialColorCode?: string;
+  allowSync?: boolean;
+  notes?: string;
+  matchedColorId?: string;
+  syncStatus?: "not_synced" | "synced_to_filament";
 };
 
 async function readStore() {
@@ -63,9 +78,51 @@ export async function getFilamentEvidenceDraft(id: string) {
   return (await readStore()).find((draft) => draft.id === id) || null;
 }
 
+export async function updateFilamentEvidenceDraft(
+  id: string,
+  changes: {
+    titleEvidence?: Record<string, unknown>;
+    annotations?: EvidenceColorCard[];
+  },
+) {
+  const records = await readStore();
+  const index = records.findIndex((draft) => draft.id === id);
+  if (index < 0) return null;
+  records[index] = {
+    ...records[index],
+    ...(changes.titleEvidence ? { titleEvidence: changes.titleEvidence } : {}),
+    ...(changes.annotations ? { annotations: changes.annotations } : {}),
+  };
+  await writeStore(records);
+  return records[index];
+}
+
+export async function deleteFilamentEvidenceDraft(id: string) {
+  const records = await readStore();
+  const existing = records.find((draft) => draft.id === id);
+  if (!existing) return null;
+  await writeStore(records.filter((draft) => draft.id !== id));
+  await rm(path.join(ASSETS, id), { recursive: true, force: true });
+  return existing;
+}
+
+export async function findDuplicateEvidenceDraft(input: {
+  brandId: string;
+  productLineId: string;
+  filamentId: string;
+  sourceImageHash: string;
+}) {
+  return (await readStore()).find((draft) =>
+    draft.sourceImageHash === input.sourceImageHash
+    && draft.targetBinding.brandId === input.brandId
+    && draft.targetBinding.productLineId === input.productLineId
+    && draft.targetBinding.filamentId === input.filamentId
+  ) || null;
+}
+
 export function resolveEvidenceDraftAsset(assetId: string) {
   const normalized = assetId.replace(/\\/g, "/");
-  if (!/^assets\/evidence-[A-Za-z0-9-]+\/source\.(png|jpg|webp)$/.test(normalized)) {
+  if (!/^assets\/evidence-[A-Za-z0-9-]+\/(?:source\.(?:png|jpg|webp)|title-crop\.png|cards\/card-r\d{2}-c\d{2}\.png)$/.test(normalized)) {
     throw new Error("invalid_asset_id");
   }
   const absolute = path.resolve(ROOT, normalized);
@@ -82,6 +139,8 @@ export async function createFilamentEvidenceDraft(input: {
   sourceImageName: string;
   sourceImage: Buffer;
   sourceImageExtension: string;
+  titleCrop?: Buffer;
+  cardAssets: Array<{ row: number; column: number; bytes: Buffer }>;
   titleEvidence: Record<string, unknown>;
   annotations: Array<Record<string, unknown>>;
   cardCount: number;
@@ -92,6 +151,21 @@ export async function createFilamentEvidenceDraft(input: {
   await mkdir(assetDir, { recursive: true });
   const sourceImageAssetId = `assets/${id}/source.${input.sourceImageExtension}`;
   await writeFile(path.join(ROOT, sourceImageAssetId), input.sourceImage);
+  const sourceImageHash = createHash("sha256").update(input.sourceImage).digest("hex");
+  let titleCropAssetId = "";
+  if (input.titleCrop?.length) {
+    titleCropAssetId = `assets/${id}/title-crop.png`;
+    await writeFile(path.join(ROOT, titleCropAssetId), input.titleCrop);
+  }
+  const cardAssetIds: string[] = [];
+  if (input.cardAssets.length) {
+    await mkdir(path.join(assetDir, "cards"), { recursive: true });
+    for (const card of input.cardAssets) {
+      const assetId = `assets/${id}/cards/card-r${String(card.row).padStart(2, "0")}-c${String(card.column).padStart(2, "0")}.png`;
+      await writeFile(path.join(ROOT, assetId), card.bytes);
+      cardAssetIds.push(assetId);
+    }
+  }
   const createdAt = new Date().toISOString();
   const draft: FilamentEvidenceDraft = {
     id,
@@ -101,6 +175,9 @@ export async function createFilamentEvidenceDraft(input: {
     sourceOrigin: input.sourceOrigin,
     sourceImageName: input.sourceImageName,
     sourceImageAssetId,
+    sourceImageHash,
+    titleCropAssetId,
+    cardAssetIds,
     createdAt,
     createdBy: input.actorId,
     titleEvidence: input.titleEvidence,

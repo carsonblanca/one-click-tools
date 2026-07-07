@@ -7,13 +7,86 @@ import {
 import {
   resolveAdminDraftSource,
 } from "@/lib/filaments/drafts/supabase-draft-mapper";
-import {
-  mergeKexcelledColors,
-  type CanonicalKexcelledDraftColor,
-  type ImportedFilamentDraft,
-  type KexcelledDraftColor,
-  type KexcelledEvidenceDraft,
-} from "@/lib/filaments/evidence/kexcelled-draft-store";
+
+// ── Self-contained type stubs (removes kexcelled-draft-store dependency) ──
+type ScalarColorFields = {
+  domIndex?: number; rawSkuText?: string;
+  officialColorCode?: string | null; variantCode?: string | null;
+  nameZh?: string | null; nameEn?: string | null;
+  availability?: string;
+  imageCandidateUrl?: string | null; localImagePath?: string | null;
+  imageSourceMethod?: string; imageQualityRole?: string;
+  isSharedImageCandidate?: boolean; requiresManualReview?: boolean;
+  reviewStatus?: string;
+  sourceEvidence?: Array<Record<string, unknown>>; notes?: string[];
+  evidenceAssetId?: string; evidenceType?: string;
+  rawSkuIds?: string[]; packageSkuIds?: string[];
+  imageCandidates?: string[]; primaryImage?: string | null;
+  imageSelectionReason?: string;
+  cropAssetId?: string; cropRelativePath?: string;
+  cropRect?: [number, number, number, number]; cropConfidence?: number;
+  pantoneCode?: string; officialReferenceText?: string;
+  officialHexReference?: string; officialRgbReference?: string;
+  rawSkuCount?: number;
+};
+
+export type CanonicalKexcelledDraftColor = ScalarColorFields & {
+  colorVariants?: Array<{
+    rawSkuText?: string; packageVariant?: string; availability?: string;
+    variantCode?: string;
+    imageCandidates?: Array<{
+      sourceUrl?: string; localPath?: string; packageVariant?: string;
+      variantCode?: string; sourceType?: string; isSharedImageCandidate?: boolean;
+    }>;
+    selectedImage?: string; sourceEvidenceRef?: string;
+    sourceEvidence?: Array<Record<string, unknown>>;
+  }>;
+  representativeImageCandidateUrl?: string;
+};
+
+export type KexcelledDraftColor = ScalarColorFields;
+
+export type KexcelledEvidenceDraft = {
+  brand: { name: string; nameZh: string; sourceType: string; sourceUrl: string; reviewStatus: string };
+  productLine: {
+    name: string; materialType: string; diameterMm: number | null; netWeightG: number | null;
+    variant?: string; notes?: string[]; sourceEvidence: Array<Record<string, unknown>>; reviewStatus: string;
+  };
+  colors: ScalarColorFields[];
+  parameters: { status: string; sourceType: string; fields: Record<string, unknown> };
+  importMeta: {
+    schemaVersion: string; createdAt: string; sourceZipName: string; sourceZipPath: string;
+    pageTitle: string; primaryInput: string; variantFallbackInput: string;
+    compatibilityInput: string; compatibilityNote: string; requiresManualReview: boolean;
+  };
+};
+
+export type ImportedFilamentDraft = {
+  id: string; sourceRunId: string; sourceZipName: string; sourceEvidencePath: string;
+  sourceEvidenceStatus?: string; sourceEvidenceMissingReason?: string;
+  status: "draft"; importStatus: string; reviewStatus: string; isPublished: boolean;
+  brand: KexcelledEvidenceDraft["brand"]; productLine: KexcelledEvidenceDraft["productLine"];
+  colors: CanonicalKexcelledDraftColor[];
+  canonicalColors?: CanonicalKexcelledDraftColor[];
+  rawSkuCount: number; canonicalColorCount: number; mergedVariantCount: number;
+  parameters: KexcelledEvidenceDraft["parameters"]; parameterStatus: string;
+  productLineParameters?: ProductLineParameterDisplay[]; productLineParametersUpdatedAt?: string;
+  parameterEvidenceCandidates?: ParameterEvidenceCandidate[];
+  unmatchedSkuCandidates?: Array<Record<string, unknown>>;
+  kexcelledEvidenceClassifications?: Array<Record<string, unknown>>;
+  kexcelledParameterGroups?: Record<string, Array<Record<string, unknown>>>;
+  officialColorCardAssets?: Array<Record<string, unknown>>;
+  importedAt: string;
+};
+
+function colorsToCanonical(colors: Array<KexcelledDraftColor | CanonicalKexcelledDraftColor | ReviewedDraftColor>): CanonicalKexcelledDraftColor[] {
+  return colors.map((c) => ({
+    ...c,
+    colorVariants: (c as CanonicalKexcelledDraftColor).colorVariants || [],
+    rawSkuCount: (c as CanonicalKexcelledDraftColor).rawSkuCount || 1,
+    availability: c.availability || "unknown",
+  })) as CanonicalKexcelledDraftColor[];
+}
 
 export type ColorDisplayStatus = "pending" | "approved" | "hidden";
 export type ImageDisplayStatus = "pending" | "approved" | "hidden" | "no_image";
@@ -152,7 +225,7 @@ function normalizeColors(colors: Array<KexcelledDraftColor | CanonicalKexcelledD
   const hasCanonicalShape = colors.every((color) => Array.isArray((color as Partial<CanonicalKexcelledDraftColor>).colorVariants));
   const canonical = hasCanonicalShape
     ? colors as CanonicalKexcelledDraftColor[]
-    : mergeKexcelledColors(colors as KexcelledDraftColor[]).colors;
+    : colorsToCanonical(colors as KexcelledDraftColor[]);
   return canonical.map(normalizeColor);
 }
 

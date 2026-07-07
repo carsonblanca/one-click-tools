@@ -307,6 +307,47 @@ export const filamentBrandProfiles: BrandProfile[] = [
       },
     },
   },
+
+  {
+    id: "aliz",
+    name: "ALIZ",
+    legalEntity: null,
+    countryOrRegion: "CN",
+    headquarters: null,
+    productionLocations: [],
+    factoryStatus: "unknown",
+    summary: "Chinese filament brand (ALIZ). PLA/PETG/ABS/ASA/PA/PPS.",
+    website: null,
+    officialStores: [],
+    socialAccounts: [],
+    sources: [unknownSource],
+    verificationStatus: "unverified",
+    lastVerifiedAt: "2026-06-22",
+    localized: {
+      en: { summary: "Chinese filament brand. PLA/PETG/ABS/ASA/PA/PPS." },
+      "zh-cn": { summary: "Chinese filament brand. PLA/PETG/ABS/ASA/PA/PPS." },
+    },
+  },
+  {
+    id: "mochuang",
+    name: "MOCHUANG",
+    legalEntity: null,
+    countryOrRegion: "CN",
+    headquarters: null,
+    productionLocations: [],
+    factoryStatus: "unknown",
+    summary: "Chinese filament brand (Alchemakes). PLA/PETG/ABS/ASA.",
+    website: null,
+    officialStores: [],
+    socialAccounts: [],
+    sources: [unknownSource],
+    verificationStatus: "unverified",
+    lastVerifiedAt: "2026-06-22",
+    localized: {
+      en: { summary: "Chinese filament (Alchemakes). PETG-GF15, CF." },
+      "zh-cn": { summary: "Chinese filament (Alchemakes). PETG-GF15, CF." },
+    },
+  },
 ];
 
 const tag = (

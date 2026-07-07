@@ -2,6 +2,31 @@ import type { CatalogColor, SpoolSpec, Finish, Transparency, ColorFamily, Digita
 import { getAllFilamentColors } from "@/lib/filaments/colors/catalog";
 import r3dProductLines from "@/data/filaments/product-lines/r3d.json";
 import kexcelledProductLines from "@/data/filaments/product-lines/kexcelled.json";
+import alizProductLines from "@/data/filaments/product-lines/aliz.json";
+import mochuangProductLines from "@/data/filaments/product-lines/mochuang.json";
+import alizColorsConsolidated from "@/data/filaments/colors/aliz-consolidated.json";
+import mochuangColorsConsolidated from "@/data/filaments/colors/mochuang-consolidated.json";
+import publishedFilamentCatalog from "@/data/filaments/published-filament-catalog.json";
+import {
+  canonicalBrandName,
+  canonicalProductLineId,
+} from "./catalog-identifiers";
+const INCLUDE_FIXTURES = process.env.NEXT_PUBLIC_FILAMENT_CATALOG_INCLUDE_FIXTURES === "true";
+
+// Fixture data is always imported but only used when INCLUDE_FIXTURES is enabled.
+// Import is resolved at build time; the file is ~2KB so no bundle impact.
+let _fixtureCatalog: Array<Record<string, unknown>> | null = null;
+function getFixtureCatalog(): Array<Record<string, unknown>> {
+  if (!INCLUDE_FIXTURES) return [];
+  if (_fixtureCatalog) return _fixtureCatalog;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _fixtureCatalog = require("@/data/filaments/fixtures/published-filament-catalog.fixture.json") as Array<Record<string, unknown>>;
+  } catch {
+    _fixtureCatalog = [];
+  }
+  return _fixtureCatalog || [];
+}
 
 export type CatalogRecord = {
   id: string;
@@ -19,6 +44,8 @@ export type CatalogRecord = {
   rating: number;
   reviewCount: number;
   createdAt: string;
+  presetDownloadAllowed?: boolean;
+  catalogSource?: "static" | "published";
 };
 
 function dc(
@@ -190,10 +217,12 @@ function buildKexcelledRecords(): CatalogRecord[] {
     const transparency = (c.opacity === "translucent" ? "translucent" : "opaque") as Transparency;
     const colorFamily = inferColorFamily(c.officialName, c.hex);
 
+    const colorCode = c.officialColorCode || "";
+
     const color: CatalogColor = hasRealHex
       ? dc(hexVal, rVal, gVal, bVal, c.displayNameZh || c.officialName, c.officialName,
           colorFamily, finish, transparency,
-          c.officialColorCode || `KX-${c.id.split("-").pop()?.toUpperCase()}`,
+          colorCode,
           c.colorValueSource === "official" ? "manufacturer" : "uploader")
       : {
           colorNameZh: c.displayNameZh || c.officialName,
@@ -207,7 +236,17 @@ function buildKexcelledRecords(): CatalogRecord[] {
           physicalSwatchCount: 0,
           digitalSwatch: null,
           physicalSwatches: [],
+          imageUrl: null,
+          imageCrop: null,
         };
+
+    // Attach spool image URL if color code exists
+    if (c.officialColorCode) {
+      const encodedCode = encodeURIComponent(c.officialColorCode);
+      const encodedPl = encodeURIComponent(c.productLineId);
+      color.imageUrl = `/api/filament-color-image?brand=kexcelled&pl=${encodedPl}&code=${encodedCode}`;
+      color.imageCrop = { zoom: 2.0, x: "28%", y: "45%" };
+    }
 
     return {
       id: c.id,
@@ -307,7 +346,7 @@ function inferColorFamily(name: string, hex: string | null): ColorFamily {
 
 // Variant name maps for R3D (simplified — same as displayed variant)
 function r3dVariantZh(variant: string): string {
-  var m: Record<string, string> = {
+  const m: Record<string, string> = {
     "Standard": "标准", "Matte": "哑光", "Tough": "高韧性", "Silk": "丝绸",
     "Glow": "夜光", "Marble": "大理石", "Wood": "木质", "Rainbow": "彩虹",
     "Temperature": "温变", "UV": "UV", "CF": "碳纤维", "PEBA": "PEBA",
@@ -317,8 +356,9 @@ function r3dVariantZh(variant: string): string {
 
 function buildR3dRecords(): CatalogRecord[] {
   return r3dProductLines.productLines.map(function (pl) {
-    var color: CatalogColor = {
-      colorNameZh: "颜色信息待补充", colorNameEn: "Color information pending",
+    const colorName = pl.productLine || pl.displayName || pl.id;
+    const color: CatalogColor = {
+      colorNameZh: colorName, colorNameEn: colorName,
       colorFamily: "gray", hex: null, rgb: null,
       finish: "semi-glossy", transparency: "opaque",
       hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
@@ -326,7 +366,7 @@ function buildR3dRecords(): CatalogRecord[] {
     };
     return {
       id: pl.id + "-generic",
-      brand: "R3D", brandZh: "爱三迪",
+      brand: "R3D", brandZh: "R3D / 爱三迪",
       materialType: pl.materialType, materialTypeZh: pl.materialType,
       variant: pl.variant, variantZh: r3dVariantZh(pl.variant),
       productLine: pl.productLine,
@@ -339,7 +379,227 @@ function buildR3dRecords(): CatalogRecord[] {
 
 const kexcelledColorRecords = buildKexcelledRecords();
 
-export const CATALOG_RECORDS: CatalogRecord[] = [
+function buildAlizRecords(): CatalogRecord[] {
+  type AlizColor = { productLine: string; nameZh: string; nameEn: string; code: string | null };
+  const colors = alizColorsConsolidated as AlizColor[];
+  if (colors.length > 0) {
+    return colors.map(function (c, i) {
+      const pl = alizProductLines.productLines.find(function (p) { return p.id === 'aliz-' + c.productLine || p.id === c.productLine; });
+      const hasCode = c.code !== null && c.code !== undefined;
+      const colorNameZh = stripOfficialCode(c.nameZh, c.code);
+      const colorNameEn = stripOfficialCode(c.nameEn, c.code);
+      return {
+        id: "aliz-" + c.productLine + "-" + String(i).padStart(2, "0"),
+        brand: "ALIZ", brandZh: "爱丽兹",
+        materialType: pl?.materialType || "PLA", materialTypeZh: pl?.materialType || "PLA",
+        variant: pl?.variant || "Standard", variantZh: "标准",
+        productLine: pl?.productLine || c.productLine, productLineId: pl?.id || "aliz-" + c.productLine,
+        parameterStatus: "missing" as const,
+        color: {
+          colorNameZh, colorNameEn,
+          colorFamily: "gray" as ColorFamily, hex: null, rgb: null,
+          finish: "semi-glossy" as Finish, transparency: "opaque" as Transparency,
+          hasDigitalSwatch: hasCode, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+          digitalSwatch: hasCode ? {
+            hex: null as unknown as string, rgb: null as unknown as { r: number; g: number; b: number },
+            officialColorCode: c.code as string,
+            sourceType: "uploader" as const,
+            lastVerifiedAt: "2026-06-22",
+          } : null,
+          physicalSwatches: [],
+        },
+        spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+        rating: 0, reviewCount: 0, createdAt: "2026-06-22",
+      };
+    });
+  }
+  return alizProductLines.productLines.map(function (pl) {
+    return {
+      id: pl.id + "-generic",
+      brand: "ALIZ", brandZh: "爱丽兹",
+      materialType: pl.materialType, materialTypeZh: pl.materialType,
+      variant: pl.variant, variantZh: "标准",
+      productLine: pl.productLine, productLineId: pl.id,
+      parameterStatus: "missing" as const,
+      color: {
+        colorNameZh: pl.series || pl.productLine, colorNameEn: pl.series || pl.productLine,
+        colorFamily: "gray" as ColorFamily, hex: null, rgb: null,
+        finish: "semi-glossy" as Finish, transparency: "opaque" as Transparency,
+        hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+        digitalSwatch: null, physicalSwatches: [],
+      },
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0, reviewCount: 0, createdAt: "2026-06-22",
+    };
+  });
+}
+
+function stripOfficialCode(name: string, code: string | null) {
+  if (!code) return name;
+  const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return name.replace(new RegExp(`\\s*${escapedCode}\\s*$`, "i"), "").trim();
+}
+
+function buildMochuangRecords(): CatalogRecord[] {
+  type McColor = { productLine: string; nameZh: string; nameEn: string; code: string | null };
+  const colors = mochuangColorsConsolidated as McColor[];
+  if (colors.length > 0) {
+    return colors.map(function (c, i) {
+      const pl = mochuangProductLines.productLines.find(function (p) { return p.id === 'mochuang-' + c.productLine || p.id === c.productLine; });
+      const hasCode = c.code !== null && c.code !== undefined;
+      return {
+        id: "mochuang-" + c.productLine + "-" + String(i).padStart(2, "0"),
+        brand: "MOCHUANG", brandZh: "魔创",
+        materialType: pl?.materialType || "PLA", materialTypeZh: pl?.materialType || "PLA",
+        variant: pl?.variant || "Standard", variantZh: "标准",
+        productLine: pl?.productLine || c.productLine, productLineId: pl?.id || "mochuang-" + c.productLine,
+        parameterStatus: "missing" as const,
+        color: {
+          colorNameZh: c.nameZh, colorNameEn: c.nameEn,
+          colorFamily: "gray" as ColorFamily, hex: null, rgb: null,
+          finish: "semi-glossy" as Finish, transparency: "opaque" as Transparency,
+          hasDigitalSwatch: hasCode, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+          digitalSwatch: hasCode ? {
+            hex: null as unknown as string, rgb: null as unknown as { r: number; g: number; b: number },
+            officialColorCode: c.code as string,
+            sourceType: "uploader" as const,
+            lastVerifiedAt: "2026-06-22",
+          } : null,
+          physicalSwatches: [],
+        },
+        spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+        rating: 0, reviewCount: 0, createdAt: "2026-06-22",
+      };
+    });
+  }
+  return mochuangProductLines.productLines.map(function (pl) {
+    return {
+      id: pl.id + "-generic",
+      brand: "MOCHUANG", brandZh: "魔创",
+      materialType: pl.materialType, materialTypeZh: pl.materialType,
+      variant: pl.variant, variantZh: "标准",
+      productLine: pl.productLine, productLineId: pl.id,
+      parameterStatus: "missing" as const,
+      color: {
+        colorNameZh: pl.series || pl.productLine, colorNameEn: pl.series || pl.productLine,
+        colorFamily: "gray" as ColorFamily, hex: null, rgb: null,
+        finish: "semi-glossy" as Finish, transparency: "opaque" as Transparency,
+        hasDigitalSwatch: false, hasPhysicalSwatch: false, physicalSwatchCount: 0,
+        digitalSwatch: null, physicalSwatches: [],
+      },
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      rating: 0, reviewCount: 0, createdAt: "2026-06-22",
+    };
+  });
+}
+
+function buildPublishedRecords(): CatalogRecord[] {
+  const records: CatalogRecord[] = [];
+
+  // 1. Load published catalog (always loaded, empty by default)
+  const published = publishedFilamentCatalog as Array<Record<string, unknown>>;
+  for (const entry of published) {
+    records.push(...buildRecordsFromEntry(entry, false));
+  }
+
+  // 2. Load fixtures if enabled (dev only)
+  if (INCLUDE_FIXTURES) {
+    for (const entry of getFixtureCatalog()) {
+      records.push(...buildRecordsFromEntry(entry, true));
+    }
+  }
+
+  return records;
+}
+
+export function buildPublishedCatalogRecords(entries: Array<Record<string, unknown>>): CatalogRecord[] {
+  return entries.flatMap((entry) => buildRecordsFromEntry(entry, false));
+}
+
+const KEXCELLED_PLA_M_DEFAULT_IMAGE_CROP = {
+  zoom: 2.65,
+  x: "14%",
+  y: "50%",
+};
+
+const KEXCELLED_PLA_M_COLOR_IMAGE_CROPS: Record<
+  string,
+  { zoom: number; x: string; y: string }
+> = {
+  LSKN: { zoom: 2.65, x: "14%", y: "50%" },
+};
+
+function publishedImageCrop(
+  productLineId: string,
+  officialColorCode: string,
+  hasExplicitImageUrl: boolean,
+) {
+  if (productLineId === "kexcelled-k5-pla-m") {
+    return KEXCELLED_PLA_M_COLOR_IMAGE_CROPS[officialColorCode]
+      || KEXCELLED_PLA_M_DEFAULT_IMAGE_CROP;
+  }
+  return hasExplicitImageUrl ? { zoom: 2.0, x: "28%", y: "45%" } : null;
+}
+
+function buildRecordsFromEntry(record: Record<string, unknown>, isFixture: boolean): CatalogRecord[] {
+  const pubStatus = String(record.publicationStatus || "");
+  if (pubStatus !== "directory_preview" && pubStatus !== "complete_profile") return [];
+
+  const brand = record.brand as Record<string, string> || {};
+  const pl = record.productLine as Record<string, string> || {};
+  const colors = (record.colors as Array<Record<string, string>>) || [];
+  const params = record.parameters as Record<string, unknown> || {};
+  const plId = String(record.productLineId || canonicalProductLineId(
+    String(brand.name || ""),
+    String(pl.name || ""),
+  ));
+
+  const approvedColors = colors.filter((c) => c.displayStatus === "approved");
+  const prefix = isFixture ? "[FIXTURE] " : "";
+
+  return approvedColors.map((color, index) => ({
+    id: `published-${String(record.sourceRunId || "")}-${index}`,
+    brand: prefix + canonicalBrandName(String(brand.name || "")),
+    brandZh: prefix + String(brand.nameZh || brand.name || ""),
+    materialType: String(pl.materialType || ""),
+    materialTypeZh: String(pl.materialType || ""),
+    variant: String(pl.variant || ""),
+    variantZh: String(pl.variant || ""),
+    productLine: String(pl.name || ""),
+    productLineId: plId,
+    parameterStatus: (String(params.sourceType || "") === "missing" ? "missing" : "partial") as "missing" | "partial",
+    color: {
+      colorNameZh: String(color.nameZh || color.officialColorCode || "已批准颜色"),
+      colorNameEn: String(color.nameEn || color.nameZh || color.officialColorCode || "Approved color"),
+      colorFamily: "gray" as ColorFamily,
+      hex: null,
+      rgb: null,
+      finish: "semi-glossy" as Finish,
+      transparency: "opaque" as Transparency,
+      hasDigitalSwatch: false,
+      hasPhysicalSwatch: color.imageDisplayStatus === "approved",
+      physicalSwatchCount: color.imageDisplayStatus === "approved" ? 1 : 0,
+      digitalSwatch: { hex: "#999999", rgb: { r: 153, g: 153, b: 153 }, officialColorCode: String(color.officialColorCode || ""), sourceType: "manufacturer" as const, lastVerifiedAt: String(record.publishedAt || "") },
+      physicalSwatches: [],
+      imageUrl: color.imageUrl ? String(color.imageUrl)
+        : (plId && color.officialColorCode
+          ? `/api/filament-color-image?brand=kexcelled&pl=${encodeURIComponent(plId)}&code=${encodeURIComponent(String(color.officialColorCode))}`
+          : null),
+      imageCrop: publishedImageCrop(
+        plId,
+        String(color.officialColorCode || ""),
+        Boolean(color.imageUrl),
+      ),
+    },
+    spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+    rating: 0,
+    reviewCount: 0,
+    createdAt: String(record.publishedAt || "2026-06-26"),
+    presetDownloadAllowed: Boolean(record.canShowPresetDownload),
+  }));
+}
+
+export const STATIC_CATALOG_RECORDS: CatalogRecord[] = [
   {
     id: "bambu-pla-basic-black",
     brand: "Bambu Lab", brandZh: "Bambu Lab",
@@ -392,7 +652,7 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
   },
   {
     id: "r3d-petg-basic-black",
-    brand: "R3D", brandZh: "R3D",
+    brand: "R3D", brandZh: "R3D / 爱三迪",
     materialType: "PETG", materialTypeZh: "PETG",
     variant: "Basic", variantZh: "基础",
     productLine: "R3D ABS+ PETG",
@@ -402,7 +662,7 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
   },
   {
     id: "r3d-tpu-basic-white",
-    brand: "R3D", brandZh: "R3D",
+    brand: "R3D", brandZh: "R3D / 爱三迪",
     materialType: "TPU", materialTypeZh: "TPU",
     variant: "Basic", variantZh: "基础",
     productLine: "R3D TPU-85A",
@@ -483,7 +743,40 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
   ...kexcelledColorRecords,
   ...buildKexcelledPlaceholderRecords(kexcelledColorRecords),
   ...buildR3dRecords(),
+  ...buildAlizRecords(),
+  ...buildMochuangRecords(),
 ];
+
+const publishedRecords = buildPublishedRecords();
+// Deduplicate: published overrides static records with same productLineId
+const publishedProductLineIds = new Set(publishedRecords.map((r) => r.productLineId));
+const filteredStatic = STATIC_CATALOG_RECORDS.filter(
+  (r) => !r.productLineId || !publishedProductLineIds.has(r.productLineId),
+);
+
+export const CATALOG_RECORDS: CatalogRecord[] = [
+  ...filteredStatic,
+  ...publishedRecords,
+];
+
+/** Derive canonical productLineId from brand + productLine (display name) by catalog lookup. */
+export function resolveProductLineId(brand: string, productLine: string): string | null {
+  const brandLower = brand.toLowerCase();
+  const plLower = productLine.toLowerCase().trim();
+  // Direct match on brand + productLine
+  for (const r of CATALOG_RECORDS) {
+    if (r.brand.toLowerCase() === brandLower && r.productLine.toLowerCase().trim() === plLower) {
+      return r.productLineId || null;
+    }
+  }
+  // Match on productLine only (for brands with unique series names)
+  for (const r of CATALOG_RECORDS) {
+    if (r.productLine.toLowerCase().trim() === plLower) {
+      return r.productLineId || null;
+    }
+  }
+  return null;
+}
 
 export function getRecordsByBrand(brand: string): CatalogRecord[] {
   return CATALOG_RECORDS.filter((r) => r.brand === brand);
@@ -512,3 +805,5 @@ export const DECLARED_COLORS = CATALOG_RECORDS.filter((r) => r.color.hasDigitalS
   colorNameEn: r.color.colorNameEn,
   colorFamily: r.color.colorFamily,
 }));
+
+// ── ALIZ color data (from Evidence Pack SKU parsing) ──

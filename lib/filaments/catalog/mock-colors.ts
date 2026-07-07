@@ -54,6 +54,8 @@ export type CatalogColor = {
   physicalSwatchCount: number;
   digitalSwatch: DigitalSwatch | null;
   physicalSwatches: PhysicalSwatch[];
+  imageUrl?: string | null;
+  imageCrop?: { zoom: number; x: string; y: string } | null;
 };
 
 export const COLOR_FAMILY_LABELS: Record<ColorFamily, { zh: string; en: string }> = {

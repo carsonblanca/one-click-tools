@@ -12,6 +12,8 @@ import fillamentum from "@/data/filaments/product-lines/fillamentum.json";
 import spectrumFilaments from "@/data/filaments/product-lines/spectrum-filaments.json";
 import kexcelled from "@/data/filaments/product-lines/kexcelled.json";
 import r3d from "@/data/filaments/product-lines/r3d.json";
+import aliz from "@/data/filaments/product-lines/aliz.json";
+import mochuang from "@/data/filaments/product-lines/mochuang.json";
 
 const BRAND_FILES = [
   bambuLab,
@@ -26,6 +28,8 @@ const BRAND_FILES = [
   spectrumFilaments,
   kexcelled,
   r3d,
+  aliz,
+  mochuang,
 ] as const;
 
 function loadAll(): FilamentProductLine[] {
