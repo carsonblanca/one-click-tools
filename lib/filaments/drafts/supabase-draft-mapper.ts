@@ -187,11 +187,11 @@ function mapRow(row: SupabaseFilamentDraftRow): AdminFilamentDraft {
     },
     colors,
     canonicalColors: colors,
-    rawSkuCount: colors.reduce((count, color) => count + color.rawSkuCount, 0),
+    rawSkuCount: colors.reduce((count, color) => count + (color.rawSkuCount ?? 0), 0),
     canonicalColorCount: colors.length,
     mergedVariantCount: Math.max(
       0,
-      colors.reduce((count, color) => count + color.rawSkuCount, 0) - colors.length,
+      colors.reduce((count, color) => count + (color.rawSkuCount ?? 0), 0) - colors.length,
     ),
     parameters,
     parameterStatus: parameters.status,

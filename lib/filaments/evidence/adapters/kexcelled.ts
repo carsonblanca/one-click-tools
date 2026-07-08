@@ -45,6 +45,6 @@ export function buildKexcelledSingleImageEvidence(_files: unknown): Array<Record
 export function mergeKexcelledAdapterColorSources(
   purchaseColors: Array<Record<string, unknown>>,
   referenceColors: Array<Record<string, unknown>>,
-): Array<Record<string, unknown>> {
-  return [...purchaseColors, ...referenceColors];
+): { canonical: Array<Record<string, unknown>>; unmatchedSkuCandidates: Array<Record<string, unknown>> } {
+  return { canonical: [...purchaseColors, ...referenceColors], unmatchedSkuCandidates: [] };
 }

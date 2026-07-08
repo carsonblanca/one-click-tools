@@ -74,7 +74,12 @@ export type ImportedFilamentDraft = {
   parameterEvidenceCandidates?: ParameterEvidenceCandidate[];
   unmatchedSkuCandidates?: Array<Record<string, unknown>>;
   kexcelledEvidenceClassifications?: Array<Record<string, unknown>>;
-  kexcelledParameterGroups?: Record<string, Array<Record<string, unknown>>>;
+  kexcelledParameterGroups?: Record<string, Array<{
+    field: string; value: string; unit: string; sourceType: string;
+    reviewStatus: string; sourceAssetId: string; evidenceRef: string;
+    alternatives: Array<{ value: string; unit: string; evidenceRef: string }>;
+    [key: string]: unknown;
+  }>>;
   officialColorCardAssets?: Array<Record<string, unknown>>;
   importedAt: string;
 };
