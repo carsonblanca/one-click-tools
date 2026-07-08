@@ -1,0 +1,30 @@
+[
+  {
+    "_fixture": true,
+    "_note": "TEST FIXTURE ONLY — 不是真实已发布数据。仅当 FILAMENT_CATALOG_INCLUDE_FIXTURES=true 时加载。Codex 审核发布后替换为真实数据。",
+    "sourceRunId": "fixture-kexcelled-k5-pla-m-20260630",
+    "publicationStatus": "directory_preview",
+    "brand": { "name": "KEXCELLED", "nameZh": "KEXCELLED" },
+    "productLineId": "kexcelled-k5-pla-m",
+    "productLine": { "name": "THE K5 PLA M", "materialType": "PLA", "variant": "matte" },
+    "colors": [
+      { "officialColorCode": "NSBLK", "nameZh": "哑光夜岩黑", "nameEn": "",
+        "displayStatus": "approved", "imageDisplayStatus": "approved",
+        "imageUrl": "/api/filament-color-image?brand=kexcelled&pl=kexcelled-k5-pla-m&code=NSBLK" },
+      { "officialColorCode": "LBEG", "nameZh": "哑光浅米白", "nameEn": "",
+        "displayStatus": "approved", "imageDisplayStatus": "approved",
+        "imageUrl": "/api/filament-color-image?brand=kexcelled&pl=kexcelled-k5-pla-m&code=LBEG" },
+      { "officialColorCode": "SRPL", "nameZh": "哑光薄紫", "nameEn": "",
+        "displayStatus": "approved", "imageDisplayStatus": "approved",
+        "imageUrl": "/api/filament-color-image?brand=kexcelled&pl=kexcelled-k5-pla-m&code=SRPL" }
+    ],
+    "parameters": { "sourceType": "official", "fields": [
+      { "key": "nozzle_temperature", "displayLabel": "喷嘴温度", "value": "200–240°C" },
+      { "key": "bed_temperature", "displayLabel": "热床温度", "value": "35–55°C" },
+      { "key": "print_speed", "displayLabel": "打印速度", "value": "≤450 mm/s" },
+      { "key": "filament_diameter", "displayLabel": "线径", "value": "1.75 mm" }
+    ]},
+    "presetDownloadAllowed": false,
+    "publishedAt": "2026-06-30T12:00:00Z"
+  }
+]
