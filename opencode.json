@@ -1,0 +1,33 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "read": {
+      "*": "allow",
+      ".env": "deny",
+      ".env.*": "deny",
+      "*.env": "deny",
+      "*.env.*": "deny"
+    },
+    "edit": {
+      "*": "deny",
+      ".opencode/**": "allow",
+      "opencode.json": "allow",
+      ".gitignore": "allow",
+      "src/app/admin/filament-drafts/**": "allow",
+      "src/app/api/admin/filament-drafts/**": "allow",
+      "src/lib/supabase/**": "allow",
+      "src/lib/filaments/**": "allow"
+    },
+    "bash": {
+      "*": "deny",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git branch*": "allow"
+    },
+    "external_directory": {
+      "*": "deny"
+    },
+    "doom_loop": "ask"
+  }
+}
