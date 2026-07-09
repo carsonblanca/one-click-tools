@@ -13,10 +13,16 @@
       ".opencode/**": "allow",
       "opencode.json": "allow",
       ".gitignore": "allow",
-      "src/app/admin/filament-drafts/**": "allow",
-      "src/app/api/admin/filament-drafts/**": "allow",
-      "src/lib/supabase/**": "allow",
-      "src/lib/filaments/**": "allow"
+      "app/admin/**": "allow",
+      "app/api/admin/**": "allow",
+      "lib/admin/**": "allow",
+      "lib/supabase/**": "allow",
+      "lib/filaments/drafts/**": "allow",
+      "lib/filaments/imports/**": "allow",
+      "lib/filaments/catalog/**": "allow",
+      "lib/filaments/parameters/**": "allow",
+      "lib/filaments/colors/**": "allow",
+      "lib/storage/**": "allow"
     },
     "bash": {
       "*": "deny",
