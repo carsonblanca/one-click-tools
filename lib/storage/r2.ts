@@ -98,6 +98,23 @@ function safeObjectSegment(value: string, fallback: string) {
   return normalized || fallback;
 }
 
+function safeAssetFilename(originalFilename: string) {
+  const normalized = originalFilename
+    .normalize("NFKC")
+    .replace(/[\\/]+/g, "-")
+    .trim();
+  const extension = normalized.includes(".")
+    ? `.${normalized.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]+/g, "") || "bin"}`
+    : "";
+  const stem = normalized
+    .slice(0, extension ? -extension.length : undefined)
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+  return `${stem || "manual-asset"}${extension || ".bin"}`;
+}
+
 export async function uploadImportPackageToR2(input: {
   bytes: Uint8Array;
   originalFilename: string;
@@ -173,9 +190,32 @@ export async function uploadFipAssetToR2(input: {
   return { bucket: config.assetsBucket, objectKey };
 }
 
+export async function uploadManualFilamentAssetToR2(input: {
+  brandId: string;
+  kind: "images" | "presets";
+  bytes: Uint8Array;
+  originalFilename: string;
+  contentType: string;
+}) {
+  const config = getR2Config();
+  const brandId = safeObjectSegment(input.brandId, "unknown-brand");
+  const objectKey = `manual-filaments/${brandId}/${input.kind}/${randomUUID()}-${safeAssetFilename(input.originalFilename)}`;
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: config.assetsBucket,
+    Key: objectKey,
+    Body: input.bytes,
+    ContentType: input.contentType || "application/octet-stream",
+  }));
+  return {
+    bucket: config.assetsBucket,
+    objectKey,
+    url: `/api/admin/filament-import/kexcelled-evidence/asset?key=${encodeURIComponent(objectKey)}`,
+  };
+}
+
 export async function readFipAssetFromR2(objectKey: string) {
   const config = getR2Config();
-  if (!objectKey.startsWith("filament-imports/")) {
+  if (!objectKey.startsWith("filament-imports/") && !objectKey.startsWith("manual-filaments/")) {
     throw new Error("invalid_fip_asset_key");
   }
   const result = await getR2Client().send(new GetObjectCommand({
