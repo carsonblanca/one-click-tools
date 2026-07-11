@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ManualBrand } from "@/lib/filaments/manual-filament-types";
 import type { ManualParameterTemplateItem } from "@/lib/filaments/manual-parameter-template";
 
@@ -10,11 +11,14 @@ type ParameterRow = ManualParameterTemplateItem & {
   sourceNote: string;
 };
 
-type LocalImageFile = {
-  file: File;
+type UploadedAsset = {
+  id: string;
+  kind: "image" | "preset";
   fileName: string;
+  objectKey: string;
+  url: string;
+  contentType: string;
   size: number;
-  objectUrl: string;
 };
 
 type ColorRow = {
@@ -23,15 +27,19 @@ type ColorRow = {
   colorNameEn: string;
   officialColorCode: string;
   availability: string;
-  image: LocalImageFile | null;
+  image: UploadedAsset | null;
   note: string;
 };
 
-type JsonPresetFile = {
+type PresetRow = {
   id: string;
-  file: File;
+  name: string;
   fileName: string;
+  objectKey: string;
+  url: string;
+  fileType: string;
   size: number;
+  note: string;
 };
 
 function makeColor(): ColorRow {
@@ -62,6 +70,12 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function extensionOf(name: string): string {
+  const lower = name.toLowerCase();
+  const dot = lower.lastIndexOf(".");
+  return dot >= 0 ? lower.slice(dot) : "";
+}
+
 const PRODUCT_LABELS: Record<string, string> = {
   productLineName: "耗材名称 *",
   material: "耗材类型 *",
@@ -79,6 +93,7 @@ export default function ManualFilamentForm({
   brand: ManualBrand;
   parameterTemplate: ManualParameterTemplateItem[];
 }) {
+  const router = useRouter();
   const [productLine, setProductLine] = useState({
     productLineName: "",
     material: "",
@@ -102,7 +117,7 @@ export default function ManualFilamentForm({
     { ...makeColor(), colorNameZh: "黑色", colorNameEn: "Black" },
     { ...makeColor(), colorNameZh: "白色", colorNameEn: "White" },
   ]);
-  const [jsonPresets, setJsonPresets] = useState<JsonPresetFile[]>([]);
+  const [presets, setPresets] = useState<PresetRow[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
     const initial = new Set<string>();
     const groups = groupParameters(parameterTemplate.map((item) => ({ ...item, value: "", sourceStatus: "manual" as const, sourceNote: "" })));
@@ -126,24 +141,8 @@ export default function ManualFilamentForm({
   }
 
   function updateColor(id: string, patch: Partial<ColorRow>) {
-    setColors((current) => current.map((item) => {
-      if (item.id !== id) return item;
-      if (patch.image === null && item.image) {
-        URL.revokeObjectURL(item.image.objectUrl);
-      }
-      return { ...item, ...patch };
-    }));
+    setColors((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
     setMessage(null);
-  }
-
-  function removeColor(id: string) {
-    setColors((current) => {
-      const color = current.find((item) => item.id === id);
-      if (color?.image) {
-        URL.revokeObjectURL(color.image.objectUrl);
-      }
-      return current.filter((item) => item.id !== id);
-    });
   }
 
   function toggleCategory(category: string) {
@@ -166,51 +165,110 @@ export default function ManualFilamentForm({
     setExpandedCategories(new Set());
   }
 
-  function handleColorImageUpload(colorId: string, file: File | null) {
-    if (!file) return;
-    setMessage(null);
-    updateColor(colorId, {
-      image: {
-        file,
-        fileName: file.name,
-        size: file.size,
-        objectUrl: URL.createObjectURL(file),
-      },
+  async function uploadAsset(file: File, kind: "image" | "preset") {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("brandId", brand.brandId);
+    form.append("kind", kind);
+    const response = await fetch("/api/admin/filament-assets", {
+      method: "POST",
+      body: form,
     });
+    const body = await response.json().catch(() => null) as { asset?: UploadedAsset; error?: string } | null;
+    if (!response.ok || !body?.asset) {
+      throw new Error(body?.error || `上传失败 HTTP ${response.status}`);
+    }
+    return body.asset;
   }
 
-  function handleJsonPresetSelect(file: File | null) {
+  async function handleColorImageUpload(colorId: string, file: File | null) {
     if (!file) return;
-    setJsonPresets((current) => [
-      ...current,
-      {
-        id: `json-preset-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        file,
-        fileName: file.name,
-        size: file.size,
-      },
-    ]);
+    setMessage(null);
+    try {
+      const asset = await uploadAsset(file, "image");
+      updateColor(colorId, { image: asset });
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "图片上传失败" });
+    }
+  }
+
+  async function handleJsonPresetUpload(file: File | null) {
+    if (!file) return;
+    if (extensionOf(file.name) !== ".json") {
+      setMessage({ type: "error", text: "仅支持 .json 预设文件。" });
+      return;
+    }
+    setMessage(null);
+    try {
+      const asset = await uploadAsset(file, "preset");
+      setPresets((current) => [...current, {
+        id: asset.id,
+        name: file.name,
+        fileName: asset.fileName,
+        objectKey: asset.objectKey,
+        url: asset.url,
+        fileType: asset.contentType,
+        size: asset.size,
+        note: "",
+      }]);
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "预设上传失败" });
+    }
     if (jsonPresetInputRef.current) {
       jsonPresetInputRef.current.value = "";
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
     setSaving(true);
     setMessage(null);
+    try {
+      const missing: string[] = [];
+      if (!productLine.productLineName.trim()) missing.push("耗材名称");
+      if (!productLine.material.trim()) missing.push("耗材类型");
+      if (missing.length > 0) {
+        setMessage({ type: "error", text: `请填写必填项：${missing.join("、")}` });
+        setSaving(false);
+        return;
+      }
 
-    const missing: string[] = [];
-    if (!productLine.productLineName.trim()) missing.push("耗材名称");
-    if (!productLine.material.trim()) missing.push("耗材类型");
-
-    if (missing.length > 0) {
-      setMessage({ type: "error", text: `请填写必填项：${missing.join("、")}` });
+      const response = await fetch("/api/admin/manual-filaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandId: brand.brandId,
+          productLine,
+          parameters,
+          colors: colors.map((color) => ({
+            id: color.id,
+            colorNameZh: color.colorNameZh,
+            colorNameEn: color.colorNameEn,
+            officialColorCode: color.officialColorCode,
+            availability: color.availability,
+            image: color.image ? {
+              objectKey: color.image.objectKey,
+              url: color.image.url,
+              fileName: color.image.fileName,
+              contentType: color.image.contentType,
+              size: color.image.size,
+              displayMode: "contain",
+            } : null,
+            note: color.note,
+          })),
+          presets,
+        }),
+      });
+      const body = await response.json().catch(() => null) as { redirectUrl?: string; error?: string } | null;
+      if (!response.ok || !body?.redirectUrl) {
+        throw new Error(body?.error || `保存失败 HTTP ${response.status}`);
+      }
+      setMessage({ type: "success", text: "已保存手动耗材草稿。" });
+      router.push(body.redirectUrl);
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "保存失败" });
+    } finally {
       setSaving(false);
-      return;
     }
-
-    setMessage({ type: "success", text: "耗材表单已通过校验，等待 Catalog Core API 接入。" });
-    setSaving(false);
   }
 
   const productFields: Array<[keyof typeof productLine, string]> = [
@@ -310,7 +368,7 @@ export default function ManualFilamentForm({
                     className="hidden"
                     type="file"
                     accept="image/png,image/jpeg,image/webp,image/gif"
-                    onChange={(event) => handleColorImageUpload(color.id, event.target.files?.[0] || null)}
+                    onChange={(event) => void handleColorImageUpload(color.id, event.target.files?.[0] || null)}
                   />
                   <button
                     type="button"
@@ -325,13 +383,13 @@ export default function ManualFilamentForm({
                       <span className="text-emerald-600">✓</span>
                       <span>已选择：{color.image.fileName}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={color.image.objectUrl} alt="" className="h-10 w-10 rounded border object-contain" />
+                      <img src={color.image.url} alt="" className="h-10 w-10 rounded border object-contain" />
                     </div>
                   ) : (
                     <span className="text-sm text-slate-400">未上传图片</span>
                   )}
                 </div>
-                <button type="button" className="rounded border border-red-200 px-3 py-1.5 text-sm text-red-700" onClick={() => removeColor(color.id)}>删除颜色</button>
+                <button type="button" className="rounded border border-red-200 px-3 py-1.5 text-sm text-red-700" onClick={() => setColors((current) => current.filter((item) => item.id !== color.id))}>删除颜色</button>
               </div>
             </div>
           ))}
@@ -340,14 +398,14 @@ export default function ManualFilamentForm({
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="font-semibold">上传预设（JSON）</h2>
-        <p className="mt-1 text-xs text-slate-500">当前仅保留文件选择记录，不上传、不解析、不写入数据库。</p>
+        <p className="mt-1 text-xs text-slate-500">仅支持 .json 文件。当前仅保存文件，不自动解析同步参数。</p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <input
             ref={jsonPresetInputRef}
             className="hidden"
             type="file"
             accept=".json"
-            onChange={(event) => handleJsonPresetSelect(event.target.files?.[0] || null)}
+            onChange={(event) => void handleJsonPresetUpload(event.target.files?.[0] || null)}
           />
           <button
             type="button"
@@ -359,11 +417,12 @@ export default function ManualFilamentForm({
           </button>
         </div>
         <div className="mt-3 space-y-2">
-          {jsonPresets.map((file) => (
-            <div key={file.id} className="flex flex-wrap items-center gap-3 rounded border border-slate-200 p-2 text-sm">
-              <span className="text-slate-700">{file.fileName}</span>
-              <span className="text-xs text-slate-400">{formatFileSize(file.size)}</span>
-              <button type="button" className="text-sm text-red-700" onClick={() => setJsonPresets((current) => current.filter((item) => item.id !== file.id))}>删除</button>
+          {presets.map((preset) => (
+            <div key={preset.id} className="flex flex-wrap items-center gap-3 rounded border border-slate-200 p-3 text-sm">
+              <input className="rounded border border-slate-300 px-2 py-1.5" value={preset.name} onChange={(event) => setPresets((current) => current.map((item) => item.id === preset.id ? { ...item, name: event.target.value } : item))} />
+              <span className="text-slate-500">{preset.fileName}</span>
+              <span className="text-xs text-slate-400">{formatFileSize(preset.size)}</span>
+              <button type="button" className="text-red-700" onClick={() => setPresets((current) => current.filter((item) => item.id !== preset.id))}>删除</button>
             </div>
           ))}
         </div>
@@ -371,7 +430,7 @@ export default function ManualFilamentForm({
 
       <div className="flex justify-end">
         <button type="button" disabled={saving} onClick={() => void handleSave()} className="rounded bg-cyan-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-cyan-800 disabled:opacity-50">
-          {saving ? "校验中..." : "保存草稿"}
+          {saving ? "保存中..." : "保存草稿"}
         </button>
       </div>
     </main>
