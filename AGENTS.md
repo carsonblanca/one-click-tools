@@ -98,3 +98,5 @@ npm run build
 - Use `reuse-existing-architecture` when adding or changing features; prefer existing Supabase, R2, repository, API, and component patterns.
 - Use `git-safety` before staging, committing, pushing, or opening a PR; check branch, status, diff, and staged files first.
 - Use `real-verification` before calling user-facing work complete; build success does not replace real browser and data-chain verification.
+- Use `minimal-actions` by default for development, debugging, and validation tasks to control action budgets, avoid repeated commands, and prevent scope growth.
+- Use `session-discipline` when the task goal changes, context grows, context is compacted, or a second independent task is about to begin.
