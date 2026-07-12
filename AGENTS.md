@@ -90,3 +90,11 @@ Before considering a task done, run:
 ```bash
 npm run build
 ```
+
+## Project Agent Skills
+
+- Use `project-guardian` when work could expand beyond the requested feature, affect architecture/schema/migrations/data routes/production deployment, or distract from the August 2026 completion goal.
+- Use `root-cause-first` when debugging failures; start with the simplest, lowest-level, most common cause and stop after two failed attempts on the same issue.
+- Use `reuse-existing-architecture` when adding or changing features; prefer existing Supabase, R2, repository, API, and component patterns.
+- Use `git-safety` before staging, committing, pushing, or opening a PR; check branch, status, diff, and staged files first.
+- Use `real-verification` before calling user-facing work complete; build success does not replace real browser and data-chain verification.
