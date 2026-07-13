@@ -114,6 +114,70 @@ export async function listRecentFilamentImports(limit = 50) {
   return (data ?? []).map(mapImportRow);
 }
 
+export async function getFilamentImportBySourceRunId(sourceRunId: string) {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .select("*")
+    .eq("source_run_id", sourceRunId)
+    .maybeSingle<FilamentImportRow>();
+  if (error) throw repositoryError("get_import");
+  return data ? mapImportRow(data) : null;
+}
+
+export async function updateFilamentImportBySourceRunId(input: {
+  sourceRunId: string;
+  originalFilename?: string;
+  byteSize?: number | null;
+  manifest?: JsonValue;
+}) {
+  const updatePayload: Record<string, unknown> = {};
+  if (input.originalFilename !== undefined) updatePayload.original_filename = input.originalFilename;
+  if (input.byteSize !== undefined) updatePayload.byte_size = input.byteSize;
+  if (input.manifest !== undefined) updatePayload.manifest = input.manifest;
+
+  const { error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .update(updatePayload)
+    .eq("source_run_id", input.sourceRunId);
+
+  if (error) {
+    const code = error.code || "unknown";
+    throw new Error(`supabase_update_import_failed:${code}`);
+  }
+}
+
+export async function listRecentFilamentDrafts(limit = 50) {
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at,created_by,updated_by",
+    )
+    .order("updated_at", { ascending: false })
+    .limit(safeLimit);
+
+  if (error) throw repositoryError("list_drafts");
+  return (data ?? []) as Array<{
+    id: string;
+    import_id: string;
+    draft_key: string;
+    source_run_id: string;
+    product_index: number;
+    status: string;
+    review_status: string;
+    publication_status: string;
+    brand_id: string;
+    product_line_name: string | null;
+    material_type: string | null;
+    variant: string | null;
+    draft_data: JsonValue;
+    created_at: string;
+    updated_at: string;
+    created_by: string;
+    updated_by: string;
+  }>;
+}
+
 export async function appendAdminAuditLog(input: {
   actorId: string;
   action: string;
@@ -185,6 +249,15 @@ export async function deleteFilamentImport(id: string) {
     .delete()
     .eq("id", id);
   if (error) throw repositoryError("delete_import");
+}
+
+export async function deleteFilamentDraftsBySourceRunId(sourceRunId: string) {
+  const { error, count } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .delete({ count: "exact" })
+    .eq("source_run_id", sourceRunId);
+  if (error) throw repositoryError("delete_drafts");
+  return count ?? 0;
 }
 
 export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
