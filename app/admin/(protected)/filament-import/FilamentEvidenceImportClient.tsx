@@ -916,7 +916,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
                     {item.error ? <p className="text-xs text-red-600">{item.error}</p> : null}
                   </div>
                   {item.status === "success" && item.result?.runId ? (
-                    <Link href={`/admin/filament-import/kexcelled/${encodeURIComponent(item.result.runId)}`}
+                    <Link href={`/admin/filament-drafts/${encodeURIComponent(item.result.runId)}`}
                       className="shrink-0 text-xs text-[#1F5FAF] hover:underline">查看草稿</Link>
                   ) : null}
                   {item.status === "uploading" ? (
