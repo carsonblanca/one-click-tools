@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
+import { isCaptureDraftData } from "@/lib/filaments/drafts/capture-draft-patch";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 
 function objectValue(value: unknown): Record<string, unknown> {
@@ -92,6 +94,14 @@ export default async function FilamentDraftPage({
         <p className="mt-2 text-sm text-slate-600">
           {draft.brand_id.toUpperCase()} · {draft.material_type || text(productLine.materialType) || "材料待补充"} · 未发布
         </p>
+        {isCaptureDraftData(data) ? (
+          <Link
+            className="mt-4 inline-flex rounded bg-cyan-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-cyan-800"
+            href={`/admin/filament-drafts/${encodeURIComponent(sourceRunId)}/edit`}
+          >
+            编辑 capture 草稿
+          </Link>
+        ) : null}
       </header>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
