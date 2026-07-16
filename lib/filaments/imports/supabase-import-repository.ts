@@ -103,9 +103,11 @@ export async function createFilamentImport(
 
 export async function listRecentFilamentImports(limit = 50) {
   const safeLimit = Math.max(1, Math.min(limit, 100));
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await getServerSupabaseClient()
     .from("filament_imports")
     .select("*")
+    .gte("created_at", thirtyDaysAgo)
     .order("created_at", { ascending: false })
     .limit(safeLimit)
     .returns<FilamentImportRow[]>();

@@ -22,7 +22,7 @@ export async function DELETE(
   { params }: { params: Promise<{ sourceRunId: string }> },
 ) {
   const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.create")) {
+  if (!session || !hasAdminScope(session.role, "archive.execute")) {
     return jsonError("无权删除导入草稿", "FORBIDDEN", 403);
   }
 

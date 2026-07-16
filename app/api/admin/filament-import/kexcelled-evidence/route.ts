@@ -93,6 +93,8 @@ function draftData(input: {
   parameters: Record<string, unknown>[];
   images: Record<string, unknown>[];
   evidence: unknown;
+  report: Record<string, unknown>;
+  manifest: Record<string, unknown>;
   assetKeys: Map<string, string>;
 }) {
   const product = input.product;
@@ -125,6 +127,8 @@ function draftData(input: {
       r2ObjectKey: input.assetKeys.get(stringValue(image.packagePath)) || null,
     })),
     evidence: input.evidence,
+    importDecision: objectValue(input.report.importDecision || input.manifest.importDecision),
+    importWarnings: Array.isArray(input.report.warnings) ? input.report.warnings : [],
   };
 }
 
@@ -248,6 +252,8 @@ export async function POST(request: NextRequest) {
         parameters: parsed.parameters,
         images: parsed.images,
         evidence: parsed.evidence,
+        report: parsed.report,
+        manifest: parsed.manifest,
         assetKeys,
       })),
       actorId,
@@ -277,6 +283,7 @@ export async function POST(request: NextRequest) {
         colorCount: parsed.colors.length,
         parameterCount: parsed.parameters.length,
         assetCount: assetKeys.size,
+        importDecision: objectValue(parsed.report.importDecision || parsed.manifest.importDecision),
       },
       r2: {
         packageObjectKey: packageUpload.objectKey,

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Import Filament Evidence ZIP"
+  short_description: "Convert and safely import one filament evidence ZIP"
+  default_prompt: "Use $import-filament-evidence-zip to validate and import one plugin evidence ZIP as a safe draft or published filament."
