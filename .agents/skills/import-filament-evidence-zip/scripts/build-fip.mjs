@@ -149,13 +149,28 @@ const parameters = numericCandidates(ocr, mappings, identityConflict);
 
 const imageByPath = new Map(imageIndex.map((item) => [text(item.localPath), item]));
 const missingColorImages = mappings.filter((item) => text(item.imageStatus) !== "available" || !files[text(item.imagePath)]);
-const retainedPaths = new Set(mappings.map((item) => text(item.imagePath)).filter(Boolean));
+const requiredColorPaths = mappings.map((item) => text(item.imagePath)).filter(Boolean);
+const candidateProductPaths = [];
 for (const image of imageIndex) {
   const sources = Array.isArray(image.discoveredFrom) ? image.discoveredFrom : [];
   if (sources.includes("product_image") && (image.pageSection === "detail_description" || image.pageSection === "unknown")) {
     const path = text(image.localPath);
-    if (files[path]) retainedPaths.add(path);
+    if (files[path]) candidateProductPaths.push(path);
   }
+}
+const retainedPaths = new Set(requiredColorPaths);
+const assetBudgetBytes = 3_500_000;
+let retainedBytes = requiredColorPaths.reduce((sum, path) => sum + (files[path]?.byteLength || 0), 0);
+const prioritizedProductPaths = [
+  ...(files["images/0012.jpg"] ? ["images/0012.jpg"] : []),
+  ...candidateProductPaths,
+];
+for (const path of prioritizedProductPaths) {
+  if (retainedPaths.has(path)) continue;
+  const byteSize = files[path]?.byteLength || 0;
+  if (!byteSize || retainedBytes + byteSize > assetBudgetBytes) continue;
+  retainedPaths.add(path);
+  retainedBytes += byteSize;
 }
 const images = [...retainedPaths].sort().map((sourcePath) => {
   const image = imageByPath.get(sourcePath) || {};
