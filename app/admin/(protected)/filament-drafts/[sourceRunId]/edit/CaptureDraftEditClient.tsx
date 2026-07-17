@@ -20,11 +20,11 @@ function rowsFromFields(fields: Record<string, unknown>): ParameterRow[] {
 export default function CaptureDraftEditClient({
   sourceRunId,
   initialFields,
-  candidateCount,
+  initialCandidates,
 }: {
   sourceRunId: string;
   initialFields: Record<string, unknown>;
-  candidateCount: number;
+  initialCandidates: Array<Record<string, unknown>>;
 }) {
   const initial = useRef({ ...initialFields });
   const [rows, setRows] = useState<ParameterRow[]>(() => rowsFromFields(initialFields));
@@ -65,7 +65,20 @@ export default function CaptureDraftEditClient({
       const response = await fetch(`/api/admin/filament-drafts/${encodeURIComponent(sourceRunId)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ parameters: { fields: changedFields } }),
+        body: JSON.stringify({
+          parameters: {
+            fields: changedFields,
+            candidates: initialCandidates,
+            sourceEvidence: initialCandidates.map((candidate) => ({
+              field: candidate.field,
+              sourceFile: candidate.sourceFile,
+              sourceText: candidate.sourceText,
+              confidence: candidate.confidence,
+              reviewStatus: candidate.reviewStatus,
+              testCondition: candidate.testCondition,
+            })),
+          },
+        }),
       });
       const body = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(body?.error || `保存失败 HTTP ${response.status}`);
@@ -84,7 +97,7 @@ export default function CaptureDraftEditClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold">参数字段</h2>
-          <p className="text-xs text-slate-500">现有证据候选 {candidateCount} 项，本页面不会覆盖它们。</p>
+          <p className="text-xs text-slate-500">现有证据候选 {initialCandidates.length} 项；保存时会原样保留并补齐对应来源摘要。</p>
         </div>
         <Link className="text-sm text-blue-700 hover:underline" href={`/admin/filament-drafts/${encodeURIComponent(sourceRunId)}`}>
           返回详情

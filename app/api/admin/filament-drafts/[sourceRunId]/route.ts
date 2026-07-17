@@ -11,6 +11,28 @@ import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-
 
 export const runtime = "nodejs";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ sourceRunId: string }> },
+) {
+  const session = await readAdminSession();
+  if (!session || !hasAdminScope(session.role, "candidate.view")) {
+    return NextResponse.json({ error: "无权查看草稿。" }, { status: 403 });
+  }
+
+  const { sourceRunId } = await params;
+  try {
+    const draft = await getFilamentDraftBySourceRunId(sourceRunId);
+    if (!draft) {
+      return NextResponse.json({ error: "草稿不存在。" }, { status: 404 });
+    }
+    return NextResponse.json({ draft });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "readback_failed";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ sourceRunId: string }> },
