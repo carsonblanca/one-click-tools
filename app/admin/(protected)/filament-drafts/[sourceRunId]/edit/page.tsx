@@ -35,6 +35,9 @@ export default async function EditCaptureDraftPage({
   }
 
   const parameters = objectValue(data.parameters);
+  const candidates = Array.isArray(parameters.candidates)
+    ? parameters.candidates.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    : [];
   return (
     <main className="space-y-6">
       <header>
@@ -47,7 +50,7 @@ export default async function EditCaptureDraftPage({
       <CaptureDraftEditClient
         sourceRunId={sourceRunId}
         initialFields={objectValue(parameters.fields)}
-        candidateCount={Array.isArray(parameters.candidates) ? parameters.candidates.length : 0}
+        initialCandidates={candidates}
       />
     </main>
   );

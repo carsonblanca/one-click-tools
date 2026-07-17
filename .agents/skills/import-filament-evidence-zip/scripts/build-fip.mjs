@@ -43,6 +43,8 @@ function text(value) {
 }
 
 function productLineFrom(capture, meta) {
+  const capturedProductLine = text(capture.productIdentity?.productLine);
+  if (capturedProductLine) return capturedProductLine;
   const title = text(meta.userProvidedProductName) || text(meta.pageTitle);
   const titleMatch = title.match(/THE\s+K\d+\s*[™®]?\s*([A-Z][A-Z0-9-]*)/i);
   if (titleMatch) return `THE ${titleMatch[0].match(/K\d+/i)?.[0].toUpperCase()} ${titleMatch[1].toUpperCase()}`;
@@ -87,8 +89,18 @@ function numericCandidates(ocr, mappings, identityConflict) {
   const result = [];
   const diameter = skuText.match(/-(\d+(?:\.\d+)?)-[A-Z]/i)?.[1];
   const kg = skuText.match(/-(\d+(?:\.\d+)?)KG/i)?.[1];
-  if (diameter) result.push(candidate("filamentDiameter", diameter, diameter, "mm", "high", "confirmed", skuText));
-  if (kg) result.push(candidate("netWeight", `${kg}KG`, String(Number(kg) * 1000), "g", "high", "confirmed", skuText));
+  if (diameter) {
+    result.push({
+      ...candidate("filamentDiameter", diameter, diameter, "mm", "medium", "candidate", skuText),
+      skuVariantSpecific: true,
+    });
+  }
+  if (kg) {
+    result.push({
+      ...candidate("netWeight", `${kg}KG`, String(Number(kg) * 1000), "g", "medium", "candidate", skuText),
+      skuVariantSpecific: true,
+    });
+  }
 
   const status = identityConflict ? "conflict" : "candidate";
   const confidence = identityConflict ? "low" : "medium";
@@ -96,7 +108,6 @@ function numericCandidates(ocr, mappings, identityConflict) {
     ["diameterOptions", /1\.75\/3\s*mm/i, "1.75/3", "mm"],
     ["netWeightOptions", /0\.5\/1\/3\s*kg/i, "0.5/1/3", "kg"],
     ["diameterTolerance", /[+±]\s*0\.03\s*mm/i, "0.03", "mm"],
-    ["density", /1\.20\s*g\/cm3/i, "1.20", "g/cm³"],
     ["meltFlowIndex", /30\s*[~～-]\s*40\s*g\/10min/i, "30-40", "g/10min"],
     ["heatDeflectionTemperature", /107\s*°?C/i, "107", "°C"],
     ["vicatSofteningTemperature", /116\s*°?C/i, "116", "°C"],
@@ -105,14 +116,24 @@ function numericCandidates(ocr, mappings, identityConflict) {
     ["flexuralStrength", /90\s*[~～-]\s*93/i, "90-93", "MPa"],
     ["flexuralModulus", /2200\s*[~～-]\s*2400/i, "2200-2400", "MPa"],
     ["unnotchedImpactStrength", /35\s*[~～-]\s*40/i, "35-40", "kJ/m²"],
-    ["notchedImpactStrength", /2\s*[~～-]\s*4/i, "2-4", "kJ/m²"],
+    ["notchedImpactStrength", /缺口冲击强度[^\n]*?2\s*[~～-]\s*4/i, "2-4", "kJ/m²"],
     ["nozzleTemperature", /250\s*[-~～]\s*270\s*[Y°]?C/i, "250-270", "°C"],
   ];
   for (const [field, pattern, normalized, unit] of specs) {
     const match = ocr.match(pattern);
     if (match) result.push(candidate(field, match[0], normalized, unit, confidence, status, match[0], field === "meltFlowIndex" ? "260°C / 1.2 kg" : null));
   }
+  const density = ocr.match(/密度[^\n]*?(\d+(?:\.\d+)?)\s*g\s*\/\s*cm[³3*]?/i);
+  if (density) {
+    result.push(candidate("density", density[0], density[1], "g/cm³", confidence, status, density[0]));
+  }
   return result;
+}
+
+function fieldValue(item) {
+  const value = text(item.normalizedValue) || text(item.rawValue);
+  const unit = text(item.unit);
+  return value ? `${value}${unit ? ` ${unit}` : ""}` : "";
 }
 
 const options = argsOf(process.argv.slice(2));
@@ -194,8 +215,12 @@ const requiredMissing = [];
 if (!displayName) requiredMissing.push("productName");
 if (!brand) requiredMissing.push("brand");
 if (!material) requiredMissing.push("material");
-if (!parameters.some((item) => item.field === "filamentDiameter")) requiredMissing.push("filamentDiameter");
-if (!parameters.some((item) => item.field === "netWeight")) requiredMissing.push("netWeight");
+if (!parameters.some((item) => item.field === "filamentDiameter" && item.reviewStatus === "confirmed" && !item.skuVariantSpecific)) {
+  requiredMissing.push("filamentDiameter");
+}
+if (!parameters.some((item) => item.field === "netWeight" && item.reviewStatus === "confirmed" && !item.skuVariantSpecific)) {
+  requiredMissing.push("netWeight");
+}
 if (!colors.length) requiredMissing.push("colors");
 if (missingColorImages.length) requiredMissing.push("colorImages");
 const reasons = [];
@@ -248,8 +273,8 @@ const product = {
   displayName,
   materialType: material,
   variant: "Standard",
-  diameterMm: Number(parameters.find((item) => item.field === "filamentDiameter")?.normalizedValue) || null,
-  netWeightG: Number(parameters.find((item) => item.field === "netWeight")?.normalizedValue) || null,
+  diameterMm: Number(parameters.find((item) => item.field === "filamentDiameter" && item.reviewStatus === "confirmed" && !item.skuVariantSpecific)?.normalizedValue) || null,
+  netWeightG: Number(parameters.find((item) => item.field === "netWeight" && item.reviewStatus === "confirmed" && !item.skuVariantSpecific)?.normalizedValue) || null,
   sourceStatus: "captured_official_store",
   translationStatus: "source_preserved",
   colors,
@@ -264,7 +289,7 @@ const product = {
     amsCompatibility: null,
     nozzleRequirement: null,
     printNotes: null,
-    parameterStatus: identityConflict ? "partial" : "official",
+    parameterStatus: parameters.length ? "partial" : "missing",
     evidenceRefs: ["identity", "ocr-spec-table"],
     requiresManualReview: true,
     rawCandidates: parameters,
@@ -332,6 +357,31 @@ const report = {
   unresolvedCount: parameters.filter((item) => item.reviewStatus !== "confirmed").length + requiredMissing.length,
   warnings: reasons,
   importDecision: manifest.importDecision,
+  expectedDraft: {
+    parameterFieldCount: parameters.length,
+    parameterCandidateCount: parameters.length,
+    parameterEvidenceCount: parameters.length,
+    colorCount: colors.length,
+    colorImageRelationCount: colors.filter((color) => color.imageStatus === "available" && color.localImagePath).length,
+    missingProductDefaults: requiredMissing.filter((field) => field === "filamentDiameter" || field === "netWeight"),
+  },
+};
+
+const draftPatch = {
+  parameters: {
+    fields: Object.fromEntries(parameters.map((item) => [item.field, fieldValue(item)]).filter(([, value]) => value)),
+    candidates: parameters,
+    sourceEvidence: parameters.map((item) => ({
+      field: item.field,
+      sourceFile: item.sourceFile,
+      sourceText: item.sourceText,
+      confidence: item.confidence,
+      reviewStatus: item.reviewStatus,
+      testCondition: item.testCondition,
+    })),
+    status: "official_partial",
+    reviewNote: "Imported by import-filament-evidence-zip; SKU-specific diameter and weight remain candidates, not product defaults.",
+  },
 };
 
 const outputFiles = {
@@ -342,6 +392,7 @@ const outputFiles = {
   "images.json": strToU8(JSON.stringify(images, null, 2)),
   "evidence.json": strToU8(JSON.stringify(evidence, null, 2)),
   "package-report.json": strToU8(JSON.stringify(report, null, 2)),
+  "draft-patch.json": strToU8(JSON.stringify(draftPatch, null, 2)),
   "ocr/images.json": strToU8(JSON.stringify({ processed: Number(meta.ocrImagesCompleted) || 0, retainedFullText: false }, null, 2)),
 };
 for (const image of images) outputFiles[image.packagePath] = files[image.sourcePath];
@@ -364,6 +415,7 @@ process.stdout.write(`${JSON.stringify({
   exactNameDuplicate: duplicateMatches.length > 0,
   duplicateMatches,
   autoPublishEligible,
+  expectedDraft: report.expectedDraft,
   reviewReasons: reasons,
   fipBytes: zipped.byteLength,
   inputSha256: sourceHash,
