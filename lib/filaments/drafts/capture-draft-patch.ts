@@ -1,3 +1,9 @@
+import {
+  normalizeParameterCandidate,
+  normalizeParameterFields,
+  normalizeStoredParameters,
+} from "@/lib/filaments/parameters/normalized-parameters";
+
 export type CaptureParameterPatch = {
   fields?: Record<string, unknown>;
   candidates?: Array<Record<string, unknown>>;
@@ -97,6 +103,7 @@ export function mergeCaptureDraftData(
       throw new CaptureDraftPatchError("参数更新格式无效。");
     }
     const parameters = objectValue(current.parameters);
+    const normalizedCurrent = normalizeStoredParameters(parameters);
     const parameterPatch = patch.parameters;
     if (parameterPatch.candidates?.length === 0 || parameterPatch.sourceEvidence?.length === 0) {
       throw new CaptureDraftPatchError("不允许使用空数组清空参数证据。");
@@ -107,6 +114,10 @@ export function mergeCaptureDraftData(
     }
     if (parameterPatch.fields && (typeof parameterPatch.fields !== "object" || Array.isArray(parameterPatch.fields))) {
       throw new CaptureDraftPatchError("参数字段格式无效。");
+    }
+    const normalizedPatchFields = normalizeParameterFields(parameterPatch.fields);
+    if (Object.keys(normalizedPatchFields.unmappedFields).length) {
+      throw new CaptureDraftPatchError("新增参数必须使用参数字典中的 canonical key。");
     }
     if (parameterPatch.candidates && !parameterPatch.candidates.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
       throw new CaptureDraftPatchError("参数候选格式无效。");
@@ -122,10 +133,15 @@ export function mergeCaptureDraftData(
       ...next,
       parameters: {
         ...parameters,
+        fields: normalizedCurrent.fields,
+        candidates: normalizedCurrent.candidates,
+        unmappedFields: normalizedCurrent.unmappedFields,
         ...(parameterPatch.fields
-          ? { fields: { ...objectValue(parameters.fields), ...parameterPatch.fields } }
+          ? { fields: { ...normalizedCurrent.fields, ...normalizedPatchFields.fields } }
           : {}),
-        ...(parameterPatch.candidates ? { candidates: parameterPatch.candidates } : {}),
+        ...(parameterPatch.candidates
+          ? { candidates: parameterPatch.candidates.map(normalizeParameterCandidate) }
+          : {}),
         ...(parameterPatch.sourceEvidence ? { sourceEvidence: parameterPatch.sourceEvidence } : {}),
         ...(parameterPatch.status !== undefined ? { status: parameterPatch.status } : {}),
         ...(parameterPatch.reviewNote !== undefined ? { reviewNote: parameterPatch.reviewNote } : {}),

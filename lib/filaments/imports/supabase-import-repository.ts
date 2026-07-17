@@ -291,3 +291,15 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     updated_at: string;
   } | null;
 }
+
+export async function listPublishedFilamentDrafts() {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at",
+    )
+    .in("publication_status", ["directory_preview", "complete_profile", "published"])
+    .order("updated_at", { ascending: false });
+  if (error) throw repositoryError("list_published_drafts");
+  return (data ?? []) as Array<NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>>;
+}

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
+import { FILAMENT_PARAMETER_DEFINITIONS } from "@/lib/filaments/parameters/normalized-parameters";
 import { getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
 import {
@@ -341,14 +343,16 @@ function brandProfileIdForBrand(brand: string) {
 
 export default function FilamentDetailPageContent({
   filamentId,
+  initialRecord,
   locale = "en",
 }: {
   filamentId: string;
+  initialRecord?: CatalogRecord | null;
   locale?: Locale;
 }) {
   const { isDark } = useTheme();
   const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
-  const record = getCatalogRecord(filamentId);
+  const record = initialRecord || getCatalogRecord(filamentId);
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
   const [printerIdGlobal, setPrinterIdGlobal] = useState(printerOptions[0]?.id || "");
 
@@ -373,6 +377,12 @@ export default function FilamentDetailPageContent({
   const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
   const hasVerifiedParams = hasPresetParameters(record);
+  const publishedParameterRows = record.catalogSource === "published"
+    ? FILAMENT_PARAMETER_DEFINITIONS.flatMap((item) => {
+        const value = record.normalizedParameters?.[item.canonicalKey];
+        return value ? [{ ...item, value }] : [];
+      })
+    : [];
 
   const printerOptsThis = getBambuPrinterOptions();
   const generated = useMemo(() => {
@@ -466,11 +476,17 @@ export default function FilamentDetailPageContent({
 
           <DetailSection title={t.parameters}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
-              <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
-              <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
+              {publishedParameterRows.length ? publishedParameterRows.map((item) => (
+                <FieldRow key={item.canonicalKey} label={item.zhCNLabel} value={item.value} unknownLabel={t.unknown} />
+              )) : (
+                <>
+                  <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
+                </>
+              )}
               <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
               <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
               <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />

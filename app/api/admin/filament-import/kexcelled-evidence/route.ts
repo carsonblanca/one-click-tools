@@ -21,6 +21,10 @@ import {
   uploadFipAssetToR2,
   uploadFipPackageToR2,
 } from "@/lib/storage/r2";
+import {
+  fieldsAcceptedFromCandidates,
+  normalizeParameterCandidate,
+} from "@/lib/filaments/parameters/normalized-parameters";
 
 export const runtime = "nodejs";
 
@@ -99,12 +103,8 @@ function draftData(input: {
 }) {
   const product = input.product;
   const colors = mapColors(input.colors, input.images, input.assetKeys);
-  const fields = Object.fromEntries(input.parameters.flatMap((candidate) => {
-    const field = stringValue(candidate.field);
-    const value = stringValue(candidate.normalizedValue) || stringValue(candidate.rawValue);
-    const unit = stringValue(candidate.unit);
-    return field && value ? [[field, `${value}${unit ? ` ${unit}` : ""}`]] : [];
-  }));
+  const candidates = input.parameters.map(normalizeParameterCandidate);
+  const fields = fieldsAcceptedFromCandidates(candidates);
   return {
     source: { zipFilename: input.fileName },
     brand: { name: "KEXCELLED" },
@@ -119,7 +119,8 @@ function draftData(input: {
     canonicalColors: colors,
     parameters: {
       fields,
-      candidates: input.parameters,
+      candidates,
+      unmappedFields: {},
       status: Object.keys(fields).length ? "official_partial" : "missing",
     },
     images: input.images.map((image) => ({

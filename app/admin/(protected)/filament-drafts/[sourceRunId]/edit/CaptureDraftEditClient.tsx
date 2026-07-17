@@ -2,18 +2,47 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import {
+  FILAMENT_PARAMETER_DEFINITIONS,
+  normalizeParameterCandidate,
+} from "@/lib/filaments/parameters/normalized-parameters";
 
-type ParameterRow = { id: string; key: string; value: string };
+type ParameterRow = {
+  id: string;
+  key: string;
+  label: string;
+  category: string;
+  value: string;
+};
+
+const candidateStatusLabels: Record<string, string> = {
+  approved: "已批准候选",
+  candidate: "候选",
+  conflict: "身份或数值冲突",
+  sku_candidate: "SKU 候选",
+  rejected: "污染/已拒绝",
+  unmapped: "待归类",
+};
+
+const sourceTypeLabels: Record<string, string> = {
+  sku: "SKU",
+  ocr: "OCR",
+  structured_capture: "结构化采集",
+  contamination: "来源污染",
+  unknown: "来源未识别",
+};
 
 function text(value: unknown): string {
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
 
 function rowsFromFields(fields: Record<string, unknown>): ParameterRow[] {
-  return Object.entries(fields).map(([key, value], index) => ({
-    id: `field-${index}`,
-    key,
-    value: text(value),
+  return FILAMENT_PARAMETER_DEFINITIONS.map((item) => ({
+    id: `field-${item.canonicalKey}`,
+    key: item.canonicalKey,
+    label: item.zhCNLabel,
+    category: item.category,
+    value: text(fields[item.canonicalKey]),
   }));
 }
 
@@ -21,10 +50,12 @@ export default function CaptureDraftEditClient({
   sourceRunId,
   initialFields,
   initialCandidates,
+  initialUnmappedFields,
 }: {
   sourceRunId: string;
   initialFields: Record<string, unknown>;
   initialCandidates: Array<Record<string, unknown>>;
+  initialUnmappedFields: Record<string, unknown>;
 }) {
   const initial = useRef({ ...initialFields });
   const [rows, setRows] = useState<ParameterRow[]>(() => rowsFromFields(initialFields));
@@ -38,26 +69,26 @@ export default function CaptureDraftEditClient({
       .map((row) => [row.key.trim(), row.value]),
   ), [rows]);
   const hasChanges = Object.keys(changedFields).length > 0;
+  const normalizedCandidates = useMemo(
+    () => initialCandidates.map(normalizeParameterCandidate),
+    [initialCandidates],
+  );
+  const candidatesByKey = useMemo(() => {
+    const result = new Map<string, ReturnType<typeof normalizeParameterCandidate>[]>();
+    for (const candidate of normalizedCandidates) {
+      const key = candidate.canonicalKey || "unmapped";
+      result.set(key, [...(result.get(key) || []), candidate]);
+    }
+    return result;
+  }, [normalizedCandidates]);
 
   function updateRow(id: string, patch: Partial<ParameterRow>) {
     setRows((current) => current.map((row) => row.id === id ? { ...row, ...patch } : row));
     setMessage(null);
   }
 
-  function addRow() {
-    setRows((current) => [...current, { id: `new-${Date.now()}`, key: "", value: "" }]);
-  }
-
   async function save() {
     if (!hasChanges || saving) return;
-    const duplicateKeys = rows
-      .map((row) => row.key.trim())
-      .filter(Boolean)
-      .filter((key, index, keys) => keys.indexOf(key) !== index);
-    if (duplicateKeys.length) {
-      setMessage({ type: "error", text: `参数名重复：${duplicateKeys[0]}` });
-      return;
-    }
 
     setSaving(true);
     setMessage(null);
@@ -68,15 +99,6 @@ export default function CaptureDraftEditClient({
         body: JSON.stringify({
           parameters: {
             fields: changedFields,
-            candidates: initialCandidates,
-            sourceEvidence: initialCandidates.map((candidate) => ({
-              field: candidate.field,
-              sourceFile: candidate.sourceFile,
-              sourceText: candidate.sourceText,
-              confidence: candidate.confidence,
-              reviewStatus: candidate.reviewStatus,
-              testCondition: candidate.testCondition,
-            })),
           },
         }),
       });
@@ -105,30 +127,49 @@ export default function CaptureDraftEditClient({
       </div>
 
       <div className="mt-4 space-y-2">
-        {rows.map((row) => (
-          <div className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_minmax(220px,2fr)]" key={row.id}>
-            <input
-              aria-label="参数名"
-              className="rounded border border-slate-300 px-3 py-2 text-sm"
-              placeholder="参数名"
-              value={row.key}
-              onChange={(event) => updateRow(row.id, { key: event.target.value })}
-            />
-            <input
-              aria-label="参数值"
-              className="rounded border border-slate-300 px-3 py-2 text-sm"
-              placeholder="参数值"
-              value={row.value}
-              onChange={(event) => updateRow(row.id, { value: event.target.value })}
-            />
+        {rows.map((row) => {
+          const candidates = candidatesByKey.get(row.key) || [];
+          return (
+          <div className="rounded border border-slate-200 p-3" key={row.id}>
+            <div className="grid gap-2 sm:grid-cols-[minmax(200px,1fr)_minmax(220px,2fr)] sm:items-center">
+              <div>
+                <p className="text-sm font-medium">{row.label}</p>
+                <p className="text-xs text-slate-500">{row.key} · {row.category}</p>
+              </div>
+              <input
+                aria-label={`${row.label}参数值`}
+                className="rounded border border-slate-300 px-3 py-2 text-sm"
+                placeholder={candidates.length ? "候选值待人工确认" : "缺失/待补充"}
+                value={row.value}
+                onChange={(event) => updateRow(row.id, { value: event.target.value })}
+              />
+            </div>
+            {candidates.map((candidate, index) => (
+              <p className="mt-1 text-xs text-amber-700" key={`${row.key}-${index}`}>
+                {candidateStatusLabels[candidate.candidateStatus] || candidate.candidateStatus}：
+                {candidate.normalizedDisplayValue || "无可显示值"} · {sourceTypeLabels[candidate.sourceType] || candidate.sourceType}
+              </p>
+            ))}
+          </div>
+          );
+        })}
+        {Object.entries(initialUnmappedFields).map(([key, value]) => (
+          <div className="rounded border border-amber-200 bg-amber-50 p-3" key={`unmapped-${key}`}>
+            <p className="text-sm font-medium text-amber-900">待归类参数</p>
+            <p className="text-xs text-amber-700">{key}：{text(value)}</p>
+          </div>
+        ))}
+        {candidatesByKey.get("unmapped")?.map((candidate, index) => (
+          <div className="rounded border border-amber-200 bg-amber-50 p-3" key={`unmapped-candidate-${index}`}>
+            <p className="text-sm font-medium text-amber-900">待归类候选</p>
+            <p className="text-xs text-amber-700">
+              {text(candidate.field) || text(candidate.key) || "未知字段"}：{candidate.normalizedDisplayValue || "无可显示值"}
+            </p>
           </div>
         ))}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" className="rounded border border-slate-300 px-3 py-2 text-sm" onClick={addRow}>
-          添加参数
-        </button>
         <button
           type="button"
           className="rounded bg-cyan-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"

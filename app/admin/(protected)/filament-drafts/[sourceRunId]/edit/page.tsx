@@ -4,6 +4,7 @@ import { requireAdminScope } from "@/lib/admin/auth";
 import { isCaptureDraftData } from "@/lib/filaments/drafts/capture-draft-patch";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import CaptureDraftEditClient from "./CaptureDraftEditClient";
+import { normalizeStoredParameters } from "@/lib/filaments/parameters/normalized-parameters";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -35,9 +36,7 @@ export default async function EditCaptureDraftPage({
   }
 
   const parameters = objectValue(data.parameters);
-  const candidates = Array.isArray(parameters.candidates)
-    ? parameters.candidates.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
-    : [];
+  const normalized = normalizeStoredParameters(parameters);
   return (
     <main className="space-y-6">
       <header>
@@ -49,8 +48,9 @@ export default async function EditCaptureDraftPage({
       </header>
       <CaptureDraftEditClient
         sourceRunId={sourceRunId}
-        initialFields={objectValue(parameters.fields)}
-        initialCandidates={candidates}
+        initialFields={normalized.fields}
+        initialCandidates={normalized.candidates}
+        initialUnmappedFields={normalized.unmappedFields}
       />
     </main>
   );

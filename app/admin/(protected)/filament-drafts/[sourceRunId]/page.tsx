@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
 import { isCaptureDraftData } from "@/lib/filaments/drafts/capture-draft-patch";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { normalizeStoredParameters } from "@/lib/filaments/parameters/normalized-parameters";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -33,6 +34,17 @@ function safeLink(value: unknown) {
     ? href
     : "";
 }
+
+const parameterStatusLabels: Record<string, string> = {
+  field: "正式值",
+  candidate: "候选",
+  conflict: "身份或数值冲突",
+  sku_candidate: "SKU 候选",
+  rejected: "污染/已拒绝",
+  unmapped: "待归类",
+  missing: "缺失/待补充",
+  approved: "已批准候选",
+};
 
 function draftLookupFailure(error: unknown) {
   const message = error instanceof Error ? error.message : "unknown_error";
@@ -71,7 +83,7 @@ export default async function FilamentDraftPage({
 
   const data = objectValue(draft.draft_data);
   const productLine = objectValue(data.productLine);
-  const parameters = objectValue(objectValue(data.parameters).fields);
+  const parameters = normalizeStoredParameters(data.parameters);
   const canonicalColors = arrayValue(data.canonicalColors);
   const colors = canonicalColors.length ? canonicalColors : arrayValue(data.colors);
   const images = arrayValue(data.images);
@@ -115,12 +127,27 @@ export default async function FilamentDraftPage({
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <h2 className="font-semibold">参数候选</h2>
+        <h2 className="font-semibold">参数审核</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          正式字段 {Object.keys(parameters.fields).length} 项 · 原始候选 {parameters.candidates.length} 项
+        </p>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-          {Object.entries(parameters).map(([key, value]) => (
-            <div key={key}><dt className="text-xs text-slate-500">{key}</dt><dd>{String(value)}</dd></div>
+          {parameters.rows.map((row) => (
+            <div className="rounded border border-slate-100 p-3" key={`${row.category}-${row.canonicalKey}`}>
+              <dt className="text-sm font-medium text-slate-800">{row.zhCNLabel}</dt>
+              <dd className="mt-1 text-sm">{row.value || row.missingDisplay}</dd>
+              <p className="mt-1 text-xs text-slate-500">
+                {row.canonicalKey} · {parameterStatusLabels[row.status] || row.status}
+              </p>
+              {row.candidates.map((candidate, index) => (
+                <p className="mt-1 text-xs text-amber-700" key={`${row.canonicalKey}-candidate-${index}`}>
+                  {parameterStatusLabels[candidate.candidateStatus] || candidate.candidateStatus}
+                  {candidate.normalizedDisplayValue ? `：${candidate.normalizedDisplayValue}` : ""}
+                  {candidate.sourceType ? ` · ${candidate.sourceType}` : ""}
+                </p>
+              ))}
+            </div>
           ))}
-          {Object.keys(parameters).length === 0 ? <p className="text-sm text-slate-500">暂无参数候选</p> : null}
         </dl>
       </section>
 
