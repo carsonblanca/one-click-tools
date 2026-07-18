@@ -2,31 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-pa-cf-black",
-      "productLineId": "bambu-lab-pa-cf",
-      "brandId": "bambu-lab",
-      "officialName": "Black",
-      "displayNameZh": "黑色",
-      "aliases": [
-        "PA12-CF Black"
-      ],
-      "officialColorCode": "50100",
-      "hex": null,
-      "rgb": null,
-      "finish": "matte",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/pa-cf",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": true,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "PA12-CF. Color name verified from store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

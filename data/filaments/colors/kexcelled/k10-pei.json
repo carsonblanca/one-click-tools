@@ -2,29 +2,5 @@
   "brandId": "kexcelled",
   "brandName": "Kexcelled",
   "verifiedAt": "2026-06-20",
-  "colors": [
-    {
-      "id": "kexcelled-k10-pei-nat",
-      "productLineId": "kexcelled-k10-pei",
-      "brandId": "kexcelled",
-      "officialName": "Natural",
-      "displayNameZh": "自然色",
-      "aliases": [],
-      "officialColorCode": "NAT",
-      "hex": null,
-      "rgb": null,
-      "finish": null,
-      "opacity": "opaque",
-      "officialProductUrl": null,
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": false,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "Color SKU recovered from TMall page.html evidence pack. No official HEX. colorReferenceType: visual_only. ",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

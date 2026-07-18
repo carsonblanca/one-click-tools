@@ -2,29 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-pva-natural",
-      "productLineId": "bambu-lab-pva",
-      "brandId": "bambu-lab",
-      "officialName": "Natural",
-      "displayNameZh": "自然色",
-      "aliases": [],
-      "officialColorCode": "70100",
-      "hex": null,
-      "rgb": null,
-      "finish": "glossy",
-      "opacity": "translucent",
-      "officialProductUrl": "https://store.bambulab.com/products/pva-support",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": false,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Water-soluble PVA support material. Single color. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

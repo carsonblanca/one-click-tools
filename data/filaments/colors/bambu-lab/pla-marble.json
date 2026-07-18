@@ -2,31 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-pla-marble-white",
-      "productLineId": "bambu-lab-pla-marble",
-      "brandId": "bambu-lab",
-      "officialName": "Marble",
-      "displayNameZh": "大理石",
-      "aliases": [
-        "White Marble"
-      ],
-      "officialColorCode": "16100",
-      "hex": null,
-      "rgb": null,
-      "finish": "matte",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/pla-marble",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": false,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Marble PLA. Color name verified from store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

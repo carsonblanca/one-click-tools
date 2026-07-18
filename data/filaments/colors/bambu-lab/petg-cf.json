@@ -2,29 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-petg-cf-black",
-      "productLineId": "bambu-lab-petg-cf",
-      "brandId": "bambu-lab",
-      "officialName": "Black",
-      "displayNameZh": "黑色",
-      "aliases": [],
-      "officialColorCode": "25100",
-      "hex": null,
-      "rgb": null,
-      "finish": "matte",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/petg-cf",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": true,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Carbon fiber PETG. Color name verified from store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

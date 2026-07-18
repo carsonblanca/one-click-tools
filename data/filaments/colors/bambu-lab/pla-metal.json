@@ -2,29 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-pla-metal-iron",
-      "productLineId": "bambu-lab-pla-metal",
-      "brandId": "bambu-lab",
-      "officialName": "Iron Gray",
-      "displayNameZh": "铁灰色",
-      "aliases": [],
-      "officialColorCode": "18100",
-      "hex": null,
-      "rgb": null,
-      "finish": "semi-glossy",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/pla-metal",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": false,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Metal-filled PLA. Color name verified from store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }

@@ -2,52 +2,5 @@
   "brandId": "bambu-lab",
   "brandName": "Bambu Lab",
   "verifiedAt": "2026-06-16",
-  "colors": [
-    {
-      "id": "bambu-lab-pla-glow-green",
-      "productLineId": "bambu-lab-pla-glow",
-      "brandId": "bambu-lab",
-      "officialName": "Glow Green",
-      "displayNameZh": "夜光绿",
-      "aliases": [],
-      "officialColorCode": "13100",
-      "hex": null,
-      "rgb": null,
-      "finish": "glossy",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/pla-glow",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": true,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Color name verified from Bambu Lab store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    },
-    {
-      "id": "bambu-lab-pla-glow-blue",
-      "productLineId": "bambu-lab-pla-glow",
-      "brandId": "bambu-lab",
-      "officialName": "Glow Blue",
-      "displayNameZh": "夜光蓝",
-      "aliases": [],
-      "officialColorCode": "13101",
-      "hex": null,
-      "rgb": null,
-      "finish": "glossy",
-      "opacity": "opaque",
-      "officialProductUrl": "https://store.bambulab.com/products/pla-glow",
-      "officialColorSourceUrl": null,
-      "officialImageUrl": null,
-      "colorValueSource": "unknown",
-      "hasOfficialColorChart": true,
-      "hasPhysicalSwatch": false,
-      "verificationStatus": "partial",
-      "lastVerifiedAt": "2026-06-16",
-      "sourceNotes": "Color name verified from Bambu Lab store. Hex not yet confirmed.",
-      "completenessStatus": "unknown"
-    }
-  ]
+  "colors": []
 }
