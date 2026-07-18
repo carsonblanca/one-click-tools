@@ -316,7 +316,7 @@ function r3dVariantZh(variant: string): string {
 }
 
 function buildR3dRecords(): CatalogRecord[] {
-  return r3dProductLines.productLines.map(function (pl) {
+  return (r3dProductLines.productLines as Array<{ id: string; materialType: string; variant: string; productLine: string }>).map(function (pl) {
     var color: CatalogColor = {
       colorNameZh: "颜色信息待补充", colorNameEn: "Color information pending",
       colorFamily: "gray", hex: null, rgb: null,
