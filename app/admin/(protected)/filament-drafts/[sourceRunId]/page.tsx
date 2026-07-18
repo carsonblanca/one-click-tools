@@ -35,17 +35,6 @@ function safeLink(value: unknown) {
     : "";
 }
 
-const parameterStatusLabels: Record<string, string> = {
-  field: "正式值",
-  candidate: "候选",
-  conflict: "身份或数值冲突",
-  sku_candidate: "SKU 候选",
-  rejected: "污染/已拒绝",
-  unmapped: "待归类",
-  missing: "缺失/待补充",
-  approved: "已批准候选",
-};
-
 function draftLookupFailure(error: unknown) {
   const message = error instanceof Error ? error.message : "unknown_error";
   if (message.startsWith("missing_supabase_")) {
@@ -137,18 +126,23 @@ export default async function FilamentDraftPage({
               <dt className="text-sm font-medium text-slate-800">{row.zhCNLabel}</dt>
               <dd className="mt-1 text-sm">{row.value || row.missingDisplay}</dd>
               <p className="mt-1 text-xs text-slate-500">
-                {row.canonicalKey} · {parameterStatusLabels[row.status] || row.status}
+                {row.status === "field" ? "已有参数" : row.status === "unmapped" ? "原始字段" : "缺失"}
               </p>
-              {row.candidates.map((candidate, index) => (
-                <p className="mt-1 text-xs text-amber-700" key={`${row.canonicalKey}-candidate-${index}`}>
-                  {parameterStatusLabels[candidate.candidateStatus] || candidate.candidateStatus}
-                  {candidate.normalizedDisplayValue ? `：${candidate.normalizedDisplayValue}` : ""}
-                  {candidate.sourceType ? ` · ${candidate.sourceType}` : ""}
-                </p>
-              ))}
             </div>
           ))}
         </dl>
+        {parameters.candidates.length ? (
+          <div className="mt-5 border-t border-slate-100 pt-4">
+            <h3 className="text-sm font-semibold">候选参数（仅供参考）</h3>
+            <ul className="mt-2 space-y-1 text-sm text-slate-600">
+              {parameters.candidates.map((candidate, index) => (
+                <li key={`${candidate.rawKey || "candidate"}-${index}`}>
+                  {candidate.displayLabel}：{candidate.normalizedDisplayValue || "无可显示值"}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">

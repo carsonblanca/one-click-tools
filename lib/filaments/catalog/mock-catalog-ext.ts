@@ -14,8 +14,6 @@ export type CatalogRecord = {
   productLine: string;
   productLineId?: string;
   parameterStatus?: "complete" | "partial" | "missing";
-  normalizedParameters?: Record<string, string>;
-  catalogSource?: "static" | "published";
   color: CatalogColor;
   spool: SpoolSpec;
   rating: number;

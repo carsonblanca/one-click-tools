@@ -4,15 +4,18 @@ import PageShell from "@/components/PageShell";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import FilamentDetailPageContent from "@/components/filaments/FilamentDetailPageContent";
-import { getVisibleCatalogRecord } from "@/lib/filaments/catalog/published-visible-record";
+import { CATALOG_RECORDS, getCatalogRecord } from "@/lib/filaments/catalog";
 import { getLocalizedFilamentColorName } from "@/lib/filaments/catalog/localization";
 
 const baseUrl = "https://one-click-tools.com";
-export const dynamic = "force-dynamic";
+
+export function generateStaticParams() {
+  return CATALOG_RECORDS.map((record) => ({ filamentId: record.id }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ filamentId: string }> }): Promise<Metadata> {
   const { filamentId } = await params;
-  const record = await getVisibleCatalogRecord(filamentId);
+  const record = getCatalogRecord(filamentId);
   if (!record) return { title: "耗材未找到 | OneClick Tools" };
 
   const colorName = getLocalizedFilamentColorName(record.color, "zh-cn");
@@ -31,13 +34,13 @@ export async function generateMetadata({ params }: { params: Promise<{ filamentI
 
 export default async function SimplifiedChineseFilamentDetailPage({ params }: { params: Promise<{ filamentId: string }> }) {
   const { filamentId } = await params;
-  const record = await getVisibleCatalogRecord(filamentId);
+  const record = getCatalogRecord(filamentId);
   if (!record) redirect("/zh-cn/filaments");
 
   return (
     <PageShell>
       <SiteHeader locale="zh-cn" />
-      <FilamentDetailPageContent filamentId={filamentId} initialRecord={record} locale="zh-cn" />
+      <FilamentDetailPageContent filamentId={filamentId} locale="zh-cn" />
       <SiteFooter locale="zh-cn" />
     </PageShell>
   );

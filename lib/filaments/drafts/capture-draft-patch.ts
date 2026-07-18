@@ -1,5 +1,4 @@
 import {
-  normalizeParameterCandidate,
   normalizeParameterFields,
   normalizeStoredParameters,
 } from "@/lib/filaments/parameters/normalized-parameters";
@@ -134,13 +133,12 @@ export function mergeCaptureDraftData(
       parameters: {
         ...parameters,
         fields: normalizedCurrent.fields,
-        candidates: normalizedCurrent.candidates,
         unmappedFields: normalizedCurrent.unmappedFields,
         ...(parameterPatch.fields
           ? { fields: { ...normalizedCurrent.fields, ...normalizedPatchFields.fields } }
           : {}),
         ...(parameterPatch.candidates
-          ? { candidates: parameterPatch.candidates.map(normalizeParameterCandidate) }
+          ? { candidates: parameterPatch.candidates }
           : {}),
         ...(parameterPatch.sourceEvidence ? { sourceEvidence: parameterPatch.sourceEvidence } : {}),
         ...(parameterPatch.status !== undefined ? { status: parameterPatch.status } : {}),

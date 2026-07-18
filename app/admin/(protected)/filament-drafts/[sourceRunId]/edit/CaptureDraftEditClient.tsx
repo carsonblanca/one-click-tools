@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import {
-  FILAMENT_PARAMETER_DEFINITIONS,
-  normalizeParameterCandidate,
-} from "@/lib/filaments/parameters/normalized-parameters";
+import { FILAMENT_PARAMETER_DEFINITIONS } from "@/lib/filaments/parameters/normalized-parameters";
 
 type ParameterRow = {
   id: string;
@@ -13,23 +10,6 @@ type ParameterRow = {
   label: string;
   category: string;
   value: string;
-};
-
-const candidateStatusLabels: Record<string, string> = {
-  approved: "已批准候选",
-  candidate: "候选",
-  conflict: "身份或数值冲突",
-  sku_candidate: "SKU 候选",
-  rejected: "污染/已拒绝",
-  unmapped: "待归类",
-};
-
-const sourceTypeLabels: Record<string, string> = {
-  sku: "SKU",
-  ocr: "OCR",
-  structured_capture: "结构化采集",
-  contamination: "来源污染",
-  unknown: "来源未识别",
 };
 
 function text(value: unknown): string {
@@ -69,18 +49,14 @@ export default function CaptureDraftEditClient({
       .map((row) => [row.key.trim(), row.value]),
   ), [rows]);
   const hasChanges = Object.keys(changedFields).length > 0;
-  const normalizedCandidates = useMemo(
-    () => initialCandidates.map(normalizeParameterCandidate),
-    [initialCandidates],
-  );
   const candidatesByKey = useMemo(() => {
-    const result = new Map<string, ReturnType<typeof normalizeParameterCandidate>[]>();
-    for (const candidate of normalizedCandidates) {
-      const key = candidate.canonicalKey || "unmapped";
+    const result = new Map<string, Array<Record<string, unknown>>>();
+    for (const candidate of initialCandidates) {
+      const key = text(candidate.canonicalKey) || "unmapped";
       result.set(key, [...(result.get(key) || []), candidate]);
     }
     return result;
-  }, [normalizedCandidates]);
+  }, [initialCandidates]);
 
   function updateRow(id: string, patch: Partial<ParameterRow>) {
     setRows((current) => current.map((row) => row.id === id ? { ...row, ...patch } : row));
@@ -134,7 +110,7 @@ export default function CaptureDraftEditClient({
             <div className="grid gap-2 sm:grid-cols-[minmax(200px,1fr)_minmax(220px,2fr)] sm:items-center">
               <div>
                 <p className="text-sm font-medium">{row.label}</p>
-                <p className="text-xs text-slate-500">{row.key} · {row.category}</p>
+                <p className="text-xs text-slate-500">{row.category}</p>
               </div>
               <input
                 aria-label={`${row.label}参数值`}
@@ -146,8 +122,7 @@ export default function CaptureDraftEditClient({
             </div>
             {candidates.map((candidate, index) => (
               <p className="mt-1 text-xs text-amber-700" key={`${row.key}-${index}`}>
-                {candidateStatusLabels[candidate.candidateStatus] || candidate.candidateStatus}：
-                {candidate.normalizedDisplayValue || "无可显示值"} · {sourceTypeLabels[candidate.sourceType] || candidate.sourceType}
+                候选参考：{text(candidate.normalizedDisplayValue) || "无可显示值"}
               </p>
             ))}
           </div>
@@ -161,9 +136,9 @@ export default function CaptureDraftEditClient({
         ))}
         {candidatesByKey.get("unmapped")?.map((candidate, index) => (
           <div className="rounded border border-amber-200 bg-amber-50 p-3" key={`unmapped-candidate-${index}`}>
-            <p className="text-sm font-medium text-amber-900">待归类候选</p>
+            <p className="text-sm font-medium text-amber-900">原始候选参数</p>
             <p className="text-xs text-amber-700">
-              {text(candidate.field) || text(candidate.key) || "未知字段"}：{candidate.normalizedDisplayValue || "无可显示值"}
+              {text(candidate.rawKey) || text(candidate.field) || text(candidate.key) || "未知字段"}：{text(candidate.normalizedDisplayValue) || "无可显示值"}
             </p>
           </div>
         ))}
