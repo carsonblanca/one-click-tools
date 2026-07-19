@@ -54,7 +54,7 @@ For an existing capture draft regression:
 
 1. read the draft first and record its `id`, `sourceRunId`, status, product defaults, colors, canonical colors, images, and unknown fields;
 2. require the caller to provide the exact target `sourceRunId`;
-3. PATCH only the generated `draft-patch.json` to `/api/admin/filament-drafts/[sourceRunId]`;
+3. PATCH only the generated `draft-patch.json` to `/api/admin/filament-drafts/[sourceRunId]`; its nonempty evidence replacement is product-scoped and cannot update colors, images, SKUs, identity, or publication state;
 4. GET the same endpoint after PATCH and save that JSON outside the repository;
 5. verify it against the FIP:
 

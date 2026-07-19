@@ -27,6 +27,7 @@ export type CaptureDraftPatch = {
     netWeightG?: number;
   };
   parameters?: CaptureParameterPatch;
+  evidence?: Array<Record<string, unknown>>;
   colors?: Array<{
     domIndex: number;
     displayStatus?: "pending" | "approved" | "hidden";
@@ -103,15 +104,23 @@ export function mergeCaptureDraftData(
   if (!isCaptureDraftData(current)) {
     throw new CaptureDraftPatchError("仅 capture 草稿可以使用此安全编辑入口。");
   }
-  if (!patch.parameters && !patch.colors && !patch.identityScope && !patch.productDefaults) {
+  if (!patch.parameters && !patch.colors && !patch.evidence && !patch.identityScope && !patch.productDefaults) {
     throw new CaptureDraftPatchError("无有效更新字段。");
   }
-  const allowedPatchKeys = new Set(["parameters", "colors", "identityScope", "productDefaults"]);
+  const allowedPatchKeys = new Set(["parameters", "colors", "evidence", "identityScope", "productDefaults"]);
   if (Object.keys(patch).some((key) => !allowedPatchKeys.has(key))) {
     throw new CaptureDraftPatchError("请求包含不允许更新的字段。");
   }
   if (patch.colors?.length === 0) {
     throw new CaptureDraftPatchError("不允许使用空数组清空颜色。");
+  }
+  if (patch.evidence?.length === 0) {
+    throw new CaptureDraftPatchError("不允许使用空数组清空证据。");
+  }
+  if (patch.evidence && (!Array.isArray(patch.evidence) || patch.evidence.some((item) => (
+    !item || typeof item !== "object" || Array.isArray(item)
+  )))) {
+    throw new CaptureDraftPatchError("证据更新格式无效。");
   }
   if (patch.colors && (!Array.isArray(patch.colors) || patch.colors.some((color) => (
     !color
@@ -216,6 +225,20 @@ export function mergeCaptureDraftData(
         ...patch.productDefaults,
       },
     };
+  }
+
+  if (patch.evidence) {
+    const currentProductLineId = text(objectValue(next.productLine).productLineId);
+    const identityScope = patch.identityScope || {
+      brandId: text(objectValue(next.brand).brandId) || text(objectValue(next.brand).id),
+      productLineId: currentProductLineId,
+      productKey: text(next.productKey) || currentProductLineId,
+    };
+    const scopedEvidence = scopeRecords(patch.evidence, identityScope) as Array<Record<string, unknown>>;
+    if (scopedEvidence.length !== patch.evidence.length) {
+      throw new CaptureDraftPatchError("证据包含其他 productLineId，已拒绝更新。");
+    }
+    next = { ...next, evidence: scopedEvidence };
   }
 
   if (patch.identityScope) {

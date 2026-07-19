@@ -573,7 +573,7 @@ const evidence = [
     extractedAssetId: `assets/${specTable.sourcePath}`,
     extractionMethod: "existing_ocr_summary",
     cropCoordinates: null,
-    ocrText: `${productLine} official specification table: ${parameters.length} quantitative parameters.`,
+    ocrText: `${productLine} official specification table: ${parameters.filter((item) => item.sourceFile === specTable.sourcePath).length} quantitative parameters.`,
     ocrConfidence: 0.82,
     fieldBindings: parameters.filter((item) => item.sourceFile === specTable.sourcePath).map((item) => item.canonicalKey || item.field),
     notes: "Scoped to the matching productLineId; full OCR text intentionally omitted.",
@@ -666,6 +666,7 @@ const draftPatch = {
     status: requiredMissing.length ? "official_partial" : "official",
     reviewNote: "Imported from the official specification table scoped to this productLineId.",
   },
+  evidence,
 };
 
 const outputFiles = {
