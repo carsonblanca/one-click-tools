@@ -5,6 +5,7 @@ import { requireAdminScope } from "@/lib/admin/auth";
 import { isCaptureDraftData } from "@/lib/filaments/drafts/capture-draft-patch";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { normalizeStoredParameters } from "@/lib/filaments/parameters/normalized-parameters";
+import { manufacturerColorDisplay } from "@/lib/filaments/colors/color-display";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -150,6 +151,7 @@ export default async function FilamentDraftPage({
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {colors.map((color, index) => {
             const imageUrl = text(color.imageCandidateUrl);
+            const display = manufacturerColorDisplay(color);
             return (
               <article className="flex gap-3 rounded border border-slate-200 p-3" key={`${text(color.officialColorCode)}-${index}`}>
                 {imageUrl ? (
@@ -157,9 +159,9 @@ export default async function FilamentDraftPage({
                   <img alt="" className="h-16 w-16 shrink-0 object-cover" src={imageUrl} />
                 ) : <div className="h-16 w-16 shrink-0 bg-slate-100" />}
                 <div>
-                  <p className="font-medium">{text(color.nameZh) || "颜色名称待补充"}</p>
-                  <p className="text-sm text-slate-500">{text(color.nameEn) || "英文名待补充"}</p>
-                  <p className="text-sm">{text(color.officialColorCode) || "暂无官方色号"}</p>
+                  <p className="font-medium">{display.nameZh}</p>
+                  {display.nameEn ? <p className="text-sm text-slate-500">{display.nameEn}</p> : null}
+                  {display.manufacturerCode ? <p className="text-sm">厂家颜色编码：{display.manufacturerCode}</p> : null}
                 </div>
               </article>
             );

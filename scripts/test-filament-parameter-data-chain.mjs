@@ -4,7 +4,13 @@ import {
   fieldsAcceptedFromCandidates,
   normalizeStoredParameters,
   resolveCanonicalParameterKey,
+  unmappedFieldsAcceptedFromCandidates,
 } from "../lib/filaments/parameters/normalized-parameters.ts";
+import { manufacturerColorDisplay } from "../lib/filaments/colors/color-display.ts";
+import {
+  productLineScopeMatches,
+  recordsForProductLine,
+} from "../lib/filaments/identity/product-scope.ts";
 
 const expectedKeys = [
   "materialType",
@@ -14,8 +20,13 @@ const expectedKeys = [
   "diameterTolerance",
   "meltFlowIndex",
   "nozzleTemperature",
+  "nozzleDiameter",
   "bedTemperature",
+  "coolingFan",
   "printingSpeed",
+  "retractionDistance",
+  "retractionSpeed",
+  "buildPlateSurface",
   "tensileStrength",
   "elongationAtBreak",
   "impactStrength",
@@ -36,6 +47,10 @@ assert.deepEqual(
 assert.equal(resolveCanonicalParameterKey("线径"), "filamentDiameter");
 assert.equal(resolveCanonicalParameterKey("printSpeed"), "printingSpeed");
 assert.equal(resolveCanonicalParameterKey("dryingDuration"), "dryingTime");
+assert.equal(resolveCanonicalParameterKey("喷嘴口径"), "nozzleDiameter");
+assert.equal(resolveCanonicalParameterKey("底板温度"), "bedTemperature");
+assert.equal(resolveCanonicalParameterKey("回抽速度"), "retractionSpeed");
+assert.equal(resolveCanonicalParameterKey("Build Plate Material"), "buildPlateSurface");
 
 const historicalChineseKey = normalizeStoredParameters({
   fields: { "线径": "1.75 mm" },
@@ -60,6 +75,12 @@ assert.equal(
   unknown.rows.find((row) => row.canonicalKey === "vendorMysteryValue")?.zhCNLabel,
   "vendorMysteryValue",
 );
+assert.deepEqual(unmappedFieldsAcceptedFromCandidates([{
+  field: "厂家透光率",
+  normalizedValue: "42",
+  unit: "%",
+  reviewStatus: "official",
+}]), { 厂家透光率: "42 %" }, "unknown official key/value pairs must be retained losslessly");
 
 const trusted = fieldsAcceptedFromCandidates([
   {
@@ -114,5 +135,42 @@ assert.deepEqual(officialTable, {
   unnotchedImpactStrength: "24–41 kJ/m²",
   notchedImpactStrength: "2–5 kJ/m²",
 });
+
+assert.deepEqual(fieldsAcceptedFromCandidates([
+  { field: "diameterTolerance", normalizedValue: "±0.03", unit: "mm", reviewStatus: "official" },
+  { field: "printingSpeed", normalizedValue: "≤150", unit: "mm/s", reviewStatus: "official" },
+  { field: "nozzleDiameter", normalizedValue: "≥0.2", unit: "mm", reviewStatus: "official" },
+  { field: "coolingFan", normalizedValue: "0–50", unit: "%", reviewStatus: "official" },
+]), {
+  diameterTolerance: "±0.03 mm",
+  printingSpeed: "≤150 mm/s",
+  nozzleDiameter: "≥0.2 mm",
+  coolingFan: "0–50 %",
+});
+
+const impactRows = normalizeStoredParameters({
+  fields: {
+    notchedImpactStrength: "2–5 kJ/m²",
+    unnotchedImpactStrength: "24–41 kJ/m²",
+  },
+}).rows;
+assert.equal(impactRows.some((row) => row.canonicalKey === "impactStrength"), false);
+
+assert.deepEqual(manufacturerColorDisplay({
+  nameZh: "哑光黑色",
+  displayNameEn: null,
+  officialColorCode: "BLK",
+}), {
+  nameZh: "哑光黑色",
+  nameEn: null,
+  manufacturerCode: "BLK",
+});
+
+const scoped = recordsForProductLine([
+  { field: "density", productLineId: "kexcelled-k5-petg-m" },
+  { field: "density", productLineId: "kexcelled-k8-pc" },
+], "kexcelled-k5-petg-m");
+assert.equal(scoped.length, 1, "foreign productLineId candidates must not be re-scoped into the current product");
+assert.equal(productLineScopeMatches({ productLineId: "kexcelled-k8-pc" }, "kexcelled-k5-petg-m"), false);
 
 console.log("filament minimal parameter mapping tests passed");

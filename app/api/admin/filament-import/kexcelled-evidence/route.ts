@@ -24,6 +24,7 @@ import {
 import {
   fieldsAcceptedFromCandidates,
   normalizeParameterCandidate,
+  unmappedFieldsAcceptedFromCandidates,
 } from "@/lib/filaments/parameters/normalized-parameters";
 
 export const runtime = "nodejs";
@@ -107,6 +108,7 @@ function draftData(input: {
   const colors = mapColors(input.colors, input.images, input.assetKeys);
   const candidates = input.parameters.map(normalizeParameterCandidate);
   const fields = fieldsAcceptedFromCandidates(candidates);
+  const unmappedFields = unmappedFieldsAcceptedFromCandidates(candidates);
   return {
     source: { zipFilename: input.fileName },
     productKey,
@@ -125,7 +127,7 @@ function draftData(input: {
     parameters: {
       fields,
       candidates,
-      unmappedFields: {},
+      unmappedFields,
       status: Object.keys(fields).length ? "official_partial" : "missing",
     },
     images: input.images.map((image) => ({

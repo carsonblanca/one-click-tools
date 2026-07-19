@@ -36,13 +36,15 @@ Read the JSON preview printed to stdout. Stop before upload if identity is ambig
 The converter:
 
 1. rejects unsafe archive paths and missing capture files;
-2. extracts the captured brand, product line, material, SKU diameter/weight, colors, color codes, mapped images, and recognized numeric candidates;
-3. retains only concise source excerpts, not the original ZIP or full OCR transcript;
-4. marks a specification table as conflicting when its own product label differs from the captured product identity;
-5. scans the committed product-line catalog for an exact display-name match;
-6. emits `ready_for_review` for duplicates or required-data failures and otherwise emits the automatic-publication eligibility decision.
+2. extracts the captured brand, product line, material, colors, manufacturer color codes, mapped images, and recognized official parameter candidates;
+3. on macOS, scans detail images omitted from the ZIP's OCR output with built-in Vision and accepts a table only when it contains the exact current product identity plus an official recommended-print heading;
+4. normalizes known parameter headings through the shared canonical dictionary, while retaining an unknown but explicit official key/value row in `unmappedFields` instead of treating the dictionary as a whitelist;
+5. keeps every candidate, image, color, SKU relation, and evidence summary scoped to the same `productLineId` and drops a record already scoped to another product line;
+6. retains only concise source excerpts, not the original ZIP or full OCR transcript;
+7. scans the committed product-line catalog for an exact display-name match;
+8. emits `ready_for_review` for duplicates or required-data failures and otherwise emits the automatic-publication eligibility decision.
 
-It also emits `draft-patch.json`. For an explicitly identified existing capture draft, send that file unchanged to `PATCH /api/admin/filament-drafts/[sourceRunId]`; never call the creation POST for an existing draft. SKU diameter and weight remain parameter candidates and do not become product defaults.
+It also emits `draft-patch.json`. For an explicitly identified existing capture draft, send that file unchanged to `PATCH /api/admin/filament-drafts/[sourceRunId]`; never call the creation POST for an existing draft. Diameter and weight inferred only from an SKU remain candidates; the same values may become official fields and product defaults when an identity-matched official specification table confirms them.
 
 ## Import and publish decision
 

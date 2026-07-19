@@ -2,6 +2,10 @@ import {
   normalizeParameterFields,
   normalizeStoredParameters,
 } from "@/lib/filaments/parameters/normalized-parameters";
+import {
+  productLineScopeMatches,
+  recordsForProductLine,
+} from "@/lib/filaments/identity/product-scope";
 
 export type CaptureParameterPatch = {
   fields?: Record<string, unknown>;
@@ -49,12 +53,15 @@ function text(value: unknown): string {
 
 function scopeRecords(value: unknown, identityScope: NonNullable<CaptureDraftPatch["identityScope"]>) {
   if (!Array.isArray(value)) return value;
-  return value.map((item) => ({
-    ...objectValue(item),
-    brandId: identityScope.brandId,
-    productLineId: identityScope.productLineId,
-    productKey: identityScope.productKey,
-  }));
+  return recordsForProductLine(value, identityScope.productLineId).map((item) => {
+    const record = objectValue(item);
+    return {
+      ...record,
+      brandId: identityScope.brandId,
+      productLineId: identityScope.productLineId,
+      productKey: identityScope.productKey,
+    };
+  });
 }
 
 export function isCaptureDraftData(value: unknown): boolean {
@@ -122,6 +129,9 @@ export function mergeCaptureDraftData(
       || productKey !== productLineId
       || !productLineId.startsWith(`${brandId}-`)) {
       throw new CaptureDraftPatchError("产品身份作用域格式无效。");
+    }
+    if (!productLineScopeMatches(objectValue(current.productLine), productLineId)) {
+      throw new CaptureDraftPatchError("请求产品与当前草稿 productLineId 不一致。");
     }
   }
   if (patch.productDefaults && (
