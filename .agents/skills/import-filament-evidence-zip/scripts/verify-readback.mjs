@@ -56,6 +56,9 @@ const colorImageRelations = canonicalColors.filter((color) => {
   const item = objectValue(color);
   return Boolean(String(item.imageCandidateUrl || item.localImagePath || "").trim());
 }).length;
+const identityScope = objectValue(patch.identityScope);
+const expectedMissing = arrayValue(expected.missingProductDefaults);
+const scopedCollections = [colors, canonicalColors, images, arrayValue(data.evidence), candidates, sourceEvidence];
 
 const checks = {
   sourceRunId: !options["source-run-id"] || draft.source_run_id === options["source-run-id"],
@@ -66,8 +69,17 @@ const checks = {
   colorCount: colors.length === Number(expected.colorCount),
   canonicalColorCount: canonicalColors.length === Number(expected.colorCount),
   colorImageRelationCount: colorImageRelations === Number(expected.colorImageRelationCount),
-  filamentDiameterMissing: productLine.diameterMm == null,
-  netWeightMissing: productLine.netWeightG == null,
+  filamentDiameterMissing: expectedMissing.includes("filamentDiameter")
+    ? productLine.diameterMm == null
+    : productLine.diameterMm != null,
+  netWeightMissing: expectedMissing.includes("netWeight")
+    ? productLine.netWeightG == null
+    : productLine.netWeightG != null,
+  productLineId: !identityScope.productLineId || productLine.productLineId === identityScope.productLineId,
+  productKey: !identityScope.productKey || data.productKey === identityScope.productKey,
+  identityScoped: !identityScope.productLineId || scopedCollections.every((items) => items.every((item) => (
+    objectValue(item).productLineId === identityScope.productLineId
+  ))),
   statusUnpublished: draft.status === "draft" && draft.publication_status === "draft",
 };
 
@@ -85,6 +97,8 @@ const summary = {
   colorImageRelationCount: colorImageRelations,
   filamentDiameterMissing: productLine.diameterMm == null,
   netWeightMissing: productLine.netWeightG == null,
+  productLineId: productLine.productLineId,
+  productKey: data.productKey,
   status: draft.status,
   publicationStatus: draft.publication_status,
   failedChecks: failed,

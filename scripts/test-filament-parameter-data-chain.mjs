@@ -12,21 +12,26 @@ const expectedKeys = [
   "netWeight",
   "density",
   "diameterTolerance",
+  "meltFlowIndex",
   "nozzleTemperature",
   "bedTemperature",
   "printingSpeed",
   "tensileStrength",
   "elongationAtBreak",
   "impactStrength",
+  "unnotchedImpactStrength",
+  "notchedImpactStrength",
   "flexuralStrength",
+  "flexuralModulus",
   "heatDeflectionTemperature",
+  "vicatSofteningTemperature",
   "dryingTemperature",
   "dryingTime",
 ];
 assert.deepEqual(
   FILAMENT_PARAMETER_DEFINITIONS.map((item) => item.canonicalKey),
   expectedKeys,
-  "the first-stage dictionary must stay limited to the 15 core fields",
+  "the first-stage dictionary must stay limited to the approved core and official-table fields",
 );
 assert.equal(resolveCanonicalParameterKey("线径"), "filamentDiameter");
 assert.equal(resolveCanonicalParameterKey("printSpeed"), "printingSpeed");
@@ -98,5 +103,16 @@ const unsafe = fieldsAcceptedFromCandidates([
   },
 ]);
 assert.deepEqual(unsafe, {}, "SKU, conflict, and hidden candidates must not become fields");
+
+const officialTable = fieldsAcceptedFromCandidates([
+  { field: "meltFlowIndex", normalizedValue: "6–16", unit: "g/10min", reviewStatus: "official" },
+  { field: "unnotchedImpactStrength", normalizedValue: "24–41", unit: "kJ/m²", reviewStatus: "official" },
+  { field: "notchedImpactStrength", normalizedValue: "2–5", unit: "kJ/m²", reviewStatus: "official" },
+]);
+assert.deepEqual(officialTable, {
+  meltFlowIndex: "6–16 g/10min",
+  unnotchedImpactStrength: "24–41 kJ/m²",
+  notchedImpactStrength: "2–5 kJ/m²",
+});
 
 console.log("filament minimal parameter mapping tests passed");

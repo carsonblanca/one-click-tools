@@ -5,6 +5,7 @@ import {
 
 export type CaptureParameterPatch = {
   fields?: Record<string, unknown>;
+  unmappedFields?: Record<string, unknown>;
   candidates?: Array<Record<string, unknown>>;
   sourceEvidence?: Array<Record<string, unknown>>;
   status?: "missing" | "official" | "official_partial" | "inherited_unverified";
@@ -12,6 +13,15 @@ export type CaptureParameterPatch = {
 };
 
 export type CaptureDraftPatch = {
+  identityScope?: {
+    brandId: string;
+    productLineId: string;
+    productKey: string;
+  };
+  productDefaults?: {
+    diameterMm?: number;
+    netWeightG?: number;
+  };
   parameters?: CaptureParameterPatch;
   colors?: Array<{
     domIndex: number;
@@ -35,6 +45,16 @@ function objectValue(value: unknown): Record<string, unknown> {
 
 function text(value: unknown): string {
   return typeof value === "string" ? value : "";
+}
+
+function scopeRecords(value: unknown, identityScope: NonNullable<CaptureDraftPatch["identityScope"]>) {
+  if (!Array.isArray(value)) return value;
+  return value.map((item) => ({
+    ...objectValue(item),
+    brandId: identityScope.brandId,
+    productLineId: identityScope.productLineId,
+    productKey: identityScope.productKey,
+  }));
 }
 
 export function isCaptureDraftData(value: unknown): boolean {
@@ -76,10 +96,10 @@ export function mergeCaptureDraftData(
   if (!isCaptureDraftData(current)) {
     throw new CaptureDraftPatchError("仅 capture 草稿可以使用此安全编辑入口。");
   }
-  if (!patch.parameters && !patch.colors) {
+  if (!patch.parameters && !patch.colors && !patch.identityScope && !patch.productDefaults) {
     throw new CaptureDraftPatchError("无有效更新字段。");
   }
-  const allowedPatchKeys = new Set(["parameters", "colors"]);
+  const allowedPatchKeys = new Set(["parameters", "colors", "identityScope", "productDefaults"]);
   if (Object.keys(patch).some((key) => !allowedPatchKeys.has(key))) {
     throw new CaptureDraftPatchError("请求包含不允许更新的字段。");
   }
@@ -95,6 +115,23 @@ export function mergeCaptureDraftData(
   )))) {
     throw new CaptureDraftPatchError("颜色更新格式无效。");
   }
+  if (patch.identityScope) {
+    const { brandId, productLineId, productKey } = patch.identityScope;
+    if (!/^[a-z0-9-]+$/.test(brandId)
+      || !/^[a-z0-9-]+$/.test(productLineId)
+      || productKey !== productLineId
+      || !productLineId.startsWith(`${brandId}-`)) {
+      throw new CaptureDraftPatchError("产品身份作用域格式无效。");
+    }
+  }
+  if (patch.productDefaults && (
+    typeof patch.productDefaults !== "object"
+    || Array.isArray(patch.productDefaults)
+    || Object.keys(patch.productDefaults).some((key) => !["diameterMm", "netWeightG"].includes(key))
+    || Object.values(patch.productDefaults).some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)
+  )) {
+    throw new CaptureDraftPatchError("产品默认规格格式无效。");
+  }
 
   let next = current;
   if (patch.parameters) {
@@ -107,12 +144,15 @@ export function mergeCaptureDraftData(
     if (parameterPatch.candidates?.length === 0 || parameterPatch.sourceEvidence?.length === 0) {
       throw new CaptureDraftPatchError("不允许使用空数组清空参数证据。");
     }
-    const allowedKeys = new Set(["fields", "candidates", "sourceEvidence", "status", "reviewNote"]);
+    const allowedKeys = new Set(["fields", "unmappedFields", "candidates", "sourceEvidence", "status", "reviewNote"]);
     if (Object.keys(parameterPatch).some((key) => !allowedKeys.has(key))) {
       throw new CaptureDraftPatchError("参数请求包含不允许更新的字段。");
     }
     if (parameterPatch.fields && (typeof parameterPatch.fields !== "object" || Array.isArray(parameterPatch.fields))) {
       throw new CaptureDraftPatchError("参数字段格式无效。");
+    }
+    if (parameterPatch.unmappedFields && (typeof parameterPatch.unmappedFields !== "object" || Array.isArray(parameterPatch.unmappedFields))) {
+      throw new CaptureDraftPatchError("其他官方参数格式无效。");
     }
     const normalizedPatchFields = normalizeParameterFields(parameterPatch.fields);
     if (Object.keys(normalizedPatchFields.unmappedFields).length) {
@@ -137,6 +177,9 @@ export function mergeCaptureDraftData(
         ...(parameterPatch.fields
           ? { fields: { ...normalizedCurrent.fields, ...normalizedPatchFields.fields } }
           : {}),
+        ...(parameterPatch.unmappedFields
+          ? { unmappedFields: { ...normalizedCurrent.unmappedFields, ...normalizeParameterFields(parameterPatch.unmappedFields).unmappedFields } }
+          : {}),
         ...(parameterPatch.candidates
           ? { candidates: parameterPatch.candidates }
           : {}),
@@ -152,6 +195,44 @@ export function mergeCaptureDraftData(
       ...next,
       colors: mergeColorReview(current.colors, patch.colors),
       canonicalColors: mergeColorReview(current.canonicalColors, patch.colors),
+    };
+  }
+
+  if (patch.productDefaults) {
+    next = {
+      ...next,
+      productLine: {
+        ...objectValue(next.productLine),
+        ...patch.productDefaults,
+      },
+    };
+  }
+
+  if (patch.identityScope) {
+    const identityScope = patch.identityScope;
+    const parameters = objectValue(next.parameters);
+    next = {
+      ...next,
+      productKey: identityScope.productKey,
+      brand: {
+        ...objectValue(next.brand),
+        id: identityScope.brandId,
+        brandId: identityScope.brandId,
+      },
+      productLine: {
+        ...objectValue(next.productLine),
+        productLineId: identityScope.productLineId,
+        productKey: identityScope.productKey,
+      },
+      colors: scopeRecords(next.colors, identityScope),
+      canonicalColors: scopeRecords(next.canonicalColors, identityScope),
+      images: scopeRecords(next.images, identityScope),
+      evidence: scopeRecords(next.evidence, identityScope),
+      parameters: {
+        ...parameters,
+        candidates: scopeRecords(parameters.candidates, identityScope),
+        sourceEvidence: scopeRecords(parameters.sourceEvidence, identityScope),
+      },
     };
   }
 
