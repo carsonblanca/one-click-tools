@@ -291,25 +291,3 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     updated_at: string;
   } | null;
 }
-
-export async function getFilamentDraftApplySafetySnapshot(sourceRunId: string) {
-  const client = getServerSupabaseClient();
-  const [importsResult, draftsResult, matchingResult] = await Promise.all([
-    client.from("filament_imports").select("id", { count: "exact", head: true }),
-    client.from("filament_drafts").select("id", { count: "exact", head: true }),
-    client
-      .from("filament_drafts")
-      .select("id", { count: "exact", head: true })
-      .eq("source_run_id", sourceRunId),
-  ]);
-
-  if (importsResult.error || draftsResult.error || matchingResult.error) {
-    throw repositoryError("count_apply_safety");
-  }
-
-  return {
-    importCount: importsResult.count ?? 0,
-    draftCount: draftsResult.count ?? 0,
-    matchingDraftCount: matchingResult.count ?? 0,
-  };
-}
