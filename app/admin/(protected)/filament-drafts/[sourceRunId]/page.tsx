@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
+import { readAdminSession } from "@/lib/admin/session";
 import { isCaptureDraftData } from "@/lib/filaments/drafts/capture-draft-patch";
+import PublishDraftButton from "./PublishDraftButton";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { normalizeStoredParameters } from "@/lib/filaments/parameters/normalized-parameters";
 import { manufacturerColorDisplay } from "@/lib/filaments/colors/color-display";
@@ -53,6 +55,8 @@ export default async function FilamentDraftPage({
   params: Promise<{ sourceRunId: string }>;
 }) {
   await requireAdminScope("candidate.view");
+  const session = await readAdminSession();
+  const isAdmin = session?.role === "admin";
   const { sourceRunId } = await params;
   const requestId = randomUUID();
   let draft;
@@ -104,6 +108,23 @@ export default async function FilamentDraftPage({
             编辑 capture 草稿
           </Link>
         ) : null}
+
+        <div className="mt-5 rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-slate-700">
+              发布状态：
+              <span className="ml-1 font-medium">
+                {draft.publication_status === "published" ? "已发布" : "未发布"}
+              </span>
+            </div>
+            <PublishDraftButton
+              isAdmin={isAdmin}
+              sourceRunId={sourceRunId}
+              publicationStatus={draft.publication_status}
+              productLineName={draft.product_line_name || text(productLine.name)}
+            />
+          </div>
+        </div>
       </header>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
@@ -113,6 +134,7 @@ export default async function FilamentDraftPage({
           <div><dt className="text-xs text-slate-500">净重</dt><dd>{String(productLine.netWeightG ?? "—")} g</dd></div>
           <div><dt className="text-xs text-slate-500">草稿 ID</dt><dd className="break-all">{draft.id}</dd></div>
           <div><dt className="text-xs text-slate-500">状态</dt><dd>{draft.status}</dd></div>
+          <div><dt className="text-xs text-slate-500">发布状态</dt><dd>{draft.publication_status}</dd></div>
         </dl>
       </section>
 
