@@ -362,6 +362,7 @@ function buildR3dRecords(): CatalogRecord[] {
 const kexcelledColorRecords = buildKexcelledRecords();
 
 export const CATALOG_RECORDS: CatalogRecord[] = [];
+CATALOG_RECORDS.push(...kexcelledColorRecords, ...buildR3dRecords());
 
 export function getRecordsByBrand(brand: string): CatalogRecord[] {
   return CATALOG_RECORDS.filter((r) => r.brand === brand);

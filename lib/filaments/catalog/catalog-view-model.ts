@@ -153,8 +153,6 @@ export function filterCatalogRecords({
   selectedColorFamily,
   minRating,
   selectedFinish,
-  hasPhysicalSwatch,
-  hasVerifiedPreset,
   selectedPerformanceTags,
   searchHex,
 }: {
@@ -164,8 +162,6 @@ export function filterCatalogRecords({
   selectedColorFamily: ColorFamily | null;
   minRating: number;
   selectedFinish: Finish | null;
-  hasPhysicalSwatch: boolean;
-  hasVerifiedPreset: boolean;
   selectedPerformanceTags: PerformanceTag[];
   searchHex: string | null;
 }, sourceRecords: CatalogRecord[] = CATALOG_RECORDS) {
@@ -188,12 +184,6 @@ export function filterCatalogRecords({
   }
   if (selectedFinish) {
     records = records.filter((record) => record.color.finish === selectedFinish);
-  }
-  if (hasPhysicalSwatch) {
-    records = records.filter((record) => record.color.hasPhysicalSwatch);
-  }
-  if (hasVerifiedPreset) {
-    records = records.filter((record) => record.color.digitalSwatch?.sourceType === "manufacturer");
   }
   if (selectedPerformanceTags.length > 0) {
     records = records.filter((record) =>
@@ -223,7 +213,146 @@ export function resolveCatalogColorInput(input: string) {
   const rgbParts = trimmed.match(/\d+/g);
   if (rgbParts && rgbParts.length >= 3) {
     const [r, g, b] = rgbParts.slice(0, 3).map((part) => Math.max(0, Math.min(255, Number(part))));
-    return { family: null, hex: `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase() };
+    return { family: resolveColorFamily(trimmed) as ColorFamily | null, hex: `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase() };
   }
   return { family: resolveColorFamily(trimmed) as ColorFamily | null, hex: null };
+}
+
+/* ───────────── Color-card catalog helpers ───────────── */
+
+export const PRINT_PARAMETER_KEYS = new Set([
+  "nozzleTemperature",
+  "nozzleDiameter",
+  "bedTemperature",
+  "coolingFan",
+  "printingSpeed",
+  "retractionDistance",
+  "retractionSpeed",
+  "dryingTemperature",
+  "dryingTime",
+  "buildPlateSurface",
+]);
+
+export type PublishedParameter = {
+  canonicalKey: string;
+  labelZh: string;
+  value: string;
+};
+
+export function splitPublishedParameters(parameters: PublishedParameter[]) {
+  const product: PublishedParameter[] = [];
+  const print: PublishedParameter[] = [];
+  for (const parameter of parameters) {
+    if (PRINT_PARAMETER_KEYS.has(parameter.canonicalKey)) {
+      print.push(parameter);
+    } else {
+      product.push(parameter);
+    }
+  }
+  return { product, print };
+}
+
+export type ColorCard = {
+  id: string;
+  productLineId: string;
+  productLineName: string;
+  brand: string;
+  materialType: string;
+  variant: string;
+  colorNameZh: string;
+  colorNameEn: string;
+  officialColorCode: string;
+  imageUrl: string | null;
+  fallbackImageUrl: string | null;
+  detailUrl: string;
+};
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeForKey(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\-_]/g, "");
+}
+
+function colorCardId(productLineId: string, color: { id?: string; officialColorCode?: string; colorNameZh?: string }) {
+  return (
+    text(color.id) ||
+    (text(color.officialColorCode) ? `${productLineId}-${text(color.officialColorCode)}` : "") ||
+    (text(color.colorNameZh) ? `${productLineId}-${normalizeForKey(text(color.colorNameZh))}` : "")
+  );
+}
+
+function colorCardDetailParam(color: { officialColorCode?: string; id?: string; colorNameZh?: string }) {
+  return encodeURIComponent(text(color.officialColorCode) || text(color.id) || normalizeForKey(text(color.colorNameZh)));
+}
+
+function productImageFallback(record: CatalogRecord): string | null {
+  const images = record.published?.images ?? [];
+  const productImage = images.find((image) => image.role === "product") ?? images[0];
+  return productImage?.url ?? null;
+}
+
+export function getCatalogProductLineCount(records: CatalogRecord[]) {
+  const ids = new Set(records.map((record) => record.productLineId || record.id));
+  return ids.size;
+}
+
+export function getCatalogOfficialColorCount(records: CatalogRecord[]) {
+  return records.reduce((count, record) => {
+    const publishedColors = record.published?.colors;
+    if (publishedColors && publishedColors.length > 0) {
+      return count + publishedColors.length;
+    }
+    return count + 1;
+  }, 0);
+}
+
+export function getCatalogColorCards(records: CatalogRecord[]): ColorCard[] {
+  return records.flatMap((record) => {
+    const productLineId = record.productLineId || record.id;
+    const productLineName = record.productLine;
+    const fallbackImageUrl = productImageFallback(record);
+
+    const publishedColors = record.published?.colors;
+    if (publishedColors && publishedColors.length > 0) {
+      return publishedColors.map((color) => {
+        const imageUrl = color.imageUrl || fallbackImageUrl;
+        return {
+          id: colorCardId(productLineId, { id: color.id, officialColorCode: color.officialColorCode, colorNameZh: color.nameZh }),
+          productLineId,
+          productLineName,
+          brand: record.brand,
+          materialType: record.materialType,
+          variant: record.variant,
+          colorNameZh: color.nameZh,
+          colorNameEn: color.nameEn,
+          officialColorCode: color.officialColorCode,
+          imageUrl,
+          fallbackImageUrl,
+          detailUrl: `/filaments/${productLineId}?color=${colorCardDetailParam({ officialColorCode: color.officialColorCode, id: color.id, colorNameZh: color.nameZh })}`,
+        };
+      });
+    }
+
+    // Fallback for non-published / static records: one card per record using the primary color.
+    const primary = record.color;
+    return [{
+      id: colorCardId(productLineId, { id: record.id, officialColorCode: primary.digitalSwatch?.officialColorCode, colorNameZh: primary.colorNameZh }),
+      productLineId,
+      productLineName,
+      brand: record.brand,
+      materialType: record.materialType,
+      variant: record.variant,
+      colorNameZh: primary.colorNameZh,
+      colorNameEn: primary.colorNameEn,
+      officialColorCode: primary.digitalSwatch?.officialColorCode || "",
+      imageUrl: record.spool.spoolImagePlaceholder || fallbackImageUrl,
+      fallbackImageUrl: record.spool.spoolImagePlaceholder || fallbackImageUrl,
+      detailUrl: `/filaments/${productLineId}`,
+    }];
+  });
 }

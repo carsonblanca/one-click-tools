@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "@/components/ThemeProvider";
-import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
+import { getCatalogRecord, getCompareValue, hasPresetParameters, splitPublishedParameters } from "@/lib/filaments/catalog/catalog-view-model";
 import { getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
-import {
-  getLocalizedColorFamilyLabel,
-  getLocalizedFilamentColorName,
-  getLocalizedFinishLabel,
-  getLocalizedTransparencyLabel,
-  getLocalizedVariantEffectLabel,
-} from "@/lib/filaments/catalog/localization";
+import { getParameterDefinition } from "@/lib/filaments/parameters/normalized-parameters";
 import BrandLogo from "./BrandLogo";
 import type { Locale } from "@/lib/i18n";
 import { useMemo, useState } from "react";
@@ -29,23 +24,12 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     category: "Category",
     colorName: "Color name",
     officialColorCode: "Official color code",
-    colorFamily: "Color family",
-    finish: "Surface finish",
-    transparency: "Transparency",
-    rating: "Rating",
-    reviews: "reviews",
-    digitalSwatch: "Digital swatch",
-    physicalSwatch: "Physical swatch",
-    source: "Source",
-    manufacturerData: "Manufacturer data",
-    userUpload: "User upload",
-    lastVerified: "Last verified",
-    notVerified: "Not verified",
-    physicalSwatches: "physical swatches",
-    reviewStatus: "Review status",
-    approved: "Approved",
-    pendingReview: "Pending review",
-    rejected: "Rejected",
+    officialImage: "Official spool image",
+    officialColors: "Official colors",
+    noImage: "No image available",
+    selectColor: "Select color",
+    productParameters: "Product parameters",
+    printParameters: "Recommended print parameters (from official data)",
     parameters: "Parameters and presets",
     nozzleTemperature: "Nozzle temperature (first layer / normal)",
     bedTemperature: "Bed temperature (first layer / normal)",
@@ -56,9 +40,6 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     dryingRecommended: "Drying recommended",
     enclosureRecommended: "Enclosure recommended",
     hardenedNozzleRequired: "Hardened nozzle required",
-    verificationStatus: "Verification status",
-    evidenceCount: "Evidence count",
-    score: "Overall score",
     printerDownload: "Printer selection and preset download",
     downloadPreset: "Download preset",
     noPreset: "No preset available",
@@ -92,11 +73,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "Headquarters",
     productionLocation: "Actual production location",
     factoryStatus: "Factory status",
-    officialWebSocial: "Official website and social accounts",
-    officialChannel: "Official channel",
-    pendingChannel: "Pending verification",
     officialStore: "Official stores",
-    officialSocial: "Official social accounts",
     informationSource: "Information sources",
     sourceType: "Type",
     manufacturerProvided: "Manufacturer provided",
@@ -105,6 +82,8 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     marketplaceAggregated: "Marketplace aggregated",
     unknownSource: "Unknown",
     crossVerified: "Cross verified",
+    lastVerified: "Last verified",
+    notVerified: "Not verified",
   },
   "zh-cn": {
     unknown: "暂未获得可靠公开证据",
@@ -116,24 +95,13 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     materialType: "材料类型",
     category: "分类",
     colorName: "颜色名称",
-    officialColorCode: "官方颜色编号",
-    colorFamily: "色系",
-    finish: "表面效果",
-    transparency: "透明度",
-    rating: "评分",
-    reviews: "评价",
-    digitalSwatch: "电子色卡",
-    physicalSwatch: "实物色卡",
-    source: "来源",
-    manufacturerData: "厂商资料",
-    userUpload: "用户上传",
-    lastVerified: "最后核验",
-    notVerified: "未核验",
-    physicalSwatches: "张实物色卡",
-    reviewStatus: "审核状态",
-    approved: "已通过",
-    pendingReview: "待审核",
-    rejected: "未通过",
+    officialColorCode: "厂家颜色编码",
+    officialImage: "官方料盘图",
+    officialColors: "官方颜色",
+    noImage: "暂无实物图",
+    selectColor: "选择颜色",
+    productParameters: "产品参数",
+    printParameters: "建议打印参数（来自官方数据）",
     parameters: "参数与预设",
     nozzleTemperature: "喷嘴温度（首层/常规）",
     bedTemperature: "热床温度（首层/常规）",
@@ -144,9 +112,6 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     dryingRecommended: "需要烘干",
     enclosureRecommended: "需要封箱",
     hardenedNozzleRequired: "需要硬化喷嘴",
-    verificationStatus: "验证状态",
-    evidenceCount: "测试证据数",
-    score: "综合评分",
     printerDownload: "打印机选择与预设下载",
     downloadPreset: "下载预设",
     noPreset: "暂无可用预设",
@@ -180,11 +145,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "总部所在地",
     productionLocation: "实际生产地",
     factoryStatus: "工厂状态",
-    officialWebSocial: "官方网站与社交账号",
-    officialChannel: "官方渠道",
-    pendingChannel: "待核验",
     officialStore: "官方旗舰店",
-    officialSocial: "官方社交账号",
     informationSource: "信息来源",
     sourceType: "类型",
     manufacturerProvided: "厂商提供",
@@ -193,6 +154,8 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     marketplaceAggregated: "市场聚合",
     unknownSource: "未知",
     crossVerified: "交叉验证",
+    lastVerified: "最后核验",
+    notVerified: "未核验",
   },
   "zh-tw": {
     unknown: "暫未取得可靠公開證據",
@@ -204,24 +167,13 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     materialType: "材料類型",
     category: "分類",
     colorName: "顏色名稱",
-    officialColorCode: "官方顏色編號",
-    colorFamily: "色系",
-    finish: "表面效果",
-    transparency: "透明度",
-    rating: "評分",
-    reviews: "評價",
-    digitalSwatch: "電子色卡",
-    physicalSwatch: "實物色卡",
-    source: "來源",
-    manufacturerData: "廠商資料",
-    userUpload: "使用者上傳",
-    lastVerified: "最後核驗",
-    notVerified: "未核驗",
-    physicalSwatches: "張實物色卡",
-    reviewStatus: "審核狀態",
-    approved: "已通過",
-    pendingReview: "待審核",
-    rejected: "未通過",
+    officialColorCode: "廠家顏色編碼",
+    officialImage: "官方料盤圖",
+    officialColors: "官方顏色",
+    noImage: "暫無實物圖",
+    selectColor: "選擇顏色",
+    productParameters: "產品參數",
+    printParameters: "建議列印參數（來自官方資料）",
     parameters: "參數與預設",
     nozzleTemperature: "噴嘴溫度（首層/一般）",
     bedTemperature: "熱床溫度（首層/一般）",
@@ -232,9 +184,6 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     dryingRecommended: "需要烘乾",
     enclosureRecommended: "建議封箱",
     hardenedNozzleRequired: "需要硬化噴嘴",
-    verificationStatus: "核驗狀態",
-    evidenceCount: "測試證據數",
-    score: "綜合評分",
     printerDownload: "印表機選擇與預設下載",
     downloadPreset: "下載預設",
     noPreset: "暫無可用預設",
@@ -268,11 +217,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "總部所在地",
     productionLocation: "實際生產地",
     factoryStatus: "工廠狀態",
-    officialWebSocial: "官方網站與社群帳號",
-    officialChannel: "官方渠道",
-    pendingChannel: "待核驗",
     officialStore: "官方旗艦店",
-    officialSocial: "官方社群帳號",
     informationSource: "資訊來源",
     sourceType: "類型",
     manufacturerProvided: "廠商提供",
@@ -281,7 +226,37 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     marketplaceAggregated: "市場彙整",
     unknownSource: "未知",
     crossVerified: "交叉核驗",
+    lastVerified: "最後核驗",
+    notVerified: "未核驗",
   },
+};
+
+const PARAMETER_LABELS_EN: Record<string, string> = {
+  materialType: "Material type",
+  filamentDiameter: "Filament diameter",
+  netWeight: "Net weight",
+  density: "Density",
+  diameterTolerance: "Diameter tolerance",
+  meltFlowIndex: "Melt flow index",
+  nozzleTemperature: "Nozzle temperature",
+  nozzleDiameter: "Nozzle diameter",
+  bedTemperature: "Bed temperature",
+  coolingFan: "Cooling fan",
+  printingSpeed: "Printing speed",
+  retractionDistance: "Retraction distance",
+  retractionSpeed: "Retraction speed",
+  buildPlateSurface: "Build plate surface",
+  tensileStrength: "Tensile strength",
+  elongationAtBreak: "Elongation at break",
+  impactStrength: "Impact strength",
+  unnotchedImpactStrength: "Unnotched impact strength",
+  notchedImpactStrength: "Notched impact strength",
+  flexuralStrength: "Flexural strength",
+  flexuralModulus: "Flexural modulus",
+  heatDeflectionTemperature: "Heat deflection temperature",
+  vicatSofteningTemperature: "Vicat softening temperature",
+  dryingTemperature: "Drying temperature",
+  dryingTime: "Drying time",
 };
 
 function downloadJson(fileName: string, data: unknown) {
@@ -312,6 +287,13 @@ function buildPresetDownloadFileName(record: { brand: string; productLine: strin
   return "OneClick-" + brand + "-" + line + "-" + variant + "-" + dateStr + ".json";
 }
 
+function normalizeForKey(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\-_]/g, "");
+}
+
 function DetailSection({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   const { isDark } = useTheme();
   return (
@@ -340,6 +322,101 @@ function brandProfileIdForBrand(brand: string) {
   return "generic-profiles";
 }
 
+function selectProductFallbackImage(record: CatalogRecord): string | null {
+  const images = record.published?.images ?? [];
+  const product = images.find((image) => image.role === "product" || image.role === "spool");
+  return product?.url ?? images[0]?.url ?? null;
+}
+
+function getParameterLabel(canonicalKey: string, labelZh: string, locale: Locale) {
+  if (locale === "zh-cn" || locale === "zh-tw") return labelZh;
+  return PARAMETER_LABELS_EN[canonicalKey] ?? canonicalKey;
+}
+
+function sortParameters(parameters: { canonicalKey: string; labelZh: string; value: string }[]) {
+  return [...parameters].sort((a, b) => {
+    const defA = getParameterDefinition(a.canonicalKey);
+    const defB = getParameterDefinition(b.canonicalKey);
+    const orderA = defA?.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    const orderB = defB?.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
+}
+
+type OfficialColor = {
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  officialColorCode: string;
+  imageUrl: string | null;
+};
+
+function useOfficialColors(record: CatalogRecord): OfficialColor[] {
+  return useMemo(() => {
+    if (record.published && record.published.colors.length > 0) {
+      return record.published.colors.map((color) => ({
+        id: color.id,
+        nameZh: color.nameZh,
+        nameEn: color.nameEn,
+        officialColorCode: color.officialColorCode,
+        imageUrl: color.imageUrl || selectProductFallbackImage(record),
+      }));
+    }
+    return [{
+      id: record.id,
+      nameZh: record.color.colorNameZh,
+      nameEn: record.color.colorNameEn,
+      officialColorCode: record.color.digitalSwatch?.officialColorCode || "",
+      imageUrl: record.spool.spoolImagePlaceholder || selectProductFallbackImage(record),
+    }];
+  }, [record]);
+}
+
+function findColorIndex(colors: OfficialColor[], colorParam: string | null) {
+  if (!colorParam) return -1;
+  const decoded = decodeURIComponent(colorParam).trim();
+  return colors.findIndex((color) =>
+    color.officialColorCode === decoded ||
+    color.id === decoded ||
+    normalizeForKey(color.nameZh) === normalizeForKey(decoded)
+  );
+}
+
+function colorParamFor(color: OfficialColor) {
+  return encodeURIComponent(color.officialColorCode || color.id || normalizeForKey(color.nameZh));
+}
+
+function ImageWithPlaceholder({
+  src,
+  alt,
+  className,
+  containerClassName,
+  objectClassName,
+  noImageLabel,
+}: {
+  src: string | null;
+  alt: string;
+  className?: string;
+  containerClassName?: string;
+  objectClassName?: string;
+  noImageLabel: string;
+}) {
+  const { isDark } = useTheme();
+  const [error, setError] = useState(false);
+  const hasImage = Boolean(src) && !error;
+  return (
+    <div className={`relative overflow-hidden ${containerClassName ?? ""} ${className ?? ""}`}>
+      {hasImage ? (
+        <img src={src!} alt={alt} className={objectClassName ?? "h-full w-full object-contain"} onError={() => setError(true)} />
+      ) : (
+        <div className={`flex h-full w-full items-center justify-center ${isDark ? "bg-white/5 text-white/30" : "bg-slate-100 text-slate-400"}`}>
+          <span className="text-sm">{noImageLabel}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FilamentDetailPageContent({
   filamentId,
   locale = "en",
@@ -350,8 +427,24 @@ export default function FilamentDetailPageContent({
   catalogRecord?: CatalogRecord | null;
 }) {
   const { isDark } = useTheme();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
   const record = catalogRecord || getCatalogRecord(filamentId);
+
+  const colors = useOfficialColors(record ?? null as unknown as CatalogRecord);
+  const colorQuery = searchParams?.get("color") ?? null;
+  const matchedIndex = findColorIndex(colors, colorQuery);
+  const selectedIndex = matchedIndex >= 0 ? matchedIndex : colors.findIndex((color) => color.imageUrl) ?? 0;
+  const currentColor = colors[selectedIndex] || colors[0];
+
+  const setColor = (color: OfficialColor) => {
+    const param = colorParamFor(color);
+    const url = `${pathname}?color=${param}`;
+    router.replace(url, { scroll: false });
+  };
+
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
   const [printerIdGlobal, setPrinterIdGlobal] = useState(printerOptions[0]?.id || "");
 
@@ -368,16 +461,9 @@ export default function FilamentDetailPageContent({
 
   const brandProfile = getBrandProfile(brandProfileIdForBrand(record.brand));
   const brandData = brandProfile || null;
-  const c = record.color;
-  const colorName = getLocalizedFilamentColorName(c, locale);
-  const familyLabel = getLocalizedColorFamilyLabel(c.colorFamily, locale);
-  const finishLabel = getLocalizedFinishLabel(c.finish, locale);
-  const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
-  const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
   const hasVerifiedParams = hasPresetParameters(record);
 
-  const printerOptsThis = getBambuPrinterOptions();
   const generated = useMemo(() => {
     if (!printerIdGlobal) return null;
     const all = generateBambuFilamentPresetSet(printerIdGlobal);
@@ -385,38 +471,83 @@ export default function FilamentDetailPageContent({
     return match || null;
   }, [printerIdGlobal, record.materialType]);
 
+  const { product: productParameters, print: printParameters } = record.published
+    ? splitPublishedParameters(record.published.parameters)
+    : { product: [], print: [] };
+
+  const sortedProductParameters = sortParameters(productParameters);
+  const sortedPrintParameters = sortParameters(printParameters);
+
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
         <Link
           href="/tools/bambu-filament-preset-generator"
-          className={`inline-flex items-center gap-1 text-sm transition ${
-            isDark ? "text-white/50 hover:text-white" : "text-[#6B665D] hover:text-[#18181B]"
-          }`}
+          className={`inline-flex items-center gap-1 text-sm transition ${isDark ? "text-white/50 hover:text-white" : "text-[#6B665D] hover:text-[#18181B]"}`}
         >
           {t.back}
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+        <div className="space-y-6">
+          <DetailSection title={t.officialImage}>
+            <ImageWithPlaceholder
+              src={currentColor?.imageUrl || selectProductFallbackImage(record)}
+              alt={currentColor?.nameZh || record.productLine}
+              containerClassName="rounded-xl border aspect-square w-full flex items-center justify-center"
+              objectClassName="h-full w-full object-contain"
+              noImageLabel={t.noImage}
+            />
+          </DetailSection>
+
+          <DetailSection title={`${t.officialColors} (${colors.length})`}>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {colors.map((color, index) => {
+                const selected = index === selectedIndex;
+                return (
+                  <button
+                    key={color.id}
+                    onClick={() => setColor(color)}
+                    className={`text-left rounded-xl border p-3 transition ${
+                      selected
+                        ? isDark
+                          ? "border-lime-300/70 bg-lime-300/10"
+                          : "border-[#2563EB] bg-[#2563EB]/5"
+                        : isDark
+                          ? "border-white/10 bg-black/20 hover:bg-white/[0.07]"
+                          : "border-[#E5DED0] bg-[#F5F2EA] hover:bg-[#EDE8DD]"
+                    }`}
+                  >
+                    <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-lg border border-current/10">
+                      <ImageWithPlaceholder
+                        src={color.imageUrl}
+                        alt={color.nameZh}
+                        containerClassName="h-full w-full"
+                        objectClassName="h-full w-full object-cover object-[50%_60%]"
+                        noImageLabel={t.noImage}
+                      />
+                    </div>
+                    <p className={`text-sm font-medium truncate ${isDark ? "text-white" : "text-[#18181B]"}`}>{color.nameZh}</p>
+                    <p className="text-xs opacity-60 truncate">{t.officialColorCode}: {color.officialColorCode || "—"}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </DetailSection>
+        </div>
+
         <div className="space-y-6">
           <DetailSection title={t.productInfo}>
             <div className="flex items-start gap-4 mb-5">
-              {c.hasDigitalSwatch && c.hex ? (
-                <div className="h-14 w-14 shrink-0 rounded-2xl border border-current/10" style={{ backgroundColor: c.hex }} />
-              ) : (
-                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-dashed text-xs ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>--</div>
-              )}
+              <div className="shrink-0">
+                <BrandLogo brand={record.brand} size={40} />
+              </div>
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <BrandLogo brand={record.brand} size={24} />
-                  <span className={`text-sm ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{record.brand}</span>
-                </div>
-                <h1 className={`text-2xl font-semibold ${isDark ? "text-white" : "text-[#18181B]"}`}>
-                  {record.published ? record.productLine : colorName}
-                </h1>
+                <p className={`text-sm ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{record.brand}</p>
+                <h1 className={`text-2xl font-semibold ${isDark ? "text-white" : "text-[#18181B]"}`}>{record.productLine}</h1>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
-                  {record.productLine} · {record.materialType} {record.variant}
+                  {record.materialType} · {record.variant}
                 </p>
               </div>
             </div>
@@ -424,128 +555,91 @@ export default function FilamentDetailPageContent({
               <FieldRow label={t.brand} value={record.brand} unknownLabel={t.unknown} />
               <FieldRow label={t.productSeries} value={record.productLine} unknownLabel={t.unknown} />
               <FieldRow label={t.materialType} value={record.materialType} unknownLabel={t.unknown} />
-              <FieldRow label={t.category} value={variantLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.colorName} value={colorName} unknownLabel={t.unknown} />
-              <FieldRow label="HEX" value={c.hasDigitalSwatch && c.hex ? c.hex : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label="RGB" value={c.hasDigitalSwatch && c.rgb ? `${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b}` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.officialColorCode} value={c.digitalSwatch?.officialColorCode || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.colorFamily} value={familyLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.finish} value={finishLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.transparency} value={transLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.rating} value={`${record.rating.toFixed(1)} (${record.reviewCount} ${t.reviews})`} unknownLabel={t.unknown} />
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className={`rounded-xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-[#E5DED0] bg-[#F5F2EA]"}`}>
-                <div className={`text-sm font-medium mb-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.digitalSwatch}</div>
-                {c.hasDigitalSwatch && c.hex && c.rgb ? (
-                  <>
-                    <p className="font-mono text-sm">HEX {c.hex}</p>
-                    <p className="font-mono text-sm">RGB {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</p>
-                  </>
-                ) : (
-                  <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>
-                )}
-                {c.digitalSwatch && (
-                  <p className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
-                    {t.source}: {c.digitalSwatch.sourceType === "manufacturer" ? t.manufacturerData : t.userUpload} · {t.lastVerified}: {c.digitalSwatch.lastVerifiedAt || t.notVerified}
-                  </p>
-                )}
-              </div>
-              <div className={`rounded-xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-[#E5DED0] bg-[#F5F2EA]"}`}>
-                <div className={`text-sm font-medium mb-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.physicalSwatch}</div>
-                {c.hasPhysicalSwatch ? (
-                  <>
-                    <p className="text-sm">{c.physicalSwatchCount} {t.physicalSwatches}</p>
-                    <p className={`text-xs ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
-                      {t.reviewStatus}: {c.physicalSwatches[0]?.reviewStatus === "approved" ? t.approved : c.physicalSwatches[0]?.reviewStatus === "pending" ? t.pendingReview : t.rejected}
-                    </p>
-                  </>
-                ) : (
-                  <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>
-                )}
-              </div>
+              <FieldRow label={t.category} value={record.variant} unknownLabel={t.unknown} />
+              <FieldRow label={t.colorName} value={currentColor?.nameZh} unknownLabel={t.unknown} />
+              <FieldRow label={t.officialColorCode} value={currentColor?.officialColorCode || t.unknown} unknownLabel={t.unknown} />
             </div>
           </DetailSection>
 
           {record.published ? (
-            <DetailSection title={locale === "zh-cn" ? `官方颜色（${record.published.colors.length}）` : `Official colors (${record.published.colors.length})`}>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {record.published.colors.map((item) => (
-                  <div key={item.id} className={`rounded-xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#E5DED0] bg-[#F5F2EA]"}`}>
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.nameZh} className="aspect-square w-full rounded-lg object-cover" />
-                    ) : null}
-                    <p className="mt-2 text-sm font-medium">{locale === "zh-cn" ? item.nameZh : item.nameEn}</p>
-                    <p className="text-xs opacity-60">{t.officialColorCode}: {item.officialColorCode}</p>
+            <>
+              <DetailSection title={t.productParameters}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {sortedProductParameters.map((parameter) => (
+                    <FieldRow
+                      key={parameter.canonicalKey}
+                      label={getParameterLabel(parameter.canonicalKey, parameter.labelZh, locale)}
+                      value={parameter.value}
+                      unknownLabel={t.unknown}
+                    />
+                  ))}
+                </div>
+              </DetailSection>
+
+              <DetailSection title={t.printParameters}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {sortedPrintParameters.map((parameter) => (
+                    <FieldRow
+                      key={parameter.canonicalKey}
+                      label={getParameterLabel(parameter.canonicalKey, parameter.labelZh, locale)}
+                      value={parameter.value}
+                      unknownLabel={t.unknown}
+                    />
+                  ))}
+                </div>
+                <div className="mt-5">
+                  <div className={`text-sm font-medium mb-3 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.printerDownload}</div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <select
+                      value={printerIdGlobal}
+                      onChange={(e) => setPrinterIdGlobal(e.target.value)}
+                      className={`rounded-2xl border px-4 py-3 text-sm outline-none transition ${
+                        isDark ? "border-white/10 bg-black/30 text-white" : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B]"
+                      }`}
+                    >
+                      {printerOptions.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        if (generated && hasVerifiedParams) downloadJson(buildPresetDownloadFileName(record), generated.preset);
+                      }}
+                      disabled={!generated || !hasVerifiedParams}
+                      className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
+                        !generated || !hasVerifiedParams
+                          ? "opacity-40 cursor-not-allowed"
+                          : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+                      }`}
+                    >
+                      {!hasVerifiedParams ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
+                    </button>
                   </div>
-                ))}
+                  {generated && (
+                    <div className={`mt-4 grid gap-2 text-sm sm:grid-cols-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>
+                      <p>{t.nozzleTempShort}: {getPresetDisplayValue(generated.preset, "nozzle_temperature_initial_layer")} / {getPresetDisplayValue(generated.preset, "nozzle_temperature")} °C</p>
+                      <p>{t.flow}: {getPresetDisplayValue(generated.preset, "filament_flow_ratio")}</p>
+                      <p className="sm:col-span-2 text-xs opacity-60">{t.retractionSource}: {generated.sources.filament_retraction_length || t.inheritedPrinter}</p>
+                    </div>
+                  )}
+                </div>
+              </DetailSection>
+            </>
+          ) : (
+            <DetailSection title={t.parameters}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
+                <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
+                <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
+                <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
+                <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
+                <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
+                <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
+                <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
+                <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
               </div>
             </DetailSection>
-          ) : null}
-
-          <DetailSection title={t.parameters}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {record.published ? record.published.parameters.map((parameter) => (
-                <FieldRow
-                  key={parameter.canonicalKey}
-                  label={locale === "zh-cn" ? parameter.labelZh : parameter.canonicalKey}
-                  value={parameter.value}
-                  unknownLabel={t.unknown}
-                />
-              )) : (
-                <>
-                  <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
-                  <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.verificationStatus} value={getCompareValue(record, "verificationLevel")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.evidenceCount} value={getCompareValue(record, "evidenceCount")} unknownLabel={t.unknown} />
-                  <FieldRow label={t.score} value={getCompareValue(record, "score")} unknownLabel={t.unknown} />
-                </>
-              )}
-            </div>
-            <div className="mt-5">
-              <div className={`text-sm font-medium mb-3 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.printerDownload}</div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <select
-                  value={printerIdGlobal}
-                  onChange={(e) => setPrinterIdGlobal(e.target.value)}
-                  className={`rounded-2xl border px-4 py-3 text-sm outline-none transition ${
-                    isDark ? "border-white/10 bg-black/30 text-white" : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B]"
-                  }`}
-                >
-                  {printerOptsThis.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => {
-                    if (generated && hasVerifiedParams) downloadJson(buildPresetDownloadFileName(record), generated.preset);
-                  }}
-                  disabled={!generated || !hasVerifiedParams}
-                  className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
-                    !generated || !hasVerifiedParams
-                      ? "opacity-40 cursor-not-allowed"
-                      : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
-                  }`}
-                >
-                  {!hasVerifiedParams ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
-                </button>
-              </div>
-              {generated && (
-                <div className={`mt-4 grid gap-2 text-sm sm:grid-cols-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>
-                  <p>{t.nozzleTempShort}: {getPresetDisplayValue(generated.preset, "nozzle_temperature_initial_layer")} / {getPresetDisplayValue(generated.preset, "nozzle_temperature")} °C</p>
-                  <p>{t.flow}: {getPresetDisplayValue(generated.preset, "filament_flow_ratio")}</p>
-                  <p className="sm:col-span-2 text-xs opacity-60">{t.retractionSource}: {generated.sources.filament_retraction_length || t.inheritedPrinter}</p>
-                </div>
-              )}
-            </div>
-          </DetailSection>
+          )}
 
           <DetailSection title={t.spoolInfo}>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -563,9 +657,7 @@ export default function FilamentDetailPageContent({
               <FieldRow label={t.amsFit} value={amsLabel} unknownLabel={t.unknown} />
             </div>
           </DetailSection>
-        </div>
 
-        <div className="space-y-6">
           <DetailSection title={t.manufacturerInfo}>
             <div className="flex items-center gap-2 mb-4">
               <BrandLogo brand={record.brand} size={32} />
@@ -580,47 +672,33 @@ export default function FilamentDetailPageContent({
               <FieldRow label={t.lastVerified} value={brandData?.lastVerifiedAt || t.unknown} unknownLabel={t.unknown} />
             </div>
             <div className="mt-5 space-y-3">
-              <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.officialWebSocial}</h4>
-              {brandData?.website ? (
-                <div className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
-                  <p className="font-medium">{brandData.website.displayName}</p>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{brandData.website.platform} · {brandData.website.verificationStatus === "official" ? t.officialChannel : t.pendingChannel}</p>
-                  {brandData.website.url ? (
-                    <p className="text-xs mt-1 opacity-60">{brandData.website.url}</p>
-                  ) : (
-                    <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#8A8173]"}`}>{t.unknown}</p>
-                  )}
-                </div>
+              <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.officialStore}</h4>
+              {brandData?.officialStores && brandData.officialStores.length > 0 ? (
+                brandData.officialStores.map((store, i) => (
+                  <div key={i} className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
+                    <p className="font-medium">{store.displayName}</p>
+                    <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{store.platform}</p>
+                    {store.url ? <p className="text-xs mt-1 opacity-60">{store.url}</p> : <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#8A8173]"}`}>{t.unknown}</p>}
+                  </div>
+                ))
               ) : (
                 <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>
               )}
-              <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.officialStore}</h4>
-              {brandData?.officialStores && brandData.officialStores.length > 0 ? brandData.officialStores.map((store, i) => (
-                <div key={i} className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
-                  <p className="font-medium">{store.displayName}</p>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{store.platform} · {store.verificationStatus === "official" ? t.officialChannel : t.pendingChannel}</p>
-                  {store.url ? <p className="text-xs mt-1 opacity-60">{store.url}</p> : <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#8A8173]"}`}>{t.unknown}</p>}
-                </div>
-              )) : <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>}
-              <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.officialSocial}</h4>
-              {brandData?.socialAccounts && brandData.socialAccounts.length > 0 ? brandData.socialAccounts.map((acc, i) => (
-                <div key={i} className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
-                  <p className="font-medium">{acc.displayName}</p>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{acc.platform} · {acc.verificationStatus === "official" ? t.officialChannel : t.pendingChannel}</p>
-                  {acc.url ? <p className="text-xs mt-1 opacity-60">{acc.url}</p> : <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#8A8173]"}`}>{t.unknown}</p>}
-                </div>
-              )) : <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>}
               <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.informationSource}</h4>
-              {brandData?.sources && brandData.sources.length > 0 ? brandData.sources.map((src, i) => (
-                <div key={i} className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
-                  <p className="font-medium">{src.label}</p>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
-                    {t.sourceType}: {src.sourceType === "manufacturerProvided" ? t.manufacturerProvided : src.sourceType === "publicVerified" ? t.publicVerified : src.sourceType === "communityVerified" ? t.communityVerified : src.sourceType === "marketplaceAggregated" ? t.marketplaceAggregated : t.unknownSource}
-                    · {t.crossVerified}: {src.crossVerified ? t.yes : t.no}
-                    · {t.lastVerified}: {src.lastVerifiedAt || t.notVerified}
-                  </p>
-                </div>
-              )) : <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>}
+              {brandData?.sources && brandData.sources.length > 0 ? (
+                brandData.sources.map((src, i) => (
+                  <div key={i} className={`rounded-xl border p-3 text-sm ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}>
+                    <p className="font-medium">{src.label}</p>
+                    <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
+                      {t.sourceType}: {src.sourceType === "manufacturerProvided" ? t.manufacturerProvided : src.sourceType === "publicVerified" ? t.publicVerified : src.sourceType === "communityVerified" ? t.communityVerified : src.sourceType === "marketplaceAggregated" ? t.marketplaceAggregated : t.unknownSource}
+                      · {t.crossVerified}: {src.crossVerified ? t.yes : t.no}
+                      · {t.lastVerified}: {src.lastVerifiedAt || t.notVerified}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className={`text-sm ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.unknown}</p>
+              )}
             </div>
           </DetailSection>
         </div>

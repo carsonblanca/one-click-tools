@@ -1,16 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   ToolLabel,
   ToolPanel,
 } from "@/components/tool-ui/ToolUI";
-import {
-  generateBambuFilamentPresetSet,
-  getBambuPrinterOptions,
-} from "@/lib/bambu-filament-presets";
+
 import {
   CATALOG_RECORDS,
   filterCatalogRecords,
@@ -19,16 +15,18 @@ import {
   searchBrands,
   sortBrands,
   type BrandSort,
-  getLocalizedFilamentColorName,
   getLocalizedFinishLabel,
   getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
-  hasPresetParameters,
+  getCatalogColorCards,
+  getCatalogOfficialColorCount,
+  getCatalogProductLineCount,
   type CatalogRecord,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { Locale } from "@/lib/i18n";
 import BrandLogo from "./BrandLogo";
+import ColorCard from "./ColorCard";
 
 type MaterialVariantMap = Record<string, string[]>;
 
@@ -109,7 +107,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     brandSortZA: "Z\u2013A",
     brandSortCount: "Most filaments",
     allBrands: "All Brands",
-    pendingLabel: "Pending",
     brandOrderNotice: "Current popularity order is based on platform compilation and will be dynamically updated based on site browsing, search, and preset download data in the future.",
     filters: "Filters",
     close: "Close",
@@ -118,8 +115,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     clearAll: "Clear all filters",
     rating: "Minimum Rating",
     finish: "Surface Finish",
-    hasPhysicalSwatch: "Has Physical Swatch",
-    hasVerifiedPreset: "Has Verified Preset",
     colorSearch: "Color Search",
     colorPlaceholder: "Color name, color code, or upload image to match",
     searchColor: "Search",
@@ -129,9 +124,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPreset: "No preset available",
     detail: "Details",
     noResults: "No matching filaments found.",
-    compare: "Compare",
-    selected: "selected",
-    startCompare: "Start Comparison",
     remove: "Remove",
     addCompare: "Add to Compare",
     materialType: "Material Type",
@@ -143,14 +135,11 @@ const LABELS: Record<Locale, Record<string, string>> = {
     uploadImage: "Upload image",
     any: "Any",
     colorCode: "Color code",
-    physicalReference: "Physical swatch",
     images: "images",
-    noPhysicalSwatch: "No physical swatch",
     selectPrinter: "Select printer",
     paramsPending: "Parameters Pending",
     presetsUnavailable: "Verified print parameters are not yet available.",
     presetNoGcode: "Filament preset only. No G-code is included.",
-    compareHint: "2-4 items",
   },
   "zh-cn": {
     catalogTitle: "3D 打印耗材库",
@@ -163,7 +152,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     brandSortZA: "Z\u2013A",
     brandSortCount: "耗材最多",
     allBrands: "全部品牌",
-    pendingLabel: "待核验",
     brandOrderNotice: "当前热门顺序为平台整理结果，后续将根据站内浏览、搜索和预设下载数据动态更新。",
     filters: "筛选",
     close: "关闭",
@@ -172,8 +160,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     clearAll: "清除全部筛选",
     rating: "最低评分",
     finish: "表面效果",
-    hasPhysicalSwatch: "有实物色卡",
-    hasVerifiedPreset: "有已验证预设",
     colorSearch: "颜色搜索",
     colorPlaceholder: "颜色名称、颜色编号或上传图片匹配",
     searchColor: "搜索",
@@ -183,9 +169,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPreset: "暂无可用预设",
     detail: "查看详情",
     noResults: "没有匹配的耗材。",
-    compare: "对比",
-    selected: "已选择",
-    startCompare: "开始对比",
     remove: "移除",
     addCompare: "加入对比",
     materialType: "材料类型",
@@ -197,14 +180,11 @@ const LABELS: Record<Locale, Record<string, string>> = {
     uploadImage: "上传图片",
     any: "不限",
     colorCode: "颜色编码",
-    physicalReference: "实拍参考",
     images: "张图片",
-    noPhysicalSwatch: "暂无实拍",
     selectPrinter: "选择打印机",
     paramsPending: "参数待补充",
     presetsUnavailable: "该系列缺少可验证打印参数，暂不可生成预设。",
     presetNoGcode: "仅生成耗材预设，不包含 G-code。",
-    compareHint: "2-4 款",
   },
   "zh-tw": {
     catalogTitle: "3D 列印耗材庫",
@@ -217,7 +197,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     brandSortZA: "Z\u2013A",
     brandSortCount: "線材最多",
     allBrands: "全部品牌",
-    pendingLabel: "待核驗",
     brandOrderNotice: "目前熱門順序為平台整理結果，後續將根據站內瀏覽、搜尋和預設下載資料動態更新。",
     filters: "篩選",
     close: "關閉",
@@ -226,8 +205,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     clearAll: "清除全部篩選",
     rating: "最低評分",
     finish: "表面效果",
-    hasPhysicalSwatch: "有實物色卡",
-    hasVerifiedPreset: "有已驗證預設",
     colorSearch: "顏色搜尋",
     colorPlaceholder: "顏色名稱、顏色編號或上傳圖片配對",
     searchColor: "搜尋",
@@ -237,9 +214,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPreset: "暫無可用預設",
     detail: "查看詳情",
     noResults: "沒有符合條件的線材。",
-    compare: "比較",
-    selected: "已選擇",
-    startCompare: "開始比較",
     remove: "移除",
     addCompare: "加入比較",
     materialType: "材料類型",
@@ -251,14 +225,11 @@ const LABELS: Record<Locale, Record<string, string>> = {
     uploadImage: "上傳圖片",
     any: "不限",
     colorCode: "顏色編碼",
-    physicalReference: "實拍參考",
     images: "張圖片",
-    noPhysicalSwatch: "暫無實拍",
     selectPrinter: "選擇印表機",
     paramsPending: "參數待補充",
     presetsUnavailable: "該系列缺少可驗證列印參數，暫不可產生預設。",
     presetNoGcode: "僅產生線材預設，不包含 G-code。",
-    compareHint: "2-4 款",
   },
 };
 
@@ -294,7 +265,6 @@ export default function BambuFilamentCatalogExperience({
 }) {
   const { isDark } = useTheme();
   const t = LABELS[locale] || LABELS.en;
-  const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
 
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
@@ -302,17 +272,13 @@ export default function BambuFilamentCatalogExperience({
   const [filters, setFilters] = useState({
     minRating: 0,
     selectedFinish: null as Finish | null,
-    hasPhysicalSwatch: false,
-    hasVerifiedPreset: false,
   });
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [colorQuery, setColorQuery] = useState("");
   const [searchHex, setSearchHex] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
   const [mobileBrandOpen, setMobileBrandOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [cardPrinters, setCardPrinters] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [brandSearch, setBrandSearch] = useState("");
@@ -346,16 +312,14 @@ export default function BambuFilamentCatalogExperience({
       searchHex,
       minRating: filters.minRating,
       selectedFinish: filters.selectedFinish,
-      hasPhysicalSwatch: filters.hasPhysicalSwatch,
-      hasVerifiedPreset: filters.hasVerifiedPreset,
       selectedPerformanceTags: [],
     }, catalogRecords),
     [catalogRecords, selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
   );
 
-  const selectedRecords = selectedIds
-    .map((id) => catalogRecords.find((r) => r.id === id))
-    .filter((r): r is CatalogRecord => Boolean(r));
+  const colorCards = useMemo(() => getCatalogColorCards(records), [records]);
+  const productLineCount = useMemo(() => getCatalogProductLineCount(records), [records]);
+  const officialColorCount = useMemo(() => getCatalogOfficialColorCount(records), [records]);
 
   const sidePanelClass = `min-w-0 rounded-[22px] border p-4 shadow-sm ${
     isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20"
@@ -367,14 +331,6 @@ export default function BambuFilamentCatalogExperience({
   const inactiveClass = isDark ? "border border-white/10 text-white/60" : "border border-[#E5DED0] text-[#6B665D]";
   const brandActiveBg = isDark ? "bg-lime-300/20 text-lime-200" : "bg-[#2563EB]/10 text-[#2563EB]";
   const brandHoverBg = isDark ? "hover:bg-white/[0.05]" : "hover:bg-[#F5F2EA]";
-
-  const toggleCompare = (id: string) => {
-    setSelectedIds((curr) => {
-      if (curr.includes(id)) return curr.filter((i) => i !== id);
-      if (curr.length >= 4) return curr;
-      return [...curr, id];
-    });
-  };
 
   const runColorSearch = () => {
     if (!colorQuery.trim()) return;
@@ -405,11 +361,11 @@ export default function BambuFilamentCatalogExperience({
     setImageFileName(null);
     setBrandSearch("");
     setBrandSort("popular");
-    setFilters({ minRating: 0, selectedFinish: null, hasPhysicalSwatch: false, hasVerifiedPreset: false });
+    setFilters({ minRating: 0, selectedFinish: null });
   };
 
   const hasActiveFilters = selectedBrand || selectedMaterial || selectedVariant || searchHex
-    || filters.minRating > 0 || filters.selectedFinish || filters.hasPhysicalSwatch || filters.hasVerifiedPreset;
+    || filters.minRating > 0 || filters.selectedFinish;
 
   const summaryParts: string[] = [];
   if (selectedBrand) summaryParts.push(selectedBrand);
@@ -467,11 +423,6 @@ export default function BambuFilamentCatalogExperience({
             >
               <BrandLogo brand={entry.name} size={20} />
               <span className="min-w-0 truncate">{locale === "en" ? entry.name : entry.nameZh}</span>
-              {entry.verificationStatus === "pending" && (
-                <span className={`shrink-0 ml-auto text-[10px] px-1.5 py-0.5 rounded-full ${
-                  isDark ? "bg-yellow-400/20 text-yellow-300" : "bg-yellow-500/10 text-yellow-700"
-                }`}>{t.pendingLabel}</span>
-              )}
               <span className={`shrink-0 text-xs ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>
                 {count > 0 ? count : "\u2014"}
               </span>
@@ -615,20 +566,6 @@ export default function BambuFilamentCatalogExperience({
               })}
             </div>
           </div>
-          {[
-            ["hasPhysicalSwatch", t.hasPhysicalSwatch],
-            ["hasVerifiedPreset", t.hasVerifiedPreset],
-          ].map(([key, label]) => (
-            <label key={key} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm ${
-              isDark ? "border-white/10 bg-white/[0.04] text-white/70" : "border-[#E8DFD0] bg-[#F7F2E8] text-[#6B665D]"
-            }`}>
-              <input type="checkbox" checked={Boolean(filters[key as keyof typeof filters])}
-                onChange={(e) => setFilters((prev) => ({ ...prev, [key]: e.target.checked }))}
-                className={isDark ? "accent-lime-300" : "accent-[#2563EB]"}
-              />
-              {label}
-            </label>
-          ))}
         </div>
       </div>
     </div>
@@ -648,6 +585,11 @@ export default function BambuFilamentCatalogExperience({
                 <h2 className="text-2xl font-semibold leading-tight">{t.catalogTitle}</h2>
                 <p className={isDark ? "mt-2 max-w-4xl text-sm leading-6 text-white/55" : "mt-2 max-w-4xl text-sm leading-6 text-[#6B665D]"}>
                   {t.catalogIntro}
+                </p>
+                <p className={`mt-2 text-sm font-medium ${isDark ? "text-white/70" : "text-[#18181B]"}`}>
+                  {locale === "zh-cn"
+                    ? `已收录 ${productLineCount} 个产品系列 · 共 ${officialColorCount} 种官方颜色`
+                    : `${productLineCount} product line${productLineCount === 1 ? "" : "s"} · ${officialColorCount} official color${officialColorCount === 1 ? "" : "s"}`}
                 </p>
               </div>
               <div className="flex gap-2 lg:hidden">
@@ -671,7 +613,7 @@ export default function BambuFilamentCatalogExperience({
                   </span>
                 )}
                 <span className={isDark ? "text-white/50" : "text-[#8A8173]"}>
-                  {"\u00B7"} {records.length} {t.results}
+                  {"\u00B7"} {colorCards.length} {t.results}
                 </span>
                 <button onClick={resetFilters}
                   className={`ml-auto text-xs underline underline-offset-4 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}
@@ -680,133 +622,12 @@ export default function BambuFilamentCatalogExperience({
             )}
 
             <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
-              {records.map((record) => {
-                const cardPrinterId = cardPrinters[record.id] || printerOptions[0]?.id || "";
-                const generatedPreset = generateBambuFilamentPresetSet(cardPrinterId);
-                const matchPreset = generatedPreset.find((p) => p.material.type === record.materialType);
-                const hasVerifiedParams = hasPresetParameters(record);
-                const presetsDisabled = !hasVerifiedParams;
-                const c = record.color;
-                const colorName = getLocalizedFilamentColorName(c, locale);
-                const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
-                const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
-
-                return (
-                  <article key={record.id}
-                    className={`min-w-0 rounded-[22px] border p-4 shadow-sm transition ${
-                      isDark ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20 hover:border-[#2563EB]/30"
-                    }`}
-                  >
-                    <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 gap-y-2">
-                      {c.hasDigitalSwatch && c.hex ? (
-                        <div
-                          className="h-11 w-11 rounded-xl border border-current/10"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                      ) : (
-                        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>
-                          --
-                        </div>
-                      )}
-
-                      <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-base font-semibold leading-snug">
-                          {record.published ? record.productLine : colorName}
-                          {!record.published && effectLabel ? ` (${effectLabel})` : ""}
-                        </h3>
-                      </div>
-
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-current/10 bg-white">
-                        <BrandLogo brand={record.brand} size={36} />
-                      </div>
-
-                      <div className="min-w-0 self-center">
-                        <div className={`truncate text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
-                          {getDisplayBrand(record.brand)}{" \u00B7 "}{record.productLine}
-                        </div>
-                        <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
-                          <Stars value={record.rating} />
-                          <span className="whitespace-nowrap">{record.rating.toFixed(1)} ({record.reviewCount})</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Info grid */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.colorCode}</div>
-                        {c.hasDigitalSwatch && c.hex && c.rgb ? (
-                          <>
-                            <div className={isDark ? "text-white/80" : "text-[#18181B]"}>HEX: {c.hex}</div>
-                            <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>RGB: {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</div>
-                          </>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{colorName}</div>
-                        )}
-                      </div>
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.physicalReference}</div>
-                        {c.hasPhysicalSwatch ? (
-                          <div className={isDark ? "text-white/80" : "text-[#18181B]"}>{c.physicalSwatchCount} {t.images}</div>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{t.noPhysicalSwatch}</div>
-                        )}
-                        <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>{transLabel}</div>
-                      </div>
-                    </div>
-
-
-                    <div className="mt-4">
-                      <div className="flex gap-2">
-                        <select
-                          value={cardPrinters[record.id] || ""}
-                          onChange={(e) => setCardPrinters((prev) => ({ ...prev, [record.id]: e.target.value }))}
-                          className={`min-w-0 flex-1 rounded-2xl border px-3 py-2.5 text-xs outline-none transition ${
-                            isDark ? "border-white/10 bg-black/30 text-white" : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B]"
-                          }`}
-                        >
-                          <option value="" disabled>{t.selectPrinter}</option>
-                          {printerOptions.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => { if (matchPreset && !presetsDisabled) downloadJson(buildPresetDownloadFileName(record), matchPreset.preset); }}
-                          disabled={!matchPreset || presetsDisabled}
-                          className={`shrink-0 rounded-2xl px-4 py-2.5 text-xs font-medium transition ${
-                            !matchPreset || presetsDisabled
-                              ? "opacity-40 cursor-not-allowed " + (isDark ? "bg-white/10 text-white/40" : "bg-[#E8DFD0] text-[#8A8173]")
-                              : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
-                          }`}
-                        >
-                          {presetsDisabled ? t.paramsPending : (matchPreset ? t.downloadPreset : t.noPreset)}
-                        </button>
-                      </div>
-                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
-                        {presetsDisabled ? t.presetsUnavailable : t.presetNoGcode}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex gap-2">
-                      <Link href={`${locale === "en" ? "" : `/${locale}`}/filaments/${record.id}`}
-                        className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
-                          isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"
-                        }`}
-                      >{t.detail}</Link>
-                      <button onClick={() => toggleCompare(record.id)}
-                        className={`flex-1 rounded-2xl px-3 py-2.5 text-xs font-medium transition ${
-                          selectedIds.includes(record.id)
-                            ? (isDark ? "bg-[#3B82F6] text-white" : "bg-[#2563EB] text-white")
-                            : (isDark ? "border border-white/10 text-white/60 hover:bg-white/[0.05]" : "border border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]")
-                        }`}
-                      >{selectedIds.includes(record.id) ? t.remove : t.addCompare}</button>
-                    </div>
-                  </article>
-                );
-              })}
+              {colorCards.map((card) => (
+                <ColorCard key={card.id} card={card} locale={locale} />
+              ))}
             </div>
 
-            {records.length === 0 ? (
+            {colorCards.length === 0 ? (
               <div className={`mt-5 rounded-2xl border p-6 text-sm ${softButtonClass}`}>{t.noResults}</div>
             ) : null}
 
@@ -855,38 +676,6 @@ export default function BambuFilamentCatalogExperience({
         </div>
       )}
 
-      {/* Compare bar */}
-      {selectedRecords.length > 0 ? (
-        <div className={`fixed bottom-4 left-4 right-4 z-40 rounded-2xl border p-4 shadow-2xl lg:left-auto lg:right-6 lg:w-[440px] ${
-          isDark ? "border-white/10 bg-[#101114]/95 text-white" : "border-[#E5DED0] bg-[#FFFDF7]/95 text-[#18181B]"
-        }`}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold">{selectedRecords.length} {t.selected}</div>
-              <p className="mt-1 text-xs opacity-70">{t.compareHint}{" \u00B7 "}{t.compare}</p>
-            </div>
-            <button onClick={() => setSelectedIds([])} className="text-sm underline underline-offset-4">{t.clear}</button>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedRecords.map((record) => (
-              <button key={record.id} onClick={() => toggleCompare(record.id)}
-                className="rounded-full border border-current/15 px-3 py-1 text-xs"
-              >{record.brand} {record.materialType} {getLocalizedFilamentColorName(record.color, locale)} \u00D7</button>
-            ))}
-          </div>
-          {selectedRecords.length >= 2 ? (
-            <Link href={`/filaments/compare?ids=${selectedIds.join(",")}`}
-              className={`mt-3 block w-full rounded-2xl px-5 py-3 text-center text-sm font-medium ${
-                isDark ? "bg-lime-300 text-black" : "bg-[#2563EB] text-white"
-              }`}
-            >{t.startCompare}</Link>
-          ) : (
-            <button disabled
-              className={`mt-3 block w-full rounded-2xl px-5 py-3 text-sm font-medium opacity-50 ${softButtonClass}`}
-            >{t.startCompare}</button>
-          )}
-        </div>
-      ) : null}
     </ToolPanel>
   );
 }
