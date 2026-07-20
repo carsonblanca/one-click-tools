@@ -5,6 +5,9 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import BrandProfilePage from "@/components/filaments/BrandProfilePage";
 import { filamentBrandProfiles, getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
+import { getVisibleCatalogRecordsByBrand } from "@/lib/filaments/catalog/published-catalog";
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return filamentBrandProfiles.map((brand) => ({ brandId: brand.id }));
@@ -42,6 +45,7 @@ export default async function BrandPage({
 }) {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
+  const records = brand ? await getVisibleCatalogRecordsByBrand(brand.name) : [];
 
   if (!brand) {
     return (
@@ -61,7 +65,7 @@ export default async function BrandPage({
   return (
     <PageShell>
       <SiteHeader />
-      <BrandProfilePage brand={brand} locale="en" />
+      <BrandProfilePage brand={brand} locale="en" catalogRecords={records} />
       <SiteFooter />
     </PageShell>
   );

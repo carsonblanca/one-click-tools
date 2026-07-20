@@ -15,6 +15,7 @@ import {
 import BrandLogo from "./BrandLogo";
 import type { Locale } from "@/lib/i18n";
 import { useMemo, useState } from "react";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 
 const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
   en: {
@@ -342,13 +343,15 @@ function brandProfileIdForBrand(brand: string) {
 export default function FilamentDetailPageContent({
   filamentId,
   locale = "en",
+  catalogRecord,
 }: {
   filamentId: string;
   locale?: Locale;
+  catalogRecord?: CatalogRecord | null;
 }) {
   const { isDark } = useTheme();
   const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
-  const record = getCatalogRecord(filamentId);
+  const record = catalogRecord || getCatalogRecord(filamentId);
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
   const [printerIdGlobal, setPrinterIdGlobal] = useState(printerOptions[0]?.id || "");
 
@@ -410,7 +413,7 @@ export default function FilamentDetailPageContent({
                   <span className={`text-sm ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{record.brand}</span>
                 </div>
                 <h1 className={`text-2xl font-semibold ${isDark ? "text-white" : "text-[#18181B]"}`}>
-                  {colorName}
+                  {record.published ? record.productLine : colorName}
                 </h1>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                   {record.productLine} · {record.materialType} {record.variant}
@@ -464,20 +467,47 @@ export default function FilamentDetailPageContent({
             </div>
           </DetailSection>
 
+          {record.published ? (
+            <DetailSection title={locale === "zh-cn" ? `官方颜色（${record.published.colors.length}）` : `Official colors (${record.published.colors.length})`}>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {record.published.colors.map((item) => (
+                  <div key={item.id} className={`rounded-xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#E5DED0] bg-[#F5F2EA]"}`}>
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.nameZh} className="aspect-square w-full rounded-lg object-cover" />
+                    ) : null}
+                    <p className="mt-2 text-sm font-medium">{locale === "zh-cn" ? item.nameZh : item.nameEn}</p>
+                    <p className="text-xs opacity-60">{t.officialColorCode}: {item.officialColorCode}</p>
+                  </div>
+                ))}
+              </div>
+            </DetailSection>
+          ) : null}
+
           <DetailSection title={t.parameters}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
-              <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
-              <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
-              <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
-              <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
-              <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
-              <FieldRow label={t.verificationStatus} value={getCompareValue(record, "verificationLevel")} unknownLabel={t.unknown} />
-              <FieldRow label={t.evidenceCount} value={getCompareValue(record, "evidenceCount")} unknownLabel={t.unknown} />
-              <FieldRow label={t.score} value={getCompareValue(record, "score")} unknownLabel={t.unknown} />
+              {record.published ? record.published.parameters.map((parameter) => (
+                <FieldRow
+                  key={parameter.canonicalKey}
+                  label={locale === "zh-cn" ? parameter.labelZh : parameter.canonicalKey}
+                  value={parameter.value}
+                  unknownLabel={t.unknown}
+                />
+              )) : (
+                <>
+                  <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
+                  <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.verificationStatus} value={getCompareValue(record, "verificationLevel")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.evidenceCount} value={getCompareValue(record, "evidenceCount")} unknownLabel={t.unknown} />
+                  <FieldRow label={t.score} value={getCompareValue(record, "score")} unknownLabel={t.unknown} />
+                </>
+              )}
             </div>
             <div className="mt-5">
               <div className={`text-sm font-medium mb-3 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.printerDownload}</div>

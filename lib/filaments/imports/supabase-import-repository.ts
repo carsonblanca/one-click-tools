@@ -291,3 +291,58 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     updated_at: string;
   } | null;
 }
+
+export async function countFilamentImports() {
+  const { count, error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .select("id", { count: "exact", head: true });
+  if (error) throw repositoryError("count_imports");
+  return count ?? 0;
+}
+
+export async function countFilamentDrafts(sourceRunId?: string) {
+  let query = getServerSupabaseClient()
+    .from("filament_drafts")
+    .select("id", { count: "exact", head: true });
+  if (sourceRunId) query = query.eq("source_run_id", sourceRunId);
+  const { count, error } = await query;
+  if (error) throw repositoryError("count_drafts");
+  return count ?? 0;
+}
+
+export async function listPublishedFilamentDrafts() {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at",
+    )
+    .eq("publication_status", "published")
+    .order("updated_at", { ascending: false });
+  if (error) throw repositoryError("list_published_drafts");
+  return (data ?? []) as NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>[];
+}
+
+export async function publishFilamentDraft(input: {
+  sourceRunId: string;
+  draftId: string;
+  actorId: string;
+}) {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .update({
+      status: "published",
+      review_status: "approved",
+      publication_status: "published",
+      updated_by: input.actorId,
+    })
+    .eq("source_run_id", input.sourceRunId)
+    .eq("id", input.draftId)
+    .eq("publication_status", "draft")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at",
+    )
+    .maybeSingle();
+  if (error) throw repositoryError("publish_draft");
+  if (!data) throw new Error("publish_draft_precondition_failed");
+  return data as NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>;
+}

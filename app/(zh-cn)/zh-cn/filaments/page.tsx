@@ -3,6 +3,9 @@ import PageShell from "@/components/PageShell";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BambuFilamentCatalogExperience from "@/components/filaments/BambuFilamentCatalogExperience";
+import { getVisibleCatalogRecords } from "@/lib/filaments/catalog/published-catalog";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "3D 打印耗材库 | OneClick Tools",
@@ -13,11 +16,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SimplifiedChineseFilamentPage() {
+export default async function SimplifiedChineseFilamentPage() {
+  const records = await getVisibleCatalogRecords();
   return (
     <PageShell>
       <SiteHeader />
-      <BambuFilamentCatalogExperience locale="zh-cn" />
+      <BambuFilamentCatalogExperience locale="zh-cn" catalogRecords={records} />
       <SiteFooter />
     </PageShell>
   );

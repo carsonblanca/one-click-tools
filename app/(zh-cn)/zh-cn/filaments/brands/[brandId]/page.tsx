@@ -5,8 +5,10 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import BrandProfilePage from "@/components/filaments/BrandProfilePage";
 import { filamentBrandProfiles, getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
+import { getVisibleCatalogRecordsByBrand } from "@/lib/filaments/catalog/published-catalog";
 
 const baseUrl = "https://one-click-tools.com";
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return filamentBrandProfiles.map((brand) => ({ brandId: brand.id }));
@@ -47,6 +49,7 @@ export default async function SimplifiedChineseBrandPage({
 }) {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
+  const records = brand ? await getVisibleCatalogRecordsByBrand(brand.name) : [];
 
   if (!brand) {
     return (
@@ -66,7 +69,7 @@ export default async function SimplifiedChineseBrandPage({
   return (
     <PageShell>
       <SiteHeader locale="zh-cn" />
-      <BrandProfilePage brand={brand} locale="zh-cn" />
+      <BrandProfilePage brand={brand} locale="zh-cn" catalogRecords={records} />
       <SiteFooter locale="zh-cn" />
     </PageShell>
   );

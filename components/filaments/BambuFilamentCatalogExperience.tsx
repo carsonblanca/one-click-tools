@@ -24,6 +24,7 @@ import {
   getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
   hasPresetParameters,
+  type CatalogRecord,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { Locale } from "@/lib/i18n";
@@ -276,19 +277,21 @@ function getDisplayBrand(brand: string): string {
   return BRAND_SHORT_MAP[brand] || brand;
 }
 
-function variantCount(materialType: string, variant: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType && r.variant === variant).length;
+function variantCount(records: CatalogRecord[], materialType: string, variant: string): number {
+  return records.filter((r) => r.materialType === materialType && r.variant === variant).length;
 }
 
-function materialCount(materialType: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType).length;
+function materialCount(records: CatalogRecord[], materialType: string): number {
+  return records.filter((r) => r.materialType === materialType).length;
 }
 
-function brandCount(brandName: string): number {
-  return CATALOG_RECORDS.filter((r) => r.brand === brandName).length;
-}
-
-export default function BambuFilamentCatalogExperience({ locale = "en" }: { locale?: Locale }) {
+export default function BambuFilamentCatalogExperience({
+  locale = "en",
+  catalogRecords = CATALOG_RECORDS,
+}: {
+  locale?: Locale;
+  catalogRecords?: CatalogRecord[];
+}) {
   const { isDark } = useTheme();
   const t = LABELS[locale] || LABELS.en;
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
@@ -322,17 +325,17 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
 
   const realBrandCounts = useMemo(() => {
     const map = new Map<string, number>();
-    for (const r of CATALOG_RECORDS) {
+    for (const r of catalogRecords) {
       map.set(r.brand, (map.get(r.brand) || 0) + 1);
     }
     return map;
-  }, []);
+  }, [catalogRecords]);
 
   const availableVariants = useMemo(() => {
     if (!selectedMaterial) return [];
     const all = MATERIAL_VARIANTS[selectedMaterial] || [];
-    return all.filter((v) => variantCount(selectedMaterial, v) > 0);
-  }, [selectedMaterial]);
+    return all.filter((v) => variantCount(catalogRecords, selectedMaterial, v) > 0);
+  }, [catalogRecords, selectedMaterial]);
 
   const records = useMemo(
     () => filterCatalogRecords({
@@ -346,13 +349,13 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
       hasPhysicalSwatch: filters.hasPhysicalSwatch,
       hasVerifiedPreset: filters.hasVerifiedPreset,
       selectedPerformanceTags: [],
-    }),
-    [selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
+    }, catalogRecords),
+    [catalogRecords, selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
   );
 
   const selectedRecords = selectedIds
-    .map((id) => CATALOG_RECORDS.find((r) => r.id === id))
-    .filter((r): r is typeof CATALOG_RECORDS[number] => Boolean(r));
+    .map((id) => catalogRecords.find((r) => r.id === id))
+    .filter((r): r is CatalogRecord => Boolean(r));
 
   const sidePanelClass = `min-w-0 rounded-[22px] border p-4 shadow-sm ${
     isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20"
@@ -385,7 +388,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(typeof reader.result === "string" ? reader.result : null);
-      const searchableRecords = CATALOG_RECORDS.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
+      const searchableRecords = catalogRecords.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
       const next = searchableRecords[Math.floor(Math.random() * searchableRecords.length)];
       if (next?.color.hex) setSearchHex(next.color.hex);
     };
@@ -539,7 +542,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
         <ToolLabel>{t.materialType}</ToolLabel>
         <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
           {MATERIAL_TYPES.map((mat) => {
-            const count = materialCount(mat);
+            const count = materialCount(catalogRecords, mat);
             return (
               <button key={mat} onClick={() => {
                 setSelectedMaterial(selectedMaterial === mat ? null : mat);
@@ -563,7 +566,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
           ) : (
             <div className="flex flex-wrap gap-2">
               {MATERIAL_VARIANTS[selectedMaterial]?.map((v) => {
-                const count = variantCount(selectedMaterial, v);
+                const count = variantCount(catalogRecords, selectedMaterial, v);
                 return (
                   <button key={v} onClick={() => setSelectedVariant(selectedVariant === v ? null : v)}
                     className={`rounded-xl px-3 py-2 text-sm transition ${selectedVariant === v ? activeClass : inactiveClass}`}
@@ -708,8 +711,8 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
 
                       <div className="min-w-0">
                         <h3 className="line-clamp-2 text-base font-semibold leading-snug">
-                          {colorName}
-                          {effectLabel ? ` (${effectLabel})` : ""}
+                          {record.published ? record.productLine : colorName}
+                          {!record.published && effectLabel ? ` (${effectLabel})` : ""}
                         </h3>
                       </div>
 
@@ -785,7 +788,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                     </div>
 
                     <div className="mt-3 flex gap-2">
-                      <Link href={`/filaments/${record.id}`}
+                      <Link href={`${locale === "en" ? "" : `/${locale}`}/filaments/${record.id}`}
                         className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
                           isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"
                         }`}

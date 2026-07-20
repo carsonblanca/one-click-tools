@@ -75,8 +75,8 @@ function templateFor(record: CatalogRecord) {
     || bambuFilamentMaterials[0];
 }
 
-export function getCatalogRecord(id: string) {
-  return CATALOG_RECORDS.find((record) => record.id === id);
+export function getCatalogRecord(id: string, records: CatalogRecord[] = CATALOG_RECORDS) {
+  return records.find((record) => record.id === id);
 }
 
 export function getCatalogRecords(ids: string[]) {
@@ -168,8 +168,8 @@ export function filterCatalogRecords({
   hasVerifiedPreset: boolean;
   selectedPerformanceTags: PerformanceTag[];
   searchHex: string | null;
-}) {
-  let records = [...CATALOG_RECORDS];
+}, sourceRecords: CatalogRecord[] = CATALOG_RECORDS) {
+  let records = [...sourceRecords];
 
   if (selectedMaterial) {
     records = records.filter((record) => record.materialType === selectedMaterial);

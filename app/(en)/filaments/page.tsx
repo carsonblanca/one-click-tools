@@ -3,6 +3,9 @@ import PageShell from "@/components/PageShell";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BambuFilamentCatalogExperience from "@/components/filaments/BambuFilamentCatalogExperience";
+import { getVisibleCatalogRecords } from "@/lib/filaments/catalog/published-catalog";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "3D Printing Filament Library | OneClick Tools",
@@ -13,11 +16,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FilamentCatalogPage() {
+export default async function FilamentCatalogPage() {
+  const records = await getVisibleCatalogRecords();
   return (
     <PageShell>
       <SiteHeader />
-      <BambuFilamentCatalogExperience locale="en" />
+      <BambuFilamentCatalogExperience locale="en" catalogRecords={records} />
       <SiteFooter />
     </PageShell>
   );
