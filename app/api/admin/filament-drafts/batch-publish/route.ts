@@ -10,7 +10,6 @@ import {
   publishFilamentDraft,
 } from "@/lib/filaments/imports/supabase-import-repository";
 import {
-  GOLDEN_DRAFT_ID,
   validateDraftForPublish,
   validateSinglePublishRequest,
 } from "@/lib/filaments/publishing/minimal-publish";
@@ -34,7 +33,8 @@ export async function POST(request: NextRequest) {
   if (requestIssues.length) {
     return NextResponse.json({ error: requestIssues.join(" ") }, { status: 400 });
   }
-  const sourceRunId = (body as { sourceRunIds: string[] }).sourceRunIds[0];
+  const publishRequest = body as { sourceRunIds: string[]; draftId?: string };
+  const sourceRunId = publishRequest.sourceRunIds[0];
 
   try {
     const [draftCount, importCount, sourceMatchCount, current, publishedRows] = await Promise.all([
@@ -44,21 +44,24 @@ export async function POST(request: NextRequest) {
       getFilamentDraftBySourceRunId(sourceRunId),
       listPublishedFilamentDrafts(),
     ]);
-    if (draftCount !== 1 || importCount !== 1 || sourceMatchCount !== 1) {
+    if (sourceMatchCount !== 1) {
       return NextResponse.json({
-        error: "发布前数据库数量门禁不一致。",
+        error: sourceMatchCount === 0 ? "草稿不存在。" : "sourceRunId 匹配到多条草稿。",
         counts: { drafts: draftCount, imports: importCount, sourceMatches: sourceMatchCount },
       }, { status: 409 });
     }
 
-    const issues = validateDraftForPublish(current, publishedRows);
+    const issues = validateDraftForPublish(current, publishedRows, {
+      sourceRunId,
+      draftId: publishRequest.draftId,
+    });
     if (issues.length) {
       return NextResponse.json({ error: "草稿未通过发布校验。", issues }, { status: 409 });
     }
 
     await publishFilamentDraft({
       sourceRunId,
-      draftId: GOLDEN_DRAFT_ID,
+      draftId: current!.id,
       actorId: session.actorId,
     });
 
@@ -69,10 +72,11 @@ export async function POST(request: NextRequest) {
       countFilamentDrafts(sourceRunId),
     ]);
     if (!readback
-      || readback.id !== GOLDEN_DRAFT_ID
+      || readback.id !== current!.id
+      || readback.source_run_id !== sourceRunId
       || readback.publication_status !== "published"
-      || draftsAfter !== 1
-      || importsAfter !== 1
+      || draftsAfter !== draftCount
+      || importsAfter !== importCount
       || sourceMatchesAfter !== 1) {
       return NextResponse.json({ error: "发布写后回读不一致。" }, { status: 500 });
     }

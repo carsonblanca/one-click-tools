@@ -5,10 +5,6 @@ import {
   normalizeStoredParameters,
 } from "@/lib/filaments/parameters/normalized-parameters";
 
-export const GOLDEN_SOURCE_RUN_ID = "opencode-20260718081745-d5c1e1ff-d199c528";
-export const GOLDEN_DRAFT_ID = "8a3ac57b-ffc6-4c35-9d2a-41482d5002a8";
-export const GOLDEN_PRODUCT_KEY = "kexcelled-k5-petg-m";
-
 export type PublishableDraftRow = {
   id: string;
   source_run_id: string;
@@ -61,13 +57,14 @@ export function validateSinglePublishRequest(value: unknown): string[] {
   const body = objectValue(value);
   const sourceRunIds = arrayValue(body.sourceRunIds).map(text).filter(Boolean);
   if (sourceRunIds.length !== 1) return ["第一版发布接口只允许一次发布一条草稿。"];
-  if (sourceRunIds[0] !== GOLDEN_SOURCE_RUN_ID) return ["当前发布接口仅允许黄金样本 sourceRunId。"];
+  if (body.draftId !== undefined && !text(body.draftId)) return ["draftId 格式无效。"];
   return [];
 }
 
 export function validateDraftForPublish(
   row: PublishableDraftRow | null,
   publishedRows: PublishableDraftRow[],
+  request: { sourceRunId: string; draftId?: string },
 ): string[] {
   if (!row) return ["草稿不存在。"]; 
   const data = objectValue(row.draft_data);
@@ -81,20 +78,20 @@ export function validateDraftForPublish(
   const serialized = JSON.stringify(data);
   const issues: string[] = [];
 
-  if (row.source_run_id !== GOLDEN_SOURCE_RUN_ID) issues.push("sourceRunId 不匹配。");
-  if (row.id !== GOLDEN_DRAFT_ID) issues.push("草稿 ID 不匹配。");
-  if (text(row.product_line_name) !== "THE K5 PETG M") issues.push("产品名称不匹配。");
-  if (productKey !== GOLDEN_PRODUCT_KEY) issues.push("productKey 不匹配。");
+  if (row.source_run_id !== request.sourceRunId) issues.push("sourceRunId 不匹配。");
+  if (request.draftId && row.id !== request.draftId) issues.push("草稿 ID 不匹配。");
+  if (!text(row.product_line_name)) issues.push("产品名称缺失。");
+  if (!productKey) issues.push("productKey 缺失。");
   if (row.publication_status !== "draft") issues.push("草稿不是待发布状态。");
   if (!["pending_review", "approved"].includes(row.review_status)) issues.push("reviewStatus 不可发布。");
-  if (Object.keys(fields).length !== 24) issues.push("正式参数数量不是 24。");
-  if (candidates.length !== 24) issues.push("候选参数数量不是 24。");
-  if (parameterEvidence.length !== 24) issues.push("参数证据数量不是 24。");
-  if (text(fields.materialType) !== "PETG") issues.push("材料类型不是 PETG。");
-  if (colors.length !== 22) issues.push("颜色数量不是 22。");
-  if (images.length !== 36) issues.push("图片数量不是 36。");
-  if (countProductLineRecords(colors, productKey) !== 22) issues.push("颜色 productLineId 关系不是 22/22。");
-  if (countProductLineRecords(images, productKey) !== 36) issues.push("图片 productLineId 关系不是 36/36。");
+  if (!Object.keys(fields).length) issues.push("没有可发布的正式参数。");
+  if (!candidates.length) issues.push("没有参数候选记录。");
+  if (!parameterEvidence.length) issues.push("没有参数证据记录。");
+  if (!text(row.material_type) && !text(fields.materialType)) issues.push("材料类型缺失。");
+  if (!colors.length) issues.push("没有可发布的颜色。");
+  if (!images.length) issues.push("没有可发布的图片。");
+  if (countProductLineRecords(colors, productKey) !== colors.length) issues.push("存在跨产品颜色记录。");
+  if (countProductLineRecords(images, productKey) !== images.length) issues.push("存在跨产品图片记录。");
   if (colors.some((item) => !text(objectValue(item).localImagePath))) issues.push("存在没有图片关系的颜色。");
   if (serialized.includes("PC K7")) issues.push("仍包含 PC K7 污染。");
   if (serialized.includes("英文名待补充")) issues.push("仍包含英文名待补充。");
@@ -138,7 +135,7 @@ function publicAssetUrl(objectKey: string) {
     : null;
 }
 
-function mapColor(value: unknown, index: number) {
+function mapColor(value: unknown, index: number, productKey: string) {
   const source = objectValue(value);
   const nameZh = text(source.displayNameZhCN) || text(source.nameZh) || `颜色 ${index + 1}`;
   const nameEn = text(source.displayNameEn) || nameZh;
@@ -175,7 +172,7 @@ function mapColor(value: unknown, index: number) {
     }] : [],
   };
   return {
-    id: text(source.colorId) || text(source.matchKey) || `${GOLDEN_PRODUCT_KEY}-color-${index + 1}`,
+    id: text(source.colorId) || text(source.matchKey) || `${productKey}-color-${index + 1}`,
     nameZh,
     nameEn,
     officialColorCode,
@@ -197,7 +194,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   const productLine = objectValue(data.productLine);
   const normalizedParameters = normalizeStoredParameters(data.parameters);
   const productKey = productKeyOf(row);
-  const colors = arrayValue(data.colors).map(mapColor);
+  const colors = arrayValue(data.colors).map((color, index) => mapColor(color, index, productKey));
   const images = arrayValue(data.images).flatMap((value, index) => {
     const image = objectValue(value);
     const url = publicAssetUrl(text(image.r2ObjectKey));
@@ -212,7 +209,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     labelZh: getParameterDefinition(canonicalKey)?.zhCNLabel || canonicalKey,
     value,
   }));
-  const primary = colors[0]?.color || mapColor({}, 0).color;
+  const primary = colors[0]?.color || mapColor({}, 0, productKey).color;
   return {
     id: productKey,
     brand: "Kexcelled",
