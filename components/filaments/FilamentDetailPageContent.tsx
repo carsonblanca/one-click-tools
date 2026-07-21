@@ -289,9 +289,10 @@ function buildPresetDownloadFileName(record: { brand: string; productLine: strin
 
 function normalizeForKey(value: string) {
   return value
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-_]/g, "");
+    .replace(/[^\p{L}\p{N}\-_]/gu, "");
 }
 
 function DetailSection({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
@@ -322,12 +323,6 @@ function brandProfileIdForBrand(brand: string) {
   return "generic-profiles";
 }
 
-function selectProductFallbackImage(record: CatalogRecord): string | null {
-  const images = record.published?.images ?? [];
-  const product = images.find((image) => image.role === "product" || image.role === "spool");
-  return product?.url ?? images[0]?.url ?? null;
-}
-
 function getParameterLabel(canonicalKey: string, labelZh: string, locale: Locale) {
   if (locale === "zh-cn" || locale === "zh-tw") return labelZh;
   return PARAMETER_LABELS_EN[canonicalKey] ?? canonicalKey;
@@ -351,25 +346,23 @@ type OfficialColor = {
   imageUrl: string | null;
 };
 
-function useOfficialColors(record: CatalogRecord): OfficialColor[] {
-  return useMemo(() => {
-    if (record.published && record.published.colors.length > 0) {
-      return record.published.colors.map((color) => ({
-        id: color.id,
-        nameZh: color.nameZh,
-        nameEn: color.nameEn,
-        officialColorCode: color.officialColorCode,
-        imageUrl: color.imageUrl || selectProductFallbackImage(record),
-      }));
-    }
-    return [{
-      id: record.id,
-      nameZh: record.color.colorNameZh,
-      nameEn: record.color.colorNameEn,
-      officialColorCode: record.color.digitalSwatch?.officialColorCode || "",
-      imageUrl: record.spool.spoolImagePlaceholder || selectProductFallbackImage(record),
-    }];
-  }, [record]);
+function getOfficialColors(record: CatalogRecord): OfficialColor[] {
+  if (record.published && record.published.colors.length > 0) {
+    return record.published.colors.map((color) => ({
+      id: color.id,
+      nameZh: color.nameZh,
+      nameEn: color.nameEn,
+      officialColorCode: color.officialColorCode,
+      imageUrl: color.imageUrl,
+    }));
+  }
+  return [{
+    id: record.id,
+    nameZh: record.color.colorNameZh,
+    nameEn: record.color.colorNameEn,
+    officialColorCode: record.color.digitalSwatch?.officialColorCode || "",
+    imageUrl: record.spool.spoolImagePlaceholder,
+  }];
 }
 
 function findColorIndex(colors: OfficialColor[], colorParam: string | null) {
@@ -427,13 +420,31 @@ export default function FilamentDetailPageContent({
   catalogRecord?: CatalogRecord | null;
 }) {
   const { isDark } = useTheme();
+  const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
+  const record = catalogRecord || getCatalogRecord(filamentId);
+
+  if (!record) {
+    return (
+      <section className="relative mx-auto max-w-4xl px-6 py-20 text-center">
+        <h1 className="text-4xl font-semibold">{t.notFound}</h1>
+        <Link href="/tools/bambu-filament-preset-generator" className={`mt-6 inline-block underline underline-offset-4 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>
+          {t.back}
+        </Link>
+      </section>
+    );
+  }
+
+  return <ResolvedFilamentDetailPage record={record} locale={locale} />;
+}
+
+function ResolvedFilamentDetailPage({ record, locale }: { record: CatalogRecord; locale: Locale }) {
+  const { isDark } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
-  const record = catalogRecord || getCatalogRecord(filamentId);
 
-  const colors = useOfficialColors(record ?? null as unknown as CatalogRecord);
+  const colors = useMemo(() => getOfficialColors(record), [record]);
   const colorQuery = searchParams?.get("color") ?? null;
   const matchedIndex = findColorIndex(colors, colorQuery);
   const selectedIndex = matchedIndex >= 0 ? matchedIndex : colors.findIndex((color) => color.imageUrl) ?? 0;
@@ -447,17 +458,6 @@ export default function FilamentDetailPageContent({
 
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
   const [printerIdGlobal, setPrinterIdGlobal] = useState(printerOptions[0]?.id || "");
-
-  if (!record) {
-    return (
-      <section className="relative mx-auto max-w-4xl px-6 py-20 text-center">
-        <h1 className="text-4xl font-semibold">{t.notFound}</h1>
-        <Link href="/tools/bambu-filament-preset-generator" className={`mt-6 inline-block underline underline-offset-4 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>
-          {t.back}
-        </Link>
-      </section>
-    );
-  }
 
   const brandProfile = getBrandProfile(brandProfileIdForBrand(record.brand));
   const brandData = brandProfile || null;
@@ -493,7 +493,7 @@ export default function FilamentDetailPageContent({
         <div className="space-y-6">
           <DetailSection title={t.officialImage}>
             <ImageWithPlaceholder
-              src={currentColor?.imageUrl || selectProductFallbackImage(record)}
+              src={currentColor?.imageUrl || null}
               alt={currentColor?.nameZh || record.productLine}
               containerClassName="rounded-xl border aspect-square w-full flex items-center justify-center"
               objectClassName="h-full w-full object-contain"

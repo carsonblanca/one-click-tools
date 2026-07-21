@@ -188,7 +188,7 @@ describe("getCatalogColorCards", () => {
     }
   });
 
-  it("keeps cards without images instead of hiding them", () => {
+  it("keeps cards without images and does not borrow a generic product image", () => {
     const records: CatalogRecord[] = [
       {
         ...createMockRecord("a", "line-a", "红", "RED"),
@@ -197,7 +197,7 @@ describe("getCatalogColorCards", () => {
           publicationStatus: "published",
           parameters: [],
           colors: [createPublishedColor("c1", "红", "RED", null)],
-          images: [],
+          images: [{ id: "product-image", role: "product", url: "https://example.com/generic-product.png" }],
         },
       },
     ];
@@ -226,6 +226,29 @@ describe("getCatalogColorCards", () => {
     assert.equal(cards.length, 2);
     const keys = new Set(cards.map((card) => card.id));
     assert.equal(keys.size, 2);
+  });
+
+  it("scopes repeated color ids to their product line", () => {
+    const records: CatalogRecord[] = ["line-a", "line-b"].map((productLineId) => ({
+      ...createMockRecord(productLineId, productLineId, "黑", "BLK"),
+      published: {
+        sourceRunId: productLineId,
+        publicationStatus: "published",
+        parameters: [],
+        colors: [createPublishedColor("shared-color-id", "黑", "BLK", null)],
+        images: [],
+      },
+    }));
+    const cards = getCatalogColorCards(records);
+    assert.equal(cards.length, 2);
+    assert.equal(new Set(cards.map((card) => card.id)).size, 2);
+    assert.ok(cards.every((card) => card.id.startsWith(`${card.productLineId}:`)));
+  });
+
+  it("adds a stable color parameter to static fallback links", () => {
+    const record = createMockRecord("source-sku-black", "line-a", "黑", "BLK");
+    const [card] = getCatalogColorCards([record]);
+    assert.equal(card.detailUrl, "/filaments/line-a?color=BLK");
   });
 });
 
@@ -280,7 +303,7 @@ describe("splitPublishedParameters", () => {
       "materialType", "filamentDiameter", "netWeight", "density", "diameterTolerance",
       "meltFlowIndex", "nozzleTemperature", "nozzleDiameter", "bedTemperature", "coolingFan",
       "printingSpeed", "retractionDistance", "retractionSpeed", "buildPlateSurface",
-      "tensileStrength", "elongationAtBreak", "impactStrength", "unnotchedImpactStrength",
+      "tensileStrength", "elongationAtBreak", "unnotchedImpactStrength",
       "notchedImpactStrength", "flexuralStrength", "flexuralModulus", "heatDeflectionTemperature",
       "vicatSofteningTemperature", "dryingTemperature", "dryingTime",
     ];
@@ -290,6 +313,7 @@ describe("splitPublishedParameters", () => {
       value: "sample",
     }));
     const { product, print } = splitPublishedParameters(parameters);
+    assert.equal(coreKeys.length, 24);
     assert.equal(product.length + print.length, coreKeys.length);
     assert.equal(
       new Set([...product, ...print].map((parameter) => parameter.canonicalKey)).size,
@@ -297,5 +321,9 @@ describe("splitPublishedParameters", () => {
     );
     assert.equal(print.length, 10);
     assert.equal(product.length, coreKeys.length - 10);
+    assert.deepEqual(
+      new Set([...product, ...print].map((parameter) => parameter.canonicalKey)),
+      new Set(coreKeys),
+    );
   });
 });

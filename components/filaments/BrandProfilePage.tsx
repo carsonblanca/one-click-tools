@@ -30,6 +30,10 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "Headquarters",
     productionLocation: "Actual production location",
     factoryStatus: "Factory status",
+    verificationStatus: "Verification status",
+    verified: "Verified",
+    partial: "Partially verified",
+    unverified: "Unverified",
     catalogFilaments: "Filaments in this prototype",
     rating: "Score",
     website: "Official website",
@@ -59,6 +63,10 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "总部所在地",
     productionLocation: "实际生产地",
     factoryStatus: "工厂状态",
+    verificationStatus: "验证状态",
+    verified: "已验证",
+    partial: "部分验证",
+    unverified: "未验证",
     catalogFilaments: "原型中的耗材",
     rating: "评分",
     website: "官方网站",
@@ -88,6 +96,10 @@ const BRAND_LABELS: Record<Locale, Record<string, string>> = {
     headquarters: "總部所在地",
     productionLocation: "實際生產地",
     factoryStatus: "工廠狀態",
+    verificationStatus: "核驗狀態",
+    verified: "已核驗",
+    partial: "部分核驗",
+    unverified: "未核驗",
     catalogFilaments: "原型中的線材",
     rating: "評分",
     website: "官方網站",
@@ -238,6 +250,13 @@ export default function BrandProfilePage({
             <div>
               <dt className="text-sm opacity-60">{t.factoryStatus}</dt>
               <dd className="mt-1 font-medium">{factoryStatus}</dd>
+            </div>
+            <div>
+              <dt className="text-sm opacity-60">{t.verificationStatus}</dt>
+              <dd className="mt-1 font-medium">
+                {brand.verificationStatus === "verified" ? t.verified : brand.verificationStatus === "partial" ? t.partial : t.unverified}
+                · {brand.lastVerifiedAt || t.unknown}
+              </dd>
             </div>
           </dl>
         </div>

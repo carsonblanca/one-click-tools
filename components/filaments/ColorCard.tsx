@@ -24,7 +24,7 @@ export default function ColorCard({ card, locale = "en" }: ColorCardProps) {
   const [hovered, setHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const imageUrl = card.imageUrl || card.fallbackImageUrl;
+  const imageUrl = card.imageUrl;
   const hasImage = Boolean(imageUrl) && !imageError;
   const safeImageUrl = imageUrl || undefined;
   const placeholder = noImageLabel(locale);

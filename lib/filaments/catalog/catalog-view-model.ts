@@ -213,7 +213,7 @@ export function resolveCatalogColorInput(input: string) {
   const rgbParts = trimmed.match(/\d+/g);
   if (rgbParts && rgbParts.length >= 3) {
     const [r, g, b] = rgbParts.slice(0, 3).map((part) => Math.max(0, Math.min(255, Number(part))));
-    return { family: resolveColorFamily(trimmed) as ColorFamily | null, hex: `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase() };
+    return { family: null, hex: `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase() };
   }
   return { family: resolveColorFamily(trimmed) as ColorFamily | null, hex: null };
 }
@@ -263,7 +263,6 @@ export type ColorCard = {
   colorNameEn: string;
   officialColorCode: string;
   imageUrl: string | null;
-  fallbackImageUrl: string | null;
   detailUrl: string;
 };
 
@@ -273,27 +272,24 @@ function text(value: unknown): string {
 
 function normalizeForKey(value: string) {
   return value
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-_]/g, "");
+    .replace(/[^\p{L}\p{N}\-_]/gu, "");
 }
 
 function colorCardId(productLineId: string, color: { id?: string; officialColorCode?: string; colorNameZh?: string }) {
-  return (
+  const colorKey = (
     text(color.id) ||
-    (text(color.officialColorCode) ? `${productLineId}-${text(color.officialColorCode)}` : "") ||
-    (text(color.colorNameZh) ? `${productLineId}-${normalizeForKey(text(color.colorNameZh))}` : "")
+    text(color.officialColorCode) ||
+    normalizeForKey(text(color.colorNameZh)) ||
+    "unknown-color"
   );
+  return `${productLineId}:${colorKey}`;
 }
 
 function colorCardDetailParam(color: { officialColorCode?: string; id?: string; colorNameZh?: string }) {
   return encodeURIComponent(text(color.officialColorCode) || text(color.id) || normalizeForKey(text(color.colorNameZh)));
-}
-
-function productImageFallback(record: CatalogRecord): string | null {
-  const images = record.published?.images ?? [];
-  const productImage = images.find((image) => image.role === "product") ?? images[0];
-  return productImage?.url ?? null;
 }
 
 export function getCatalogProductLineCount(records: CatalogRecord[]) {
@@ -315,12 +311,10 @@ export function getCatalogColorCards(records: CatalogRecord[]): ColorCard[] {
   return records.flatMap((record) => {
     const productLineId = record.productLineId || record.id;
     const productLineName = record.productLine;
-    const fallbackImageUrl = productImageFallback(record);
 
     const publishedColors = record.published?.colors;
     if (publishedColors && publishedColors.length > 0) {
       return publishedColors.map((color) => {
-        const imageUrl = color.imageUrl || fallbackImageUrl;
         return {
           id: colorCardId(productLineId, { id: color.id, officialColorCode: color.officialColorCode, colorNameZh: color.nameZh }),
           productLineId,
@@ -331,8 +325,7 @@ export function getCatalogColorCards(records: CatalogRecord[]): ColorCard[] {
           colorNameZh: color.nameZh,
           colorNameEn: color.nameEn,
           officialColorCode: color.officialColorCode,
-          imageUrl,
-          fallbackImageUrl,
+          imageUrl: color.imageUrl,
           detailUrl: `/filaments/${productLineId}?color=${colorCardDetailParam({ officialColorCode: color.officialColorCode, id: color.id, colorNameZh: color.nameZh })}`,
         };
       });
@@ -350,9 +343,12 @@ export function getCatalogColorCards(records: CatalogRecord[]): ColorCard[] {
       colorNameZh: primary.colorNameZh,
       colorNameEn: primary.colorNameEn,
       officialColorCode: primary.digitalSwatch?.officialColorCode || "",
-      imageUrl: record.spool.spoolImagePlaceholder || fallbackImageUrl,
-      fallbackImageUrl: record.spool.spoolImagePlaceholder || fallbackImageUrl,
-      detailUrl: `/filaments/${productLineId}`,
+      imageUrl: record.spool.spoolImagePlaceholder,
+      detailUrl: `/filaments/${productLineId}?color=${colorCardDetailParam({
+        officialColorCode: primary.digitalSwatch?.officialColorCode,
+        id: record.id,
+        colorNameZh: primary.colorNameZh,
+      })}`,
     }];
   });
 }
