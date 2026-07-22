@@ -198,8 +198,11 @@ function saveJson(path, value) {
 export async function runImport(options, dependencies = {}) {
   const inputPath = resolve(stringValue(options.input));
   const outputDir = resolve(stringValue(options.outputDir));
-  if (!options.input || !options.outputDir || !options.baseUrl || !options.cookieFile) {
-    throw new ImportRunnerError("arguments", "Required: --input, --base-url, --output-dir, and --cookie-file");
+  if (!options.input || !options.outputDir || !options.baseUrl) {
+    throw new ImportRunnerError("arguments", "Required: --input, --base-url, and --output-dir");
+  }
+  if (options.executeUpload && !options.cookieFile) {
+    throw new ImportRunnerError("arguments", "--execute-upload requires --cookie-file");
   }
   const baseUrl = validateBaseUrl(options.baseUrl);
   try {
@@ -213,12 +216,14 @@ export async function runImport(options, dependencies = {}) {
   } catch {
     throw new ImportRunnerError("environment_preflight", "Output directory is not writable");
   }
-  let cookieHeader;
-  try {
-    cookieHeader = readCookieFile(resolve(options.cookieFile), baseUrl);
-  } catch (error) {
-    if (error instanceof ImportRunnerError) throw error;
-    throw new ImportRunnerError("environment_preflight", "Administrator cookie file does not exist or is not readable");
+  let cookieHeader = "";
+  if (options.executeUpload) {
+    try {
+      cookieHeader = readCookieFile(resolve(options.cookieFile), baseUrl);
+    } catch (error) {
+      if (error instanceof ImportRunnerError) throw error;
+      throw new ImportRunnerError("environment_preflight", "Administrator cookie file does not exist or is not readable");
+    }
   }
   const inputBytes = readFileSync(inputPath);
   const stem = basename(inputPath).replace(/\.zip$/i, "") || "filament";
@@ -238,6 +243,9 @@ export async function runImport(options, dependencies = {}) {
     counts: preflight.counts,
     localSourceRunId: preflight.sourceRunId,
     publicationEligibility: preflight.publicationEligibility,
+    officialSpecificationTable: stringValue(preflight.report.officialSpecificationTable) || "unknown",
+    parameterEvidenceComplete: preflight.report.parameterEvidenceComplete === true,
+    requiresManualReview: preflight.manifest.requiresManualReview !== false,
     automaticallyPublished: false,
     publicationNotice: "未自动发布",
   };

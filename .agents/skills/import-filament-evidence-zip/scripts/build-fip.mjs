@@ -69,9 +69,10 @@ function officialSpecTable(ocr, productLine) {
     && /密度/.test(block)
     && /测试标准/.test(block)
   ));
-  if (matches.length !== 1) {
-    fail(`Expected one official specification table for ${productLine}, found ${matches.length}`);
+  if (matches.length > 1) {
+    fail(`Ambiguous official specification tables for ${productLine}: found ${matches.length}`);
   }
+  if (!matches.length) return null;
   return {
     sourcePath: text(matches[0].match(/^SOURCE:\s*(.+)$/m)?.[1]),
     text: matches[0],
@@ -374,7 +375,7 @@ const materialParameter = candidate(
   { sourceFile: "capture.json", productLineId, officialRawName: "材料类型" },
 );
 const collectedParameters = [
-  ...numericCandidates(ocr, mappings, productLineId, specTable),
+  ...(specTable ? numericCandidates(ocr, mappings, productLineId, specTable) : []),
   materialParameter,
   ...visionTables.flatMap((table) => recommendedPrintCandidates(table, productLineId)),
 ];
@@ -398,7 +399,7 @@ const retainedPaths = new Set(requiredColorPaths);
 const assetBudgetBytes = 3_500_000;
 let retainedBytes = requiredColorPaths.reduce((sum, path) => sum + (files[path]?.byteLength || 0), 0);
 const prioritizedProductPaths = [
-  ...(files[specTable.sourcePath] ? [specTable.sourcePath] : []),
+  ...(specTable?.sourcePath && files[specTable.sourcePath] ? [specTable.sourcePath] : []),
   ...visionTables.map((table) => table.sourcePath).filter((path) => files[path]),
   ...candidateProductPaths,
 ];
@@ -457,6 +458,7 @@ const requiredMissing = [];
 if (!displayName) requiredMissing.push("productName");
 if (!brand) requiredMissing.push("brand");
 if (!material) requiredMissing.push("material");
+if (!specTable) requiredMissing.push("officialSpecificationTable");
 if (!parameters.some((item) => item.field === "filamentDiameter" && ["confirmed", "official"].includes(item.reviewStatus) && !item.skuVariantSpecific)) {
   requiredMissing.push("filamentDiameter");
 }
@@ -494,6 +496,8 @@ const manifest = {
   totalPackageSizeBytes: inputBytes.byteLength,
   importStatus: autoPublishEligible ? "ready_for_review" : "ready_for_review",
   requiresManualReview: true,
+  officialSpecificationTable: specTable ? "present" : "missing",
+  parameterEvidenceComplete: Boolean(specTable),
   warnings: reasons,
   importDecision: {
     autoPublishEligible,
@@ -501,6 +505,9 @@ const manifest = {
     duplicateMatches,
     requiredMissing,
     reasons,
+    officialSpecificationTable: specTable ? "present" : "missing",
+    parameterEvidenceComplete: Boolean(specTable),
+    requiresManualReview: true,
   },
 };
 
@@ -535,12 +542,12 @@ const product = {
     nozzleRequirement: null,
     printNotes: null,
     parameterStatus: parameters.length ? "partial" : "missing",
-    evidenceRefs: ["identity", "ocr-spec-table", ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
+    evidenceRefs: ["identity", ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
     requiresManualReview: true,
     rawCandidates: parameters,
   },
   notes: reasons.join("; "),
-  evidenceRefs: ["identity", "colors", "ocr-spec-table", ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
+  evidenceRefs: ["identity", "colors", ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
 };
 
 const evidence = [
@@ -561,7 +568,7 @@ const evidence = [
     fieldBindings: ["brand", "productLine", "material", "materialType"],
     notes: text(meta.url),
   },
-  {
+  ...(specTable ? [{
     evidenceId: "ocr-spec-table",
     brandId,
     productLineId,
@@ -577,7 +584,7 @@ const evidence = [
     ocrConfidence: 0.82,
     fieldBindings: parameters.filter((item) => item.sourceFile === specTable.sourcePath).map((item) => item.canonicalKey || item.field),
     notes: "Scoped to the matching productLineId; full OCR text intentionally omitted.",
-  },
+  }] : []),
   ...visionTables.map((table, index) => ({
     evidenceId: `ocr-print-table-${index + 1}`,
     brandId,
@@ -624,6 +631,9 @@ const report = {
   savingRatio: null,
   ocrImageCount: Number(meta.ocrImagesCompleted) || 0,
   supplementalOcrTableCount: visionTables.length,
+  officialSpecificationTable: specTable ? "present" : "missing",
+  parameterEvidenceComplete: Boolean(specTable),
+  requiresManualReview: true,
   colorCandidateCount: colors.length,
   parameterCandidateCount: parameters.length,
   unresolvedCount: parameters.filter((item) => !["confirmed", "official"].includes(item.reviewStatus)).length + requiredMissing.length,
