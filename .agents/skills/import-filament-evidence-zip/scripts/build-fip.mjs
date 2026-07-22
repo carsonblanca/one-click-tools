@@ -139,6 +139,83 @@ function candidate(field, rawValue, normalizedValue, unit, confidence, status, s
   };
 }
 
+function explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine) {
+  const target = normalizedIdentity(productLine);
+  const sources = [];
+  const addSource = (sourceFile, value) => {
+    for (const line of text(value).split(/\r?\n/).map((item) => item.trim()).filter(Boolean)) {
+      if (normalizedIdentity(line).includes(target)) sources.push({ sourceFile, sourceText: line });
+    }
+  };
+  for (const mapping of mappings) addSource("color-mappings.json", mapping.sourceText);
+  if (files["page.txt"]) addSource("page.txt", strFromU8(files["page.txt"]));
+  addSource("page.meta.json", text(meta.userProvidedProductName) || text(meta.pageTitle));
+
+  const patterns = [
+    /(?<![\d.])(\d+(?:\.\d+)?)\s*(mm|毫米)?\s*[\/／]\s*(\d+(?:\.\d+)?)\s*(kg|g|公斤|千克|克)(?![A-Za-z\u4e00-\u9fff])/giu,
+    /(?<![\d.])(\d+(?:\.\d+)?)\s*(mm|毫米)?\s*[-–—]\s*[A-Z0-9]{2,12}\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(kg|g|公斤|千克|克)(?![A-Za-z\u4e00-\u9fff])/giu,
+  ];
+  const matches = [];
+  const seen = new Set();
+  for (const source of sources) {
+    for (const pattern of patterns) {
+      for (const match of source.sourceText.matchAll(pattern)) {
+        const diameter = Number(match[1]);
+        const weight = Number(match[3]);
+        const unit = match[4].toLowerCase();
+        const weightGrams = ["kg", "公斤", "千克"].includes(unit) ? weight * 1000 : weight;
+        if (!Number.isFinite(diameter) || !Number.isFinite(weightGrams)) continue;
+        const key = `${diameter}|${weightGrams}|${source.sourceFile}|${source.sourceText}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        matches.push({ ...source, diameter, weightGrams, rawValue: match[0] });
+      }
+    }
+  }
+
+  const diameterValues = [...new Set(matches.map((item) => item.diameter))];
+  const weightValues = [...new Set(matches.map((item) => item.weightGrams))];
+  const conflicts = [];
+  if (diameterValues.length > 1) conflicts.push({ field: "filamentDiameter", values: diameterValues.map((value) => `${value} mm`) });
+  if (weightValues.length > 1) conflicts.push({ field: "netWeight", values: weightValues.map((value) => `${value} g`) });
+  const candidates = [];
+  if (diameterValues.length === 1) {
+    const evidence = matches.find((item) => item.diameter === diameterValues[0]);
+    candidates.push(candidate(
+      "filamentDiameter",
+      `${diameterValues[0]} mm`,
+      String(diameterValues[0]),
+      "mm",
+      "high",
+      "official",
+      evidence.sourceText,
+      null,
+      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "线径" },
+    ));
+  }
+  if (weightValues.length === 1) {
+    const evidence = matches.find((item) => item.weightGrams === weightValues[0]);
+    candidates.push(candidate(
+      "netWeight",
+      `${weightValues[0]} g`,
+      String(weightValues[0]),
+      "g",
+      "high",
+      "official",
+      evidence.sourceText,
+      null,
+      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "净重" },
+    ));
+  }
+  return { candidates, conflicts };
+}
+
+function netWeightGrams(item) {
+  const value = Number(item?.normalizedValue);
+  if (!Number.isFinite(value)) return null;
+  return String(item?.unit).toLowerCase() === "kg" ? value * 1000 : value;
+}
+
 function normalizeRange(value) {
   return text(value)
     .replace(/[~～—−-]/g, "–")
@@ -363,6 +440,9 @@ const catalogRoot = resolve(options["catalog-root"] || join(process.cwd(), "data
 const duplicateMatches = exactCatalogMatches(displayName, catalogRoot);
 const specTable = officialSpecTable(ocr, productLine);
 const visionTables = supplementalVisionTables(files, imageIndex, ocr, productLine);
+const explicitBasics = specTable
+  ? { candidates: [], conflicts: [] }
+  : explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine);
 const materialParameter = candidate(
   "materialType",
   material,
@@ -377,6 +457,7 @@ const materialParameter = candidate(
 const collectedParameters = [
   ...(specTable ? numericCandidates(ocr, mappings, productLineId, specTable) : []),
   materialParameter,
+  ...explicitBasics.candidates,
   ...visionTables.flatMap((table) => recommendedPrintCandidates(table, productLineId)),
 ];
 const parameters = [...new Map(collectedParameters.map((item) => [
@@ -470,6 +551,7 @@ if (missingColorImages.length) requiredMissing.push("colorImages");
 const reasons = [];
 if (duplicateMatches.length) reasons.push(`EXACT_NAME_DUPLICATE:${displayName}`);
 if (requiredMissing.length) reasons.push(`MISSING_REQUIRED:${requiredMissing.join(",")}`);
+for (const conflict of explicitBasics.conflicts) reasons.push(`PARAMETER_CONFLICT:${conflict.field}=${conflict.values.join("|")}`);
 const autoPublishEligible = !duplicateMatches.length && !requiredMissing.length;
 const sourceHash = hash(inputBytes);
 const sourceRunId = `opencode-${text(meta.savedAt).replace(/[^0-9]/g, "").slice(0, 14) || Date.now()}-${sourceHash.slice(0, 8)}`;
@@ -505,6 +587,7 @@ const manifest = {
     duplicateMatches,
     requiredMissing,
     reasons,
+    parameterConflicts: explicitBasics.conflicts,
     officialSpecificationTable: specTable ? "present" : "missing",
     parameterEvidenceComplete: Boolean(specTable),
     requiresManualReview: true,
@@ -526,7 +609,7 @@ const product = {
   materialType: material,
   variant: "Standard",
   diameterMm: Number(parameters.find((item) => item.canonicalKey === "filamentDiameter" && item.reviewStatus === "official")?.normalizedValue) || null,
-  netWeightG: Number(parameters.find((item) => item.canonicalKey === "netWeight" && item.reviewStatus === "official")?.normalizedValue) * 1000 || null,
+  netWeightG: netWeightGrams(parameters.find((item) => item.canonicalKey === "netWeight" && item.reviewStatus === "official")) || null,
   sourceStatus: "captured_official_store",
   translationStatus: "source_preserved",
   colors,
@@ -638,6 +721,7 @@ const report = {
   parameterCandidateCount: parameters.length,
   unresolvedCount: parameters.filter((item) => !["confirmed", "official"].includes(item.reviewStatus)).length + requiredMissing.length,
   warnings: reasons,
+  parameterConflicts: explicitBasics.conflicts,
   importDecision: manifest.importDecision,
   expectedDraft: {
     parameterFieldCount: parameters.length,
@@ -674,7 +758,9 @@ const draftPatch = {
       officialRawName: item.officialRawName,
     })),
     status: requiredMissing.length ? "official_partial" : "official",
-    reviewNote: "Imported from the official specification table scoped to this productLineId.",
+    reviewNote: specTable
+      ? "Imported from the official specification table scoped to this productLineId."
+      : "Imported from explicit product and SKU text scoped to this productLineId; the official specification table is missing.",
   },
   evidence,
 };
