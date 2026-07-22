@@ -26,12 +26,27 @@ The final report must distinguish all five stages: evidence ZIP preview, FIP con
 Run from the OneClick Tools repository:
 
 ```bash
-node .agents/skills/import-filament-evidence-zip/scripts/build-fip.mjs \
+node .agents/skills/import-filament-evidence-zip/scripts/run-import.mjs \
   --input "/absolute/path/evidence.zip" \
-  --output "/tmp/product.filament-import.zip"
+  --base-url "https://explicit-target.example" \
+  --output-dir "/tmp/filament-import" \
+  --cookie-file "/absolute/path/admin-cookie.txt"
 ```
 
-Read the JSON preview printed to stdout. Stop before upload if identity is ambiguous, a required color image is missing, or the FIP validator fails.
+This is a dry run: it builds and inspects the FIP, writes `import-report.json`, and makes no HTTP request. The cookie file may be a plain `Cookie` header or a Netscape cookie jar; its contents are never printed. Stop before upload if identity is ambiguous, a required color image is missing, or the FIP validator fails.
+
+After reviewing the preflight report, execute exactly one upload by repeating the same command with `--execute-upload`. The runner calls the existing builder rather than copying its logic, saves the upload response and GET readback under `--output-dir`, invokes `verify-readback.mjs`, and emits one final report. It never retries and never calls a publication endpoint.
+
+```bash
+node .agents/skills/import-filament-evidence-zip/scripts/run-import.mjs \
+  --input "/absolute/path/evidence.zip" \
+  --base-url "https://explicit-target.example" \
+  --output-dir "/tmp/filament-import" \
+  --cookie-file "/absolute/path/admin-cookie.txt" \
+  --execute-upload
+```
+
+`build-fip.mjs` remains the lower-level build-only command for debugging. Normal imports must use `run-import.mjs` so upload and stored readback cannot be reported independently.
 
 The converter:
 
@@ -48,7 +63,7 @@ It also emits `draft-patch.json`. For an explicitly identified existing capture 
 
 ## Import and publish decision
 
-Upload a new product's generated `.filament-import.zip` with an authenticated `opencode`, `codex`, or admin session. Confirm the response `sourceRunId` and draft URL. Before upload, query the existing draft/product surfaces for the exact display name; the committed catalog check is only a local preflight.
+Upload a new product's generated `.filament-import.zip` with `run-import.mjs` and an authenticated `opencode`, `codex`, or admin session. Confirm the final report contains one `sourceRunId`, one `draftId`, and `validation=readback_passed`. Before upload, query the existing draft/product surfaces for the exact display name; the committed catalog check is only a local preflight.
 
 For an existing capture draft regression:
 
