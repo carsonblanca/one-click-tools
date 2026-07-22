@@ -5,6 +5,7 @@ import { readAdminSession } from "@/lib/admin/session";
 import {
   fipImageEntries,
   FipValidationError,
+  parameterSourceEvidence,
   parseKexcelledFip,
 } from "@/lib/filaments/imports/kexcelled-fip";
 import {
@@ -128,6 +129,7 @@ function draftData(input: {
       fields,
       candidates,
       unmappedFields,
+      sourceEvidence: parameterSourceEvidence(input.parameters, input.evidence),
       status: Object.keys(fields).length ? "official_partial" : "missing",
     },
     images: input.images.map((image) => ({

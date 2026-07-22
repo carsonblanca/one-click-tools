@@ -11,6 +11,7 @@ import {
   productLineScopeMatches,
   recordsForProductLine,
 } from "../lib/filaments/identity/product-scope.ts";
+import { parameterSourceEvidence } from "../lib/filaments/imports/kexcelled-fip.ts";
 
 const expectedKeys = [
   "materialType",
@@ -172,5 +173,64 @@ const scoped = recordsForProductLine([
 ], "kexcelled-k5-petg-m");
 assert.equal(scoped.length, 1, "foreign productLineId candidates must not be re-scoped into the current product");
 assert.equal(productLineScopeMatches({ productLineId: "kexcelled-k8-pc" }, "kexcelled-k5-petg-m"), false);
+
+const topLevelEvidence = [
+  {
+    evidenceId: "identity",
+    sourceRelativePath: "capture.json",
+    sourceType: "structured_capture",
+    sourceUrl: "https://example.test/product",
+    ocrText: "THE K5 PLA P / PLA",
+    fieldBindings: ["brand", "productLine", "materialType"],
+  },
+  {
+    evidenceId: "color-1",
+    sourceRelativePath: "images/red.webp",
+    sourceType: "sku_color_mapping",
+    fieldBindings: ["colors.0"],
+  },
+  {
+    evidenceId: "image-1",
+    sourceRelativePath: "images/product.webp",
+    sourceType: "product_image",
+    fieldBindings: ["images.0"],
+  },
+];
+const topLevelSnapshot = structuredClone(topLevelEvidence);
+const sourceEvidence = parameterSourceEvidence([
+  {
+    canonicalKey: "materialType",
+    sourceFile: "capture.json",
+    sourceText: "THE K5 PLA P / PLA",
+    productLineId: "kexcelled-k5-pla-p",
+  },
+  {
+    canonicalKey: "filamentDiameter",
+    sourceFile: "page.txt",
+    sourceText: "THE K5 PLA P 1.75/1KG",
+    productLineId: "kexcelled-k5-pla-p",
+  },
+  {
+    canonicalKey: "netWeight",
+    sourceFile: "page.txt",
+    sourceText: "THE K5 PLA P 1.75/1KG",
+    productLineId: "kexcelled-k5-pla-p",
+  },
+  {
+    canonicalKey: "netWeight",
+    sourceFile: "page.txt",
+    sourceText: "THE K5 PLA P 1.75/1KG",
+    productLineId: "kexcelled-k5-pla-p",
+  },
+], topLevelEvidence);
+assert.equal(sourceEvidence.length, 2, "duplicate parameter evidence must be deduplicated");
+assert.equal(sourceEvidence[0].evidenceId, "identity", "materialType must retain its referenced evidence ID");
+assert.equal(sourceEvidence[0].sourceUrl, "https://example.test/product", "source URL must be preserved");
+assert.deepEqual(sourceEvidence[1].fieldBindings, ["filamentDiameter", "netWeight"]);
+assert.equal(sourceEvidence[1].sourceFile, "page.txt");
+assert.equal(sourceEvidence[1].sourceText, "THE K5 PLA P 1.75/1KG");
+assert.equal(sourceEvidence.some((item) => item.evidenceId === "color-1" || item.evidenceId === "image-1"), false);
+assert.deepEqual(parameterSourceEvidence([{ canonicalKey: "density" }], topLevelEvidence), [], "missing parameter evidence must stay empty");
+assert.deepEqual(topLevelEvidence, topLevelSnapshot, "top-level evidence must remain unchanged");
 
 console.log("filament minimal parameter mapping tests passed");

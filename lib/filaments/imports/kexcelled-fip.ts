@@ -42,6 +42,97 @@ function arrayOfObjects(value: unknown): JsonObject[] {
     : [];
 }
 
+function text(value: unknown): string {
+  return typeof value === "string" || typeof value === "number"
+    ? String(value).trim()
+    : "";
+}
+
+function stringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(text).filter(Boolean);
+  const single = text(value);
+  return single ? [single] : [];
+}
+
+function parameterBinding(candidate: JsonObject): string {
+  return text(candidate.canonicalKey) || text(candidate.field) || text(candidate.key);
+}
+
+function mergeBindings(record: JsonObject, binding: string): JsonObject {
+  const fieldBindings = [...new Set([
+    ...stringArray(record.fieldBindings),
+    ...(binding ? [binding] : []),
+  ])];
+  return fieldBindings.length ? { ...record, fieldBindings } : { ...record };
+}
+
+function evidenceKey(record: JsonObject): string {
+  const evidenceId = text(record.evidenceId);
+  if (evidenceId) return `id:${evidenceId}`;
+  return JSON.stringify([
+    text(record.sourceFile) || text(record.sourceRelativePath),
+    text(record.sourceUrl) || text(record.url),
+    text(record.sourceText) || text(record.ocrText),
+  ]);
+}
+
+/**
+ * Select only evidence actually referenced by parameter candidates. Evidence
+ * records are kept intact; candidate-local source text is used only when the
+ * FIP has no matching top-level evidence record.
+ */
+export function parameterSourceEvidence(parameters: unknown, evidence: unknown): JsonObject[] {
+  const candidates = arrayOfObjects(parameters);
+  const evidenceRecords = arrayOfObjects(evidence);
+  const selected = new Map<string, JsonObject>();
+
+  const add = (record: JsonObject, binding: string) => {
+    const key = evidenceKey(record);
+    const existing = selected.get(key);
+    selected.set(key, mergeBindings(existing ? { ...record, ...existing } : record, binding));
+  };
+
+  for (const candidate of candidates) {
+    const binding = parameterBinding(candidate);
+    const sourceFile = text(candidate.sourceFile) || text(candidate.sourceRelativePath);
+    const sourceText = text(candidate.sourceText) || text(candidate.ocrText);
+    const explicitIds = new Set([
+      ...stringArray(candidate.evidenceId),
+      ...stringArray(candidate.evidenceIds),
+      ...stringArray(candidate.evidenceRef),
+      ...stringArray(candidate.evidenceRefs),
+    ]);
+    const matches = evidenceRecords.filter((record) => {
+      const recordId = text(record.evidenceId);
+      if (recordId && explicitIds.has(recordId)) return true;
+      const recordSource = text(record.sourceFile) || text(record.sourceRelativePath);
+      const bindings = stringArray(record.fieldBindings);
+      return Boolean(sourceFile && recordSource === sourceFile && binding && bindings.includes(binding));
+    });
+
+    if (matches.length) {
+      for (const record of matches) add(record, binding);
+      continue;
+    }
+
+    if (!sourceFile || !sourceText) continue;
+    const localEvidence: JsonObject = {
+      ...(text(candidate.evidenceId) ? { evidenceId: text(candidate.evidenceId) } : {}),
+      sourceFile,
+      sourceText,
+      ...(text(candidate.sourceUrl) || text(candidate.url)
+        ? { sourceUrl: text(candidate.sourceUrl) || text(candidate.url) }
+        : {}),
+      ...(candidate.confidence !== undefined ? { confidence: candidate.confidence } : {}),
+      ...(candidate.testCondition !== undefined ? { testCondition: candidate.testCondition } : {}),
+      ...(text(candidate.productLineId) ? { productLineId: text(candidate.productLineId) } : {}),
+    };
+    add(localEvidence, binding);
+  }
+
+  return [...selected.values()];
+}
+
 function readJson(files: Record<string, Uint8Array>, name: string): unknown {
   try {
     return JSON.parse(strFromU8(files[name]));
