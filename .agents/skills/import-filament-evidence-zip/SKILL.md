@@ -42,11 +42,13 @@ node .agents/skills/import-filament-evidence-zip/scripts/run-import.mjs \
   --input "/absolute/path/evidence.zip" \
   --base-url "https://explicit-target.example" \
   --output-dir "/tmp/filament-import" \
-  --cookie-file "/absolute/path/admin-cookie.txt" \
+  --keychain-service "one-click-tools-production-opencode-token" \
   --execute-upload
 ```
 
 `build-fip.mjs` remains the lower-level build-only command for debugging. Normal imports must use `run-import.mjs` so upload and stored readback cannot be reported independently.
+
+For uploads, pass exactly one authentication source: `--keychain-service` for the restricted OpenCode Bearer Token stored in macOS Keychain, or the legacy `--cookie-file` for an administrator browser session. Dry runs require neither. The runner reads a Keychain token into memory, sends it only in the `Authorization` header, and never writes or prints it.
 
 The converter:
 

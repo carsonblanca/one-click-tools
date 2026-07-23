@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAdminApiSession } from "@/lib/admin/auth";
 import { hasAdminScope } from "@/lib/admin/permissions";
-import { readAdminSession } from "@/lib/admin/session";
 import {
   appendAdminAuditLog,
   deleteFilamentDraftsBySourceRunId,
@@ -18,11 +18,14 @@ function jsonError(error: string, code: string, status: number) {
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ sourceRunId: string }> },
 ) {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "archive.execute")) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return jsonError("需要认证", "UNAUTHORIZED", 401);
+  }
+  if (!hasAdminScope(session.role, "archive.execute")) {
     return jsonError("无权删除导入草稿", "FORBIDDEN", 403);
   }
 

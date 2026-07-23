@@ -105,6 +105,28 @@ function readCookieFile(cookieFile, baseUrl) {
   return plain;
 }
 
+export function readKeychainToken(service) {
+  const accountArgs = process.env.USER ? ["-a", process.env.USER] : [];
+  const result = spawnSync("security", [
+    "find-generic-password",
+    ...accountArgs,
+    "-s",
+    service,
+    "-w",
+  ], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  const token = stringValue(result.stdout);
+  if (result.status !== 0 || !token) {
+    throw new ImportRunnerError(
+      "environment_preflight",
+      "OpenCode token was not found in macOS Keychain",
+    );
+  }
+  return token;
+}
+
 export function inspectFip(fipPath) {
   let files;
   try {
@@ -201,8 +223,12 @@ export async function runImport(options, dependencies = {}) {
   if (!options.input || !options.outputDir || !options.baseUrl) {
     throw new ImportRunnerError("arguments", "Required: --input, --base-url, and --output-dir");
   }
-  if (options.executeUpload && !options.cookieFile) {
-    throw new ImportRunnerError("arguments", "--execute-upload requires --cookie-file");
+  const authMethodCount = [options.cookieFile, options.keychainService].filter(Boolean).length;
+  if (options.executeUpload && authMethodCount !== 1) {
+    throw new ImportRunnerError(
+      "arguments",
+      "--execute-upload requires exactly one of --cookie-file or --keychain-service",
+    );
   }
   const baseUrl = validateBaseUrl(options.baseUrl);
   try {
@@ -216,13 +242,22 @@ export async function runImport(options, dependencies = {}) {
   } catch {
     throw new ImportRunnerError("environment_preflight", "Output directory is not writable");
   }
-  let cookieHeader = "";
+  let authHeaders = {};
   if (options.executeUpload) {
-    try {
-      cookieHeader = readCookieFile(resolve(options.cookieFile), baseUrl);
-    } catch (error) {
-      if (error instanceof ImportRunnerError) throw error;
-      throw new ImportRunnerError("environment_preflight", "Administrator cookie file does not exist or is not readable");
+    if (options.cookieFile) {
+      try {
+        authHeaders = { Cookie: readCookieFile(resolve(options.cookieFile), baseUrl) };
+      } catch (error) {
+        if (error instanceof ImportRunnerError) throw error;
+        throw new ImportRunnerError("environment_preflight", "Administrator cookie file does not exist or is not readable");
+      }
+    } else {
+      const tokenReader = dependencies.readKeychainToken || readKeychainToken;
+      const token = tokenReader(stringValue(options.keychainService));
+      if (!token) {
+        throw new ImportRunnerError("environment_preflight", "OpenCode token was not found in macOS Keychain");
+      }
+      authHeaders = { Authorization: `Bearer ${token}` };
     }
   }
   const inputBytes = readFileSync(inputPath);
@@ -264,7 +299,7 @@ export async function runImport(options, dependencies = {}) {
   form.append("files", new Blob([fipBytes], { type: "application/zip" }), basename(fipPath));
   const uploadResponse = await fetchImpl(`${baseUrl}${UPLOAD_PATH}`, {
     method: "POST",
-    headers: { Cookie: cookieHeader },
+    headers: authHeaders,
     credentials: "include",
     body: form,
   });
@@ -281,7 +316,7 @@ export async function runImport(options, dependencies = {}) {
   const draftId = draftIds[0];
   const readbackResponse = await fetchImpl(`${baseUrl}${READBACK_PATH}/${encodeURIComponent(sourceRunId)}`, {
     method: "GET",
-    headers: { Cookie: cookieHeader },
+    headers: authHeaders,
     credentials: "include",
   });
   const readbackBody = await jsonResponse(readbackResponse, "readback");
