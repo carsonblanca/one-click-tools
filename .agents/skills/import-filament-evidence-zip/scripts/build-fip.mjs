@@ -12,6 +12,10 @@ import {
   getParameterDefinition,
   resolveCanonicalParameterKey,
 } from "../../../../lib/filaments/parameters/normalized-parameters.ts";
+import {
+  parseOfficialPhysicalProperties,
+  selectOfficialPhysicalPropertyTable,
+} from "./physical-property-table.mjs";
 
 function fail(message) {
   process.stderr.write(`${message}\n`);
@@ -63,20 +67,16 @@ function normalizedIdentity(value) {
 }
 
 function officialSpecTable(ocr, productLine) {
-  const target = normalizedIdentity(productLine);
-  const matches = ocr.split(/(?=^SOURCE:\s)/m).filter((block) => (
-    normalizedIdentity(block).includes(target)
-    && /密度/.test(block)
-    && /测试标准/.test(block)
-  ));
-  if (matches.length > 1) {
-    fail(`Ambiguous official specification tables for ${productLine}: found ${matches.length}`);
+  const tables = ocr.split(/(?=^SOURCE:\s)/m).map((block) => ({
+    sourcePath: text(block.match(/^SOURCE:\s*(.+)$/m)?.[1]),
+    text: block,
+    extractionMethod: "existing_ocr",
+  }));
+  try {
+    return selectOfficialPhysicalPropertyTable(tables, productLine);
+  } catch (error) {
+    fail(error instanceof Error ? error.message : `Ambiguous official specification tables for ${productLine}`);
   }
-  if (!matches.length) return null;
-  return {
-    sourcePath: text(matches[0].match(/^SOURCE:\s*(.+)$/m)?.[1]),
-    text: matches[0],
-  };
 }
 
 function officialColorKey(productLineId, item, index) {
@@ -321,12 +321,15 @@ function supplementalVisionTables(files, imageIndex, ocr, productLine) {
     if (failedResult) {
       throw new Error(`macOS Vision OCR failed: ${JSON.stringify(failedResult)}`);
     }
-    const target = normalizedIdentity(productLine);
-    return visionResults.flatMap((result) => {
+    return visionResults.map((result) => {
       const rows = visionRows(Array.isArray(result.observations) ? result.observations : []);
       const allText = rows.map((row) => row.text).join("\n");
-      if (!normalizedIdentity(allText).includes(target) || !/(?:建议|推荐).*打印参数/.test(allText)) return [];
-      return [{ sourcePath: sourceByTempPath.get(result.path), rows, text: allText }];
+      return {
+        sourcePath: sourceByTempPath.get(result.path),
+        rows,
+        text: allText,
+        extractionMethod: "macos_vision_supplemental_ocr",
+      };
     });
   } catch (error) {
     fail(error instanceof Error ? error.message : "macOS Vision OCR failed");
@@ -382,45 +385,31 @@ function recommendedPrintCandidates(table, productLineId) {
   return result;
 }
 
-function numericCandidates(ocr, mappings, productLineId, specTable) {
-  const lines = specTable.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  const findLine = (pattern) => lines.find((line) => pattern.test(line)) || "";
-  const range = (line) => line.match(/(\d+(?:\.\d+)?)\s*[~～\-–]\s*(\d+(?:\.\d+)?)/);
-  const single = (line) => line.match(/(\d+(?:\.\d+)?)/);
+function numericCandidates(productLineId, specTable) {
   const options = (officialRawName) => ({
     sourceFile: specTable.sourcePath,
     productLineId,
     officialRawName,
   });
-  const skuText = mappings.map((item) => text(item.sourceText)).join(" | ");
   const result = [];
   const header = specTable.text.match(/线径\s+重量\s+公差\s*\n\s*(\d+(?:\.\d+)?)\s*mm\s+(\d+(?:\.\d+)?)\s*kg\s+[+±]\s*(\d+(?:\.\d+)?)\s*mm/i);
-  if (!header) fail(`Official specification header is unreadable for ${productLineId}`);
-  result.push(candidate("filamentDiameter", `${header[1]} mm`, header[1], "mm", "high", "official", header[0], null, options("线径")));
-  result.push(candidate("netWeight", `${header[2]} kg`, header[2], "kg", "high", "official", header[0], null, options("重量")));
-  result.push(candidate("diameterTolerance", `±${header[3]} mm`, `±${header[3]}`, "mm", "high", "official", header[0], null, options("公差")));
-
-  const specs = [
-    ["density", /^密度/, "g/cm³", "密度", null],
-    ["meltFlowIndex", /^熔融指数/, "g/10min", "熔融指数", "230°C / 2.16 kg"],
-    ["heatDeflectionTemperature", /^热变形温度/, "°C", "热变形温度", "0.45 MPa / 120°C/h"],
-    ["vicatSofteningTemperature", /^维卡软化温度/, "°C", "维卡软化温度", "10 N / 120°C/h"],
-    ["tensileStrength", /^拉伸强度/, "MPa", "拉伸强度", null],
-    ["elongationAtBreak", /^拉伸断裂伸长率/, "%", "拉伸断裂伸长率", null],
-    ["flexuralStrength", /^弯曲强度/, "MPa", "弯曲强度", null],
-    ["flexuralModulus", /^弯曲模量/, "MPa", "弯曲模量", null],
-    ["unnotchedImpactStrength", /^无缺口冲击强度/, "kJ/m²", "无缺口冲击强度", null],
-    ["notchedImpactStrength", /^缺口冲击强度/, "kJ/m²", "缺口冲击强度", null],
-  ];
-  for (const [field, pattern, unit, rawName, testCondition] of specs) {
-    const line = findLine(pattern);
-    if (!line) fail(`Missing official parameter row ${rawName} for ${productLineId}`);
-    const matchedRange = range(line);
-    const matchedTemperature = unit === "°C" ? line.match(/(\d+(?:\.\d+)?)\s*°?C\b/i) : null;
-    const matchedSingle = matchedTemperature || single(line.replace(rawName, ""));
-    const normalized = matchedRange ? `${matchedRange[1]}–${matchedRange[2]}` : matchedSingle?.[1];
-    if (!normalized) fail(`Unreadable official parameter row ${rawName} for ${productLineId}`);
-    result.push(candidate(field, line, normalized, unit, "high", "official", line, testCondition, options(rawName)));
+  if (header) {
+    result.push(candidate("filamentDiameter", `${header[1]} mm`, header[1], "mm", "high", "official", header[0], null, options("线径")));
+    result.push(candidate("netWeight", `${header[2]} kg`, header[2], "kg", "high", "official", header[0], null, options("重量")));
+    result.push(candidate("diameterTolerance", `±${header[3]} mm`, `±${header[3]}`, "mm", "high", "official", header[0], null, options("公差")));
+  }
+  for (const property of parseOfficialPhysicalProperties(specTable.text)) {
+    result.push(candidate(
+      property.canonicalKey,
+      property.sourceText,
+      property.normalizedValue,
+      property.unit,
+      "high",
+      "official",
+      property.sourceText,
+      property.testCondition,
+      options(property.officialRawName),
+    ));
   }
   return result;
 }
@@ -463,11 +452,24 @@ const productKey = productLineId;
 const displayName = `Kexcelled ${productLine}`;
 const catalogRoot = resolve(options["catalog-root"] || join(process.cwd(), "data/filaments/product-lines"));
 const duplicateMatches = exactCatalogMatches(displayName, catalogRoot);
-const specTable = officialSpecTable(ocr, productLine);
-const visionTables = supplementalVisionTables(files, imageIndex, ocr, productLine);
-const explicitBasics = specTable
-  ? { candidates: [], conflicts: [] }
-  : explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine);
+const existingSpecTable = officialSpecTable(ocr, productLine);
+const supplementalVisionResults = supplementalVisionTables(files, imageIndex, ocr, productLine);
+let supplementalSpecTable;
+try {
+  supplementalSpecTable = selectOfficialPhysicalPropertyTable(supplementalVisionResults, productLine);
+} catch (error) {
+  fail(error instanceof Error ? error.message : `Ambiguous official specification tables for ${productLine}`);
+}
+if (existingSpecTable && supplementalSpecTable) {
+  fail(`Ambiguous official specification tables for ${productLine}: found 2`);
+}
+const specTable = existingSpecTable || supplementalSpecTable;
+const targetIdentity = normalizedIdentity(productLine);
+const visionTables = supplementalVisionResults.filter((table) => (
+  normalizedIdentity(table.text).includes(targetIdentity)
+  && /(?:建议|推荐).*打印参数/.test(table.text)
+));
+const explicitBasics = explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine);
 const materialParameter = candidate(
   "materialType",
   material,
@@ -480,7 +482,7 @@ const materialParameter = candidate(
   { sourceFile: "capture.json", productLineId, officialRawName: "材料类型" },
 );
 const collectedParameters = [
-  ...(specTable ? numericCandidates(ocr, mappings, productLineId, specTable) : []),
+  ...(specTable ? numericCandidates(productLineId, specTable) : []),
   materialParameter,
   ...explicitBasics.candidates,
   ...visionTables.flatMap((table) => recommendedPrintCandidates(table, productLineId)),
@@ -686,12 +688,12 @@ const evidence = [
     sourceRelativePath: specTable.sourcePath,
     sourceType: "ocr_candidate",
     extractedAssetId: `assets/${specTable.sourcePath}`,
-    extractionMethod: "existing_ocr_summary",
+    extractionMethod: specTable.extractionMethod,
     cropCoordinates: null,
-    ocrText: `${productLine} official specification table: ${parameters.filter((item) => item.sourceFile === specTable.sourcePath).length} quantitative parameters.`,
+    ocrText: specTable.text,
     ocrConfidence: 0.82,
     fieldBindings: parameters.filter((item) => item.sourceFile === specTable.sourcePath).map((item) => item.canonicalKey || item.field),
-    notes: "Scoped to the matching productLineId; full OCR text intentionally omitted.",
+    notes: "Scoped to the matching productLineId; the source OCR text is retained for parameter evidence.",
   }] : []),
   ...visionTables.map((table, index) => ({
     evidenceId: `ocr-print-table-${index + 1}`,
