@@ -293,11 +293,36 @@ function supplementalVisionTables(files, imageIndex, ocr, productLine) {
       maxBuffer: 16 * 1024 * 1024,
       timeout: 240_000,
     });
+    if (run.error) {
+      throw new Error(`macOS Vision OCR process failed: ${JSON.stringify({
+        ok: false,
+        stage: "process_spawn",
+        errorDomain: run.error.name,
+        errorCode: run.error.code ?? null,
+        errorMessage: run.error.message,
+        signal: run.signal ?? null,
+      })}`);
+    }
+    if (run.signal) {
+      throw new Error(`macOS Vision OCR process failed: ${JSON.stringify({
+        ok: false,
+        stage: "process_exit",
+        errorDomain: "Process",
+        errorCode: run.status,
+        errorMessage: "Swift Vision OCR exited because of a signal",
+        signal: run.signal,
+      })}`);
+    }
     if (run.status !== 0 || !text(run.stdout)) {
       throw new Error(`macOS Vision OCR failed: ${text(run.stderr) || `exit ${run.status}`}`);
     }
+    const visionResults = JSON.parse(run.stdout);
+    const failedResult = visionResults.find((result) => result?.ok === false);
+    if (failedResult) {
+      throw new Error(`macOS Vision OCR failed: ${JSON.stringify(failedResult)}`);
+    }
     const target = normalizedIdentity(productLine);
-    return JSON.parse(run.stdout).flatMap((result) => {
+    return visionResults.flatMap((result) => {
       const rows = visionRows(Array.isArray(result.observations) ? result.observations : []);
       const allText = rows.map((row) => row.text).join("\n");
       if (!normalizedIdentity(allText).includes(target) || !/(?:建议|推荐).*打印参数/.test(allText)) return [];
