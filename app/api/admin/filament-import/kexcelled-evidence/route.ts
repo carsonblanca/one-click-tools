@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { readAdminApiSession } from "@/lib/admin/auth";
 import { hasAdminScope } from "@/lib/admin/permissions";
-import { readAdminSession } from "@/lib/admin/session";
 import {
   fipImageEntries,
   FipValidationError,
@@ -142,9 +142,12 @@ function draftData(input: {
   };
 }
 
-export async function GET() {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.view")) {
+export async function GET(request: NextRequest) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return jsonError("需要认证", "UNAUTHORIZED", 401);
+  }
+  if (!hasAdminScope(session.role, "candidate.view")) {
     return jsonError("无权查看导入记录", "FORBIDDEN", 403);
   }
   try {
@@ -179,8 +182,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.create")) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return jsonError("需要认证", "UNAUTHORIZED", 401);
+  }
+  if (!hasAdminScope(session.role, "candidate.create")) {
     return jsonError("无权导入耗材包", "FORBIDDEN", 403);
   }
 

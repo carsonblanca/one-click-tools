@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAdminApiSession } from "@/lib/admin/auth";
 import { hasAdminScope } from "@/lib/admin/permissions";
-import { readAdminSession } from "@/lib/admin/session";
 import {
   appendAdminAuditLog,
   countFilamentDrafts,
@@ -17,8 +17,11 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "publish.execute") || session.role !== "admin") {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "需要认证。" }, { status: 401 });
+  }
+  if (!hasAdminScope(session.role, "publish.execute") || session.role !== "admin") {
     return NextResponse.json({ error: "无权发布耗材。" }, { status: 403 });
   }
 

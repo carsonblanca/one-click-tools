@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAdminApiSession } from "@/lib/admin/auth";
 import { hasAdminScope } from "@/lib/admin/permissions";
-import { readAdminSession } from "@/lib/admin/session";
 import {
   CaptureDraftPatchError,
   mergeCaptureDraftData,
@@ -12,11 +12,14 @@ import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ sourceRunId: string }> },
 ) {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.view")) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "需要认证。" }, { status: 401 });
+  }
+  if (!hasAdminScope(session.role, "candidate.view")) {
     return NextResponse.json({ error: "无权查看草稿。" }, { status: 403 });
   }
 
@@ -37,8 +40,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ sourceRunId: string }> },
 ) {
-  const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "display.draft.edit") || (session.role !== "admin" && session.role !== "codex")) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "需要认证。" }, { status: 401 });
+  }
+  if (!hasAdminScope(session.role, "display.draft.edit")) {
     return NextResponse.json({ error: "无权编辑草稿。" }, { status: 403 });
   }
 
