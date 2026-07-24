@@ -25,7 +25,10 @@ export async function DELETE(
   if (!session) {
     return jsonError("需要认证", "UNAUTHORIZED", 401);
   }
-  if (!hasAdminScope(session.role, "archive.execute")) {
+  if (
+    session.role === "opencode"
+    || !hasAdminScope(session.role, "archive.execute")
+  ) {
     return jsonError("无权删除导入草稿", "FORBIDDEN", 403);
   }
 

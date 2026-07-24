@@ -107,6 +107,12 @@ test("publish and delete retain their existing restrictive scopes", () => {
   assert.match(deleteRoute, /"archive\.execute"/);
 });
 
+test("opencode is blocked from delete even if archive scope changes later", () => {
+  const deleteRoute = read("app/api/admin/filament-import/kexcelled-evidence/[sourceRunId]/route.ts");
+  assert.equal(hasAdminScope("admin", "archive.execute"), true);
+  assert.match(deleteRoute, /session\.role === "opencode"[\s\S]*"archive\.execute"/);
+});
+
 test("browser session fallback remains in the unified API helper", () => {
   const source = read("lib/admin/auth.ts");
   assert.match(source, /if \(authorization\)/);
