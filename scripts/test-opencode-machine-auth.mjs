@@ -61,6 +61,24 @@ test("opencode can create compliant imports and drafts", () => {
   assert.equal(hasAdminScope("opencode", "display.draft.create"), true);
 });
 
+test("OpenCode Bearer authentication passes the upload route scope", () => {
+  const authenticated = authenticateOpenCodeBearer(`Bearer ${token}`, tokenHash);
+  assert.equal(authenticated.status, "authenticated");
+  assert.equal(authenticated.session.role, "opencode");
+  assert.equal(hasAdminScope(authenticated.session.role, "candidate.create"), true);
+
+  const route = read("app/api/admin/filament-import/kexcelled-evidence/route.ts");
+  assert.match(route, /export async function POST\(request: NextRequest\)/);
+  assert.match(route, /const session = await readAdminApiSession\(request\)/);
+  assert.match(route, /hasAdminScope\(session\.role,\s*"candidate\.create"\)/);
+});
+
+test("authenticated roles without upload scope remain forbidden", () => {
+  assert.equal(hasAdminScope("viewer", "candidate.create"), false);
+  const route = read("app/api/admin/filament-import/kexcelled-evidence/route.ts");
+  assert.match(route, /"无权导入耗材包",\s*"FORBIDDEN",\s*403/);
+});
+
 test("opencode can update existing drafts", () => {
   assert.equal(hasAdminScope("opencode", "display.draft.edit"), true);
 });
