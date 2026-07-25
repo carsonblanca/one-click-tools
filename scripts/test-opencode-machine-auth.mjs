@@ -153,7 +153,8 @@ test("the import runner reads Keychain credentials in memory and sends Bearer au
 test("the import runner sends the Preview machine token as the Vercel bypass secret", () => {
   const source = read(".agents/skills/import-filament-evidence-zip/scripts/run-import.mjs");
   assert.equal(source.includes('hostname.endsWith(".vercel.app")'), true);
-  assert.match(source, /headers\["x-vercel-protection-bypass"\]\s*=\s*token/);
+  assert.match(source, /headers\["x-vercel-protection-bypass"\]\s*=\s*createHash\("sha256"\)/);
+  assert.match(source, /\.slice\(0,\s*32\)/);
 });
 
 test("the import runner omits the Vercel bypass header for Production", () => {

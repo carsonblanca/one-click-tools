@@ -48,7 +48,7 @@ node .agents/skills/import-filament-evidence-zip/scripts/run-import.mjs \
 
 `build-fip.mjs` remains the lower-level build-only command for debugging. Normal imports must use `run-import.mjs` so upload and stored readback cannot be reported independently.
 
-For uploads, pass exactly one authentication source: `--keychain-service` for the restricted OpenCode Bearer Token stored in macOS Keychain, or the legacy `--cookie-file` for an administrator browser session. Dry runs require neither. The runner reads a Keychain token into memory and never writes or prints it. It sends the token in `Authorization`; for a `.vercel.app` Preview it also sends the same Preview-only token in `x-vercel-protection-bypass`, so Vercel Deployment Protection must use that Preview token as its automation bypass secret.
+For uploads, pass exactly one authentication source: `--keychain-service` for the restricted OpenCode Bearer Token stored in macOS Keychain, or the legacy `--cookie-file` for an administrator browser session. Dry runs require neither. The runner reads a Keychain token into memory and never writes or prints it. It sends the token in `Authorization`; for a `.vercel.app` Preview it derives a 32-character SHA-256 prefix for `x-vercel-protection-bypass`, so Vercel Deployment Protection must use that derived Preview-only value as its automation bypass secret.
 
 The converter:
 
