@@ -162,3 +162,10 @@ test("the import runner omits the Vercel bypass header for Production", () => {
   assert.match(source, /const headers = \{ Authorization: `Bearer \$\{token\}` \}/);
   assert.doesNotMatch(source, /x-vercel-protection-bypass.*one-click-tools\.com/);
 });
+
+test("readback verification ignores field key order and counts candidate evidence associations", () => {
+  const source = read(".agents/skills/import-filament-evidence-zip/scripts/verify-readback.mjs");
+  assert.match(source, /isDeepStrictEqual\(fields,\s*expectedFields\)/);
+  assert.match(source, /candidateEvidence\.length \? candidateEvidence : sourceEvidence/);
+  assert.doesNotMatch(source, /JSON\.stringify\(fields\) === JSON\.stringify\(expectedFields\)/);
+});

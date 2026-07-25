@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 import { strFromU8, unzipSync } from "fflate";
 
 export class ReadbackVerificationError extends Error {
@@ -76,7 +77,7 @@ export function verifyReadback({ fipPath, readbackPath, sourceRunId = "", draftI
     const item = objectValue(candidate);
     return Boolean(stringValue(item.sourceFile) || stringValue(item.sourceText));
   });
-  const parameterEvidence = sourceEvidence.length ? sourceEvidence : candidateEvidence;
+  const parameterEvidence = candidateEvidence.length ? candidateEvidence : sourceEvidence;
   const colorImageRelations = canonicalColors.filter((color) => {
     const item = objectValue(color);
     return Boolean(stringValue(item.imageCandidateUrl || item.localImagePath));
@@ -99,7 +100,7 @@ export function verifyReadback({ fipPath, readbackPath, sourceRunId = "", draftI
     productName: stringValue(draft.product_line_name || productLine.name) === expectedProductName,
     brand: stringValue(draft.brand_id || objectValue(data.brand).brandId).toLowerCase() === expectedBrandId,
     material: stringValue(draft.material_type || productLine.materialType).toUpperCase() === expectedMaterial,
-    parameterFields: JSON.stringify(fields) === JSON.stringify(expectedFields),
+    parameterFields: isDeepStrictEqual(fields, expectedFields),
     parameterFieldCount: Object.keys(fields).length === Number(expected.parameterFieldCount),
     parameterCandidateCount: candidates.length === Number(expected.parameterCandidateCount),
     parameterEvidenceCount: parameterEvidence.length === Number(expected.parameterEvidenceCount),
