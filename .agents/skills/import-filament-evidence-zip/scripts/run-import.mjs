@@ -130,7 +130,10 @@ export function readKeychainToken(service) {
 export function buildMachineAuthHeaders(token, baseUrl) {
   const headers = { Authorization: `Bearer ${token}` };
   if (new URL(baseUrl).hostname.endsWith(".vercel.app")) {
-    headers["x-vercel-protection-bypass"] = token;
+    headers["x-vercel-protection-bypass"] = createHash("sha256")
+      .update(token, "utf8")
+      .digest("hex")
+      .slice(0, 32);
   }
   return headers;
 }
