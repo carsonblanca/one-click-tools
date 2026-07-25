@@ -149,3 +149,15 @@ test("the import runner reads Keychain credentials in memory and sends Bearer au
   assert.doesNotMatch(source, /writeFileSync\([^)]*token/);
   assert.doesNotMatch(source, /console\.(?:log|error)\([^)]*token/);
 });
+
+test("the import runner sends the Preview machine token as the Vercel bypass secret", () => {
+  const source = read(".agents/skills/import-filament-evidence-zip/scripts/run-import.mjs");
+  assert.equal(source.includes('hostname.endsWith(".vercel.app")'), true);
+  assert.match(source, /headers\["x-vercel-protection-bypass"\]\s*=\s*token/);
+});
+
+test("the import runner omits the Vercel bypass header for Production", () => {
+  const source = read(".agents/skills/import-filament-evidence-zip/scripts/run-import.mjs");
+  assert.match(source, /const headers = \{ Authorization: `Bearer \$\{token\}` \}/);
+  assert.doesNotMatch(source, /x-vercel-protection-bypass.*one-click-tools\.com/);
+});
