@@ -127,6 +127,14 @@ export function readKeychainToken(service) {
   return token;
 }
 
+export function buildMachineAuthHeaders(token, baseUrl) {
+  const headers = { Authorization: `Bearer ${token}` };
+  if (new URL(baseUrl).hostname.endsWith(".vercel.app")) {
+    headers["x-vercel-protection-bypass"] = token;
+  }
+  return headers;
+}
+
 export function inspectFip(fipPath) {
   let files;
   try {
@@ -257,7 +265,7 @@ export async function runImport(options, dependencies = {}) {
       if (!token) {
         throw new ImportRunnerError("environment_preflight", "OpenCode token was not found in macOS Keychain");
       }
-      authHeaders = { Authorization: `Bearer ${token}` };
+      authHeaders = buildMachineAuthHeaders(token, baseUrl);
     }
   }
   const inputBytes = readFileSync(inputPath);
