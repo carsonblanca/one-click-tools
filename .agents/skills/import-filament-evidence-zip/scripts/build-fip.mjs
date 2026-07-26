@@ -13,6 +13,7 @@ import {
   resolveCanonicalParameterKey,
 } from "../../../../lib/filaments/parameters/normalized-parameters.ts";
 import {
+  isOfficialPhysicalPropertyTable,
   parseOfficialPhysicalProperties,
   selectOfficialPhysicalPropertyTable,
 } from "./physical-property-table.mjs";
@@ -263,22 +264,36 @@ function visionRows(observations) {
 function supplementalVisionTables(files, imageIndex, ocr, productLine) {
   if (process.platform !== "darwin") return [];
   const processed = new Set([...ocr.matchAll(/^SOURCE:\s*(.+)$/gm)].map((match) => text(match[1])));
-  const candidates = imageIndex.filter((image) => (
+  const indexedCandidates = imageIndex.filter((image) => (
     image.pageSection === "detail_description"
     && !processed.has(text(image.localPath))
     && files[text(image.localPath)]
-  ));
+  )).map((image) => ({
+    sourcePath: text(image.localPath),
+    sourceKind: "indexed_detail_image",
+  }));
+  const detailSegments = Object.keys(files)
+    .filter((path) => /^screenshots\/segments\/\d+\.(?:jpe?g|png|webp)$/i.test(path))
+    .sort()
+    .map((sourcePath) => ({ sourcePath, sourceKind: "detail_segment" }));
+  const detailSectionPath = "screenshots/detail-section.webp";
+  const screenshotCandidates = detailSegments.length
+    ? detailSegments
+    : files[detailSectionPath]
+      ? [{ sourcePath: detailSectionPath, sourceKind: "detail_section" }]
+      : [];
+  const candidates = [...indexedCandidates, ...screenshotCandidates];
   if (!candidates.length) return [];
 
   const tempRoot = mkdtempSync(join(tmpdir(), "filament-vision-"));
   try {
     const sourceByTempPath = new Map();
-    for (const [index, image] of candidates.entries()) {
-      const sourcePath = text(image.localPath);
+    for (const [index, candidate] of candidates.entries()) {
+      const sourcePath = candidate.sourcePath;
       const tempPath = join(tempRoot, `${String(index + 1).padStart(3, "0")}-${basename(sourcePath)}`);
       mkdirSync(dirname(tempPath), { recursive: true });
       writeFileSync(tempPath, files[sourcePath]);
-      sourceByTempPath.set(tempPath, sourcePath);
+      sourceByTempPath.set(tempPath, candidate);
     }
     const scriptPath = join(dirname(fileURLToPath(import.meta.url)), "vision-ocr.swift");
     const moduleCachePath = join(tempRoot, "swift-module-cache");
@@ -324,8 +339,10 @@ function supplementalVisionTables(files, imageIndex, ocr, productLine) {
     return visionResults.map((result) => {
       const rows = visionRows(Array.isArray(result.observations) ? result.observations : []);
       const allText = rows.map((row) => row.text).join("\n");
+      const candidate = sourceByTempPath.get(result.path);
       return {
-        sourcePath: sourceByTempPath.get(result.path),
+        sourcePath: candidate?.sourcePath,
+        sourceKind: candidate?.sourceKind,
         rows,
         text: allText,
         extractionMethod: "macos_vision_supplemental_ocr",
@@ -336,6 +353,47 @@ function supplementalVisionTables(files, imageIndex, ocr, productLine) {
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
+}
+
+function physicalVisionTables(tables, files, productLine) {
+  const regularTables = tables.filter((table) => table.sourceKind !== "detail_segment");
+  const segments = tables
+    .filter((table) => table.sourceKind === "detail_segment")
+    .sort((a, b) => text(a.sourcePath).localeCompare(text(b.sourcePath)));
+  const groups = [];
+  const physicalContinuation = /基本物性指标|密度|熔融指数|热变形温度|维卡软化温度|拉伸强度|拉伸断裂伸长率|弯曲强度|弯曲模量|冲击强度|测试标准/;
+  for (const segment of segments) {
+    const relevant = isOfficialPhysicalPropertyTable(segment.text, productLine)
+      || physicalContinuation.test(segment.text);
+    if (!relevant) continue;
+    const segmentNumber = Number(text(segment.sourcePath).match(/(\d+)\.[^.]+$/)?.[1]);
+    const previous = groups.at(-1);
+    if (previous && Number.isFinite(segmentNumber) && segmentNumber === previous.lastSegmentNumber + 1) {
+      previous.tables.push(segment);
+      previous.lastSegmentNumber = segmentNumber;
+    } else {
+      groups.push({
+        tables: [segment],
+        lastSegmentNumber: segmentNumber,
+      });
+    }
+  }
+  const detailSectionPath = "screenshots/detail-section.webp";
+  return [
+    ...regularTables,
+    ...groups.map((group) => {
+      const mergedText = group.tables.map((table) => table.text).join("\n")
+        .replace(/简支梁无缺口冲击\s*\n\s*强度/gu, "无缺口冲击强度")
+        .replace(/简支梁缺口冲击\s*\n\s*强度/gu, "缺口冲击强度");
+      return {
+        sourcePath: files[detailSectionPath] ? detailSectionPath : group.tables[0].sourcePath,
+        sourceKind: "detail_segment_group",
+        rows: group.tables.flatMap((table) => table.rows),
+        text: mergedText,
+        extractionMethod: "macos_vision_supplemental_ocr",
+      };
+    }),
+  ];
 }
 
 function knownAliasAtStart(value) {
@@ -353,8 +411,51 @@ function recommendedPrintCandidates(table, productLineId) {
     productLineId,
     officialRawName,
   });
+  const gridDefinitions = [
+    [/^线径$/, "filamentDiameter"],
+    [/^重量$/, "netWeight"],
+    [/^[±士]?\s*公差$/, "diameterTolerance"],
+    [/^打印温度$/, "nozzleTemperature"],
+    [/^平台温度$/, "bedTemperature"],
+    [/^打印速度$/, "printingSpeed"],
+  ];
+  const gridItems = table.rows.flatMap((row) => row.items);
+  for (const [labelPattern, canonicalKey] of gridDefinitions) {
+    const label = gridItems.find((item) => labelPattern.test(text(item.text)));
+    if (!label) continue;
+    const labelCenter = label.x + label.width / 2;
+    const valueItem = gridItems
+      .filter((item) => item.y < label.y && label.y - item.y < 0.06)
+      .sort((a, b) => (
+        Math.abs((a.x + a.width / 2) - labelCenter)
+        - Math.abs((b.x + b.width / 2) - labelCenter)
+      ))[0];
+    if (!valueItem || Math.abs((valueItem.x + valueItem.width / 2) - labelCenter) > 0.06) continue;
+    const rawName = text(label.text).replace(/^士\s*/, "±");
+    let rawValue = text(valueItem.text);
+    if (canonicalKey === "filamentDiameter" && /[/／]/.test(rawValue)) continue;
+    if (canonicalKey === "diameterTolerance" && /^[±士]/.test(rawName) && !/^[±士]/.test(rawValue)) {
+      rawValue = `±${rawValue}`;
+    }
+    const definition = getParameterDefinition(canonicalKey);
+    const parsed = valueParts(rawValue, definition?.defaultUnit || null);
+    if (!parsed.value) continue;
+    result.push(candidate(
+      canonicalKey,
+      rawValue,
+      parsed.value.replace(/^士/, "±"),
+      parsed.unit,
+      "high",
+      "official",
+      `${rawName} ${text(valueItem.text)}`,
+      null,
+      options(rawName),
+    ));
+  }
+  if (result.length >= 2) return result;
+
   for (const row of table.rows) {
-    if (/(?:建议|推荐).*打印参数/.test(row.text)) continue;
+    if (/(?:建议|推荐)?打印参数/.test(row.text)) continue;
     if (/^(?:Ps\.?|注[：:]?|所有材料|长时间|间隔时间|PETG\s)/i.test(row.text)) break;
     const left = row.items.filter((item) => item.x < 0.45).map((item) => text(item.text)).join(" ");
     const right = row.items.filter((item) => item.x >= 0.45).map((item) => text(item.text)).join(" ");
@@ -454,9 +555,10 @@ const catalogRoot = resolve(options["catalog-root"] || join(process.cwd(), "data
 const duplicateMatches = exactCatalogMatches(displayName, catalogRoot);
 const existingSpecTable = officialSpecTable(ocr, productLine);
 const supplementalVisionResults = supplementalVisionTables(files, imageIndex, ocr, productLine);
+const supplementalPhysicalTables = physicalVisionTables(supplementalVisionResults, files, productLine);
 let supplementalSpecTable;
 try {
-  supplementalSpecTable = selectOfficialPhysicalPropertyTable(supplementalVisionResults, productLine);
+  supplementalSpecTable = selectOfficialPhysicalPropertyTable(supplementalPhysicalTables, productLine);
 } catch (error) {
   fail(error instanceof Error ? error.message : `Ambiguous official specification tables for ${productLine}`);
 }
@@ -467,7 +569,7 @@ const specTable = existingSpecTable || supplementalSpecTable;
 const targetIdentity = normalizedIdentity(productLine);
 const visionTables = supplementalVisionResults.filter((table) => (
   normalizedIdentity(table.text).includes(targetIdentity)
-  && /(?:建议|推荐).*打印参数/.test(table.text)
+  && /(?:建议|推荐)?打印参数/.test(table.text)
 ));
 const explicitBasics = explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine);
 const materialParameter = candidate(

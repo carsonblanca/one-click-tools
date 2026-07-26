@@ -35,6 +35,30 @@ test("unprocessed Vision result can be selected as the official physical-propert
   assert.equal(selected.sourcePath, "images/table.jpg");
 });
 
+test("adjacent high-resolution detail segments can form one official physical-property table", () => {
+  const headerSegment = `
+  THE K5 PLA P
+  基本物性指标
+  PLA K5P 打印件 注塑件 测试标准
+  `;
+  const valuesSegment = `
+  THE K5 PLA P
+  密度（g/cm3） 1.24 ISO 1183
+  熔融指数（g/10min） 7-15 ISO 1133
+  `;
+  const selected = selectOfficialPhysicalPropertyTable([
+    {
+      sourcePath: "screenshots/detail-section.webp",
+      text: `${headerSegment}\n${valuesSegment}`,
+    },
+  ], productLine);
+  assert.equal(selected.sourcePath, "screenshots/detail-section.webp");
+  assert.deepEqual(
+    parseOfficialPhysicalProperties(selected.text).map((item) => item.canonicalKey),
+    ["density", "meltFlowIndex"],
+  );
+});
+
 test("product identity must match the physical-property table", () => {
   assert.equal(isOfficialPhysicalPropertyTable(physicalTableText, "THE K8 PC"), false);
 });
@@ -95,6 +119,15 @@ test("marketing speed image is not mistaken for a physical-property table", () =
 
 test("zero matching table remains missing", () => {
   assert.equal(selectOfficialPhysicalPropertyTable([], productLine), null);
+});
+
+test("detail screenshots without an official specification table remain missing", () => {
+  assert.equal(selectOfficialPhysicalPropertyTable([
+    {
+      sourcePath: "screenshots/detail-section.webp",
+      text: "THE K5 PLA P 闪耀美学 高适配率 优质原材料",
+    },
+  ], productLine), null);
 });
 
 test("multiple matching tables are rejected as ambiguous", () => {
