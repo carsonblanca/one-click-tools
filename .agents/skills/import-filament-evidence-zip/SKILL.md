@@ -54,12 +54,15 @@ The converter:
 
 1. rejects unsafe archive paths and missing capture files;
 2. extracts the captured brand, product line, material, colors, manufacturer color codes, mapped images, and recognized official parameter candidates;
-3. on macOS, scans detail images omitted from the ZIP's OCR output with built-in Vision and accepts a table only when it contains the exact current product identity plus an official recommended-print heading;
-4. normalizes known parameter headings through the shared canonical dictionary, while retaining an unknown but explicit official key/value row in `unmappedFields` instead of treating the dictionary as a whitelist;
-5. keeps every candidate, image, color, SKU relation, and evidence summary scoped to the same `productLineId` and drops a record already scoped to another product line;
-6. retains only concise source excerpts, not the original ZIP or full OCR transcript;
-7. scans the committed product-line catalog for an exact display-name match;
-8. emits `ready_for_review` for duplicates or required-data failures and otherwise emits the automatic-publication eligibility decision.
+3. consumes `parameter-tables.json` first when a new Evidence ZIP contains a coordinate-restored official table; preserves its columns and cell values, treats `/` as missing, splits drying temperature from duration, and never converts an unmapped structured row into a formal candidate;
+4. falls back in order to official DOM/specification text, legacy flat OCR, and finally missing-data review; on macOS, legacy ZIPs may still scan omitted detail images with built-in Vision;
+5. accepts structured-table values as official only when the table title matches the current product identity; retain a mismatched table as evidence, force manual review, and keep its candidates out of formal fields;
+6. prevents legacy flat OCR from overriding a canonical parameter already supplied by the structured table;
+7. normalizes known legacy parameter headings through the shared canonical dictionary, while retaining an unknown but explicit legacy official key/value row in `unmappedFields` for backward compatibility;
+8. keeps every candidate, image, color, SKU relation, and evidence summary scoped to the same `productLineId` and drops a record already scoped to another product line;
+9. retains only concise source excerpts, not the original ZIP or full OCR transcript;
+10. scans the committed product-line catalog for an exact display-name match;
+11. emits `ready_for_review` for duplicates or required-data failures and otherwise emits the automatic-publication eligibility decision.
 
 It also emits `draft-patch.json`. For an explicitly identified existing capture draft, send that file unchanged to `PATCH /api/admin/filament-drafts/[sourceRunId]`; never call the creation POST for an existing draft. Diameter and weight inferred only from an SKU remain candidates; the same values may become official fields and product defaults when an identity-matched official specification table confirms them.
 

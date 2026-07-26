@@ -17,6 +17,7 @@ import {
   parseOfficialPhysicalProperties,
   selectOfficialPhysicalPropertyTable,
 } from "./physical-property-table.mjs";
+import { parseStructuredParameterTable } from "./structured-parameter-table.mjs";
 
 function fail(message) {
   process.stderr.write(`${message}\n`);
@@ -40,6 +41,15 @@ function unsafePath(name) {
 
 function json(files, name) {
   if (!files[name]) fail(`Missing required evidence file: ${name}`);
+  try {
+    return JSON.parse(strFromU8(files[name]));
+  } catch {
+    fail(`Invalid JSON: ${name}`);
+  }
+}
+
+function optionalJson(files, name) {
+  if (!files[name]) return null;
   try {
     return JSON.parse(strFromU8(files[name]));
   } catch {
@@ -120,7 +130,7 @@ function exactCatalogMatches(displayName, catalogRoot) {
 }
 
 function candidate(field, rawValue, normalizedValue, unit, confidence, status, sourceText, testCondition = null, options = {}) {
-  const canonicalKey = resolveCanonicalParameterKey(field);
+  const canonicalKey = options.canonicalKey || resolveCanonicalParameterKey(field);
   return {
     field,
     canonicalKey,
@@ -540,6 +550,7 @@ const meta = json(files, "page.meta.json");
 const mappings = json(files, "color-mappings.json");
 const imageIndex = json(files, "images.json");
 json(files, "parameter-evidence.json");
+const structuredTableInput = optionalJson(files, "parameter-tables.json");
 if (!Array.isArray(mappings) || !Array.isArray(imageIndex)) fail("Color or image index is not an array");
 const ocr = files["ocr/ocr-raw.txt"] ? strFromU8(files["ocr/ocr-raw.txt"]) : "";
 const brand = text(capture.productIdentity?.brand).toUpperCase();
@@ -553,8 +564,18 @@ const productKey = productLineId;
 const displayName = `Kexcelled ${productLine}`;
 const catalogRoot = resolve(options["catalog-root"] || join(process.cwd(), "data/filaments/product-lines"));
 const duplicateMatches = exactCatalogMatches(displayName, catalogRoot);
+let structuredTable;
+try {
+  structuredTable = parseStructuredParameterTable(structuredTableInput, {
+    expectedProductTitle: productLine,
+  });
+} catch (error) {
+  fail(error instanceof Error ? error.message : "Invalid parameter-tables.json");
+}
 const existingSpecTable = officialSpecTable(ocr, productLine);
-const supplementalVisionResults = supplementalVisionTables(files, imageIndex, ocr, productLine);
+const supplementalVisionResults = structuredTable
+  ? []
+  : supplementalVisionTables(files, imageIndex, ocr, productLine);
 const supplementalPhysicalTables = physicalVisionTables(supplementalVisionResults, files, productLine);
 let supplementalSpecTable;
 try {
@@ -568,6 +589,8 @@ if (existingSpecTable && supplementalSpecTable) {
 const specTable = existingSpecTable || supplementalSpecTable;
 const targetIdentity = normalizedIdentity(productLine);
 const visionTables = supplementalVisionResults.filter((table) => (
+  !structuredTable
+  &&
   normalizedIdentity(table.text).includes(targetIdentity)
   && /(?:建议|推荐)?打印参数/.test(table.text)
 ));
@@ -583,7 +606,24 @@ const materialParameter = candidate(
   null,
   { sourceFile: "capture.json", productLineId, officialRawName: "材料类型" },
 );
+const structuredParameters = structuredTable?.parameters.map((item) => candidate(
+  item.canonicalKey,
+  item.rawValue,
+  item.normalizedValue,
+  item.unit,
+  structuredTable.productTitleMatch ? "high" : "low",
+  structuredTable.productTitleMatch ? "official" : "conflict",
+  item.sourceText,
+  null,
+  {
+    sourceFile: item.sourceFile,
+    productLineId,
+    officialRawName: item.officialRawName,
+    canonicalKey: item.canonicalKey,
+  },
+)) || [];
 const collectedParameters = [
+  ...structuredParameters,
   ...(specTable ? numericCandidates(productLineId, specTable) : []),
   materialParameter,
   ...explicitBasics.candidates,
@@ -609,6 +649,9 @@ const retainedPaths = new Set(requiredColorPaths);
 const assetBudgetBytes = 3_500_000;
 let retainedBytes = requiredColorPaths.reduce((sum, path) => sum + (files[path]?.byteLength || 0), 0);
 const prioritizedProductPaths = [
+  ...(structuredTable?.table.sourceImage && files[structuredTable.table.sourceImage]
+    ? [structuredTable.table.sourceImage]
+    : []),
   ...(specTable?.sourcePath && files[specTable.sourcePath] ? [specTable.sourcePath] : []),
   ...visionTables.map((table) => table.sourcePath).filter((path) => files[path]),
   ...candidateProductPaths,
@@ -681,7 +724,12 @@ const reasons = [];
 if (duplicateMatches.length) reasons.push(`EXACT_NAME_DUPLICATE:${displayName}`);
 if (requiredMissing.length) reasons.push(`MISSING_REQUIRED:${requiredMissing.join(",")}`);
 for (const conflict of explicitBasics.conflicts) reasons.push(`PARAMETER_CONFLICT:${conflict.field}=${conflict.values.join("|")}`);
-const autoPublishEligible = !duplicateMatches.length && !requiredMissing.length;
+if (structuredTable && !structuredTable.productTitleMatch) {
+  reasons.push(`PARAMETER_TABLE_IDENTITY_MISMATCH:${structuredTable.warnings.join("|") || structuredTable.table.tableTitle}`);
+}
+const autoPublishEligible = !duplicateMatches.length
+  && !requiredMissing.length
+  && (!structuredTable || structuredTable.productTitleMatch);
 const sourceHash = hash(inputBytes);
 const sourceRunId = `opencode-${text(meta.savedAt).replace(/[^0-9]/g, "").slice(0, 14) || Date.now()}-${sourceHash.slice(0, 8)}`;
 const createdAt = new Date().toISOString();
@@ -749,17 +797,17 @@ const product = {
     bedTemperature: parameters.find((item) => item.canonicalKey === "bedTemperature") || null,
     printSpeed: parameters.find((item) => item.canonicalKey === "printingSpeed") || null,
     dryingTemperature: parameters.find((item) => item.canonicalKey === "dryingTemperature") || null,
-    dryingDuration: parameters.find((item) => item.canonicalKey === "dryingTime") || null,
+  dryingDuration: parameters.find((item) => ["dryingDuration", "dryingTime"].includes(item.canonicalKey)) || null,
     amsCompatibility: null,
     nozzleRequirement: null,
     printNotes: null,
     parameterStatus: parameters.length ? "partial" : "missing",
-    evidenceRefs: ["identity", ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
+    evidenceRefs: ["identity", ...(structuredTable ? ["structured-parameter-table"] : []), ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
     requiresManualReview: true,
     rawCandidates: parameters,
   },
   notes: reasons.join("; "),
-  evidenceRefs: ["identity", "colors", ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
+  evidenceRefs: ["identity", "colors", ...(structuredTable ? ["structured-parameter-table"] : []), ...(specTable ? ["ocr-spec-table"] : []), ...visionTables.map((_, index) => `ocr-print-table-${index + 1}`)],
 };
 
 const evidence = [
@@ -780,6 +828,29 @@ const evidence = [
     fieldBindings: ["brand", "productLine", "material", "materialType"],
     notes: text(meta.url),
   },
+  ...(structuredTable ? [{
+    evidenceId: "structured-parameter-table",
+    brandId,
+    productLineId,
+    productKey,
+    sourceZipFilename: basename(inputPath),
+    sourceZipHash: sourceHash,
+    sourceRelativePath: "parameter-tables.json",
+    sourceType: "structured_parameter_table",
+    extractedAssetId: files[structuredTable.table.sourceImage]
+      ? `assets/${structuredTable.table.sourceImage}`
+      : null,
+    extractionMethod: "parameter-tables.v1",
+    cropCoordinates: null,
+    ocrText: JSON.stringify(structuredTable.table.rows),
+    ocrConfidence: structuredTable.productTitleMatch ? 0.95 : 0.5,
+    fieldBindings: structuredParameters.map((item) => item.canonicalKey),
+    notes: [
+      `Source image: ${structuredTable.table.sourceImage}`,
+      `Table title: ${structuredTable.table.tableTitle}`,
+      ...structuredTable.warnings,
+    ].join("; "),
+  }] : []),
   ...(specTable ? [{
     evidenceId: "ocr-spec-table",
     brandId,
