@@ -40,6 +40,29 @@ function stringValue(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function verifiedOfficialPlaceholder(value) {
+  const color = objectValue(value);
+  const colorCode = stringValue(color.officialColorCode);
+  const sku = stringValue(color.sourceSkuId || color.skuId);
+  const sourceText = stringValue(color.rawSkuText || color.sourceText);
+  return stringValue(color.imageStatus) === "placeholder"
+    && Boolean(colorCode)
+    && Boolean(sku)
+    && stringValue(color.sourceStatus) === "marketplace_official_store"
+    && Boolean(sourceText)
+    && sourceText.toLowerCase().includes(colorCode.toLowerCase());
+}
+
+function placeholderWarning(value) {
+  const color = objectValue(value);
+  return {
+    colorCode: stringValue(color.officialColorCode),
+    sku: stringValue(color.sourceSkuId || color.skuId),
+    imageStatus: stringValue(color.imageStatus),
+    reason: "official_placeholder_filtered",
+  };
+}
+
 function hash(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -162,10 +185,21 @@ export function inspectFip(fipPath) {
   if (!stringValue(manifest.sourceRunId)) throw new ImportRunnerError("fip_preflight", "FIP sourceRunId is missing");
   if (!colors.length) throw new ImportRunnerError("fip_preflight", "FIP contains no colors");
   const colorImageRelationCount = colors.filter((color) => Boolean(stringValue(objectValue(color).localImagePath))).length;
-  if (colorImageRelationCount !== colors.length) {
+  const colorsWithoutRelations = colors.filter((color) => !stringValue(objectValue(color).localImagePath));
+  const verifiedPlaceholders = colorsWithoutRelations.filter(verifiedOfficialPlaceholder);
+  const invalidMissingImages = colorsWithoutRelations.filter((color) => !verifiedOfficialPlaceholder(color));
+  if (invalidMissingImages.length || colorImageRelationCount + verifiedPlaceholders.length !== colors.length) {
     throw new ImportRunnerError("fip_preflight", "Every color must reference an included image", {
       colorCount: colors.length,
       colorImageRelationCount,
+      invalidMissingImages: invalidMissingImages.map((value) => {
+        const color = objectValue(value);
+        return {
+          colorCode: stringValue(color.officialColorCode),
+          sku: stringValue(color.sourceSkuId || color.skuId),
+          imageStatus: stringValue(color.imageStatus) || "missing",
+        };
+      }),
     });
   }
   for (const image of images) {
@@ -184,9 +218,11 @@ export function inspectFip(fipPath) {
       colors: colors.length,
       images: images.length,
       colorImageRelations: colorImageRelationCount,
+      explicitPlaceholderColors: verifiedPlaceholders.length,
       parameters: candidates.length,
       evidence: evidence.length,
     },
+    colorsWithoutUsableOfficialImage: verifiedPlaceholders.map(placeholderWarning),
     publicationEligibility: objectValue(report.importDecision || manifest.importDecision),
   };
 }
@@ -276,6 +312,7 @@ export async function runImport(options, dependencies = {}) {
     fipSha256: hash(fipBytes),
     product: preflight.identity,
     counts: preflight.counts,
+    colorsWithoutUsableOfficialImage: preflight.colorsWithoutUsableOfficialImage,
     localSourceRunId: preflight.sourceRunId,
     publicationEligibility: preflight.publicationEligibility,
     officialSpecificationTable: stringValue(preflight.report.officialSpecificationTable) || "unknown",
