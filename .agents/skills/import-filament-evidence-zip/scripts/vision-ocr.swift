@@ -46,26 +46,65 @@ private func failure(
 
 private final class VisionRequestState: @unchecked Sendable {
   private let lock = NSLock()
-  private var finished = false
+  private var performFinished = false
   private var storedObservations: [VNRecognizedTextObservation] = []
-  private var storedError: NSError?
+  private var completionError: VisionRequestError?
+  private var performError: VisionRequestError?
   let semaphore = DispatchSemaphore(value: 0)
 
-  func finish(observations: [VNRecognizedTextObservation] = [], error: NSError? = nil) {
+  func finishCompletion(
+    observations: [VNRecognizedTextObservation] = [],
+    error: VisionRequestError? = nil
+  ) {
     lock.lock()
     defer { lock.unlock() }
-    guard !finished else { return }
-    finished = true
     storedObservations = observations
-    storedError = error
+    completionError = error
+  }
+
+  func finishPerform(
+    observations: [VNRecognizedTextObservation] = [],
+    error: VisionRequestError? = nil
+  ) {
+    lock.lock()
+    defer { lock.unlock() }
+    guard !performFinished else { return }
+    performFinished = true
+    if storedObservations.isEmpty {
+      storedObservations = observations
+    }
+    performError = error
     semaphore.signal()
   }
 
-  func snapshot() -> ([VNRecognizedTextObservation], NSError?) {
+  func snapshot() -> ([VNRecognizedTextObservation], VisionRequestError?) {
     lock.lock()
     defer { lock.unlock() }
-    return (storedObservations, storedError)
+    return (storedObservations, performError ?? completionError)
   }
+}
+
+private struct VisionRequestError {
+  let domain: String
+  let code: Int
+  let message: String
+}
+
+private func visionRequestError(_ error: Error) -> VisionRequestError {
+  let reflected = String(reflecting: error)
+  if reflected == "Foundation._GenericObjCError.nilError" {
+    return VisionRequestError(
+      domain: "Foundation._GenericObjCError",
+      code: 1,
+      message: reflected
+    )
+  }
+  let nsError = error as NSError
+  return VisionRequestError(
+    domain: nsError.domain,
+    code: nsError.code,
+    message: nsError.localizedDescription
+  )
 }
 
 private func recognize(path: String) -> ImageResult {
@@ -102,10 +141,12 @@ private func recognize(path: String) -> ImageResult {
   let state = VisionRequestState()
   let request = VNRecognizeTextRequest { request, error in
     if let error {
-      state.finish(error: error as NSError)
+      state.finishCompletion(error: visionRequestError(error))
       return
     }
-    state.finish(observations: request.results as? [VNRecognizedTextObservation] ?? [])
+    state.finishCompletion(
+      observations: request.results as? [VNRecognizedTextObservation] ?? []
+    )
   }
   request.recognitionLevel = .accurate
   request.recognitionLanguages = ["zh-Hans", "en-US"]
@@ -115,8 +156,9 @@ private func recognize(path: String) -> ImageResult {
     autoreleasepool {
       do {
         try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+        state.finishPerform(observations: request.results ?? [])
       } catch {
-        state.finish(error: error as NSError)
+        state.finishPerform(error: visionRequestError(error))
       }
     }
   }
@@ -138,7 +180,7 @@ private func recognize(path: String) -> ImageResult {
       stage: "vision_request",
       domain: requestError.domain,
       code: requestError.code,
-      message: requestError.localizedDescription
+      message: requestError.message
     )
   }
 

@@ -18,9 +18,11 @@ const imageGeneratorSource = join(workdir, "image-generator.swift");
 const imageGeneratorBinary = join(workdir, "image-generator");
 const englishImage = join(workdir, "english.png");
 const bilingualImage = join(workdir, "bilingual.png");
+const tinyImage = join(workdir, "tiny.png");
 const physicalTableImage = join(workdir, "physical-table.jpg");
 let englishResult;
 let bilingualResult;
+let tinyResult;
 let physicalTableResult;
 
 const imageGenerator = String.raw`
@@ -29,7 +31,9 @@ import Foundation
 
 let output = CommandLine.arguments[1]
 let mode = CommandLine.arguments[2]
-let size = NSSize(width: 1600, height: 700)
+let size = mode == "tiny"
+  ? NSSize(width: 2, height: 36)
+  : NSSize(width: 1600, height: 700)
 let image = NSImage(size: size)
 image.lockFocus()
 NSColor.white.setFill()
@@ -74,6 +78,7 @@ before(() => {
   execFileSync("swiftc", [imageGeneratorSource, "-o", imageGeneratorBinary], { stdio: "pipe" });
   execFileSync(imageGeneratorBinary, [englishImage, "english"]);
   execFileSync(imageGeneratorBinary, [bilingualImage, "bilingual"]);
+  execFileSync(imageGeneratorBinary, [tinyImage, "tiny"]);
   if (fixtureZip) {
     writeFileSync(
       physicalTableImage,
@@ -84,6 +89,7 @@ before(() => {
   }
   englishResult = runOCR(englishImage);
   bilingualResult = runOCR(bilingualImage);
+  tinyResult = runOCR(tinyImage);
   if (fixtureZip) physicalTableResult = runOCR(physicalTableImage);
 });
 
@@ -122,6 +128,17 @@ test("simple Chinese and English image is recognized", () => {
   const recognized = item.observations.map(({ text }) => text).join("\n");
   assert.match(recognized, /THE K5 PLA P/);
   assert.match(recognized, /密度|拉伸强度/);
+});
+
+test("perform error takes precedence over an empty completion result", () => {
+  const { item } = tinyResult;
+  assert.equal(item.ok, false);
+  assert.equal(item.stage, "vision_request");
+  assert.equal(item.observationCount, 0);
+  assert.equal(typeof item.errorDomain, "string");
+  assert.equal(typeof item.errorCode, "number");
+  assert.equal(typeof item.errorMessage, "string");
+  assert.ok(item.errorMessage.length > 0);
 });
 
 test("large physical-property image always returns JSON observations", {
