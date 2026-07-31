@@ -39,6 +39,12 @@ const images = Array.from({ length: 36 }, (_, index) => ({
   role: index < 22 ? "color" : "product",
   r2ObjectKey: `filament-imports/kexcelled/import/assets/images/${index + 1}.webp`,
 }));
+images.push({
+  imageId: "parameter-evidence",
+  productLineId: PRODUCT_KEY,
+  role: "evidence-only",
+  r2ObjectKey: "filament-imports/kexcelled/import/assets/images/parameter-evidence.png",
+});
 
 const draft = {
   id: DRAFT_ID,
@@ -84,6 +90,7 @@ assert.equal(record.id, PRODUCT_KEY);
 assert.equal(record.published.parameters.length, 24);
 assert.equal(record.published.colors.length, 22);
 assert.equal(record.published.images.length, 36);
+assert.equal(record.published.images.some((image) => image.id === "parameter-evidence"), false);
 assert.equal(record.published.colors.filter((color) => color.imageUrl).length, 22);
 assert.equal(record.published.parameters.find((item) => item.canonicalKey === "diameterTolerance")?.value, "±0.03 mm");
 assert.equal(record.published.parameters.find((item) => item.canonicalKey === "printingSpeed")?.value, "≤150 mm/s");

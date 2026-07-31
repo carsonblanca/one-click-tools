@@ -498,8 +498,15 @@ test("build-fip keeps legacy ZIP compatibility and optionally merges a structure
         pageSection: "sku_option",
         discoveredFrom: ["color_mapping"],
         sizeBytes: 3,
+      }, {
+        id: "parameter-table",
+        localPath: "images/0027.jpg",
+        pageSection: "sku_option",
+        discoveredFrom: ["parameter_evidence"],
+        sizeBytes: 3,
       }])),
       "images/color.jpg": new Uint8Array([1, 2, 3]),
+      "images/0027.jpg": new Uint8Array([4, 5, 6]),
     };
 
     const build = (name, parameterTables = null) => {
@@ -517,23 +524,28 @@ test("build-fip keeps legacy ZIP compatibility and optionally merges a structure
       ], { encoding: "utf8" });
       assert.equal(run.status, 0, run.stderr || run.stdout);
       const fip = unzipSync(new Uint8Array(readFileSync(output)));
-      return JSON.parse(strFromU8(fip["parameter-candidates.json"]));
+      return {
+        parameters: JSON.parse(strFromU8(fip["parameter-candidates.json"])),
+        images: JSON.parse(strFromU8(fip["images.json"])),
+      };
     };
 
     const legacy = build("legacy");
-    assert.deepEqual(legacy.map((item) => item.canonicalKey).sort(), [
+    assert.deepEqual(legacy.parameters.map((item) => item.canonicalKey).sort(), [
       "filamentDiameter",
       "materialType",
       "netWeight",
     ]);
 
     const enriched = build("enriched", table([row("喷嘴温度", "220℃")]));
-    assert.deepEqual(enriched.map((item) => item.canonicalKey).sort(), [
+    assert.deepEqual(enriched.parameters.map((item) => item.canonicalKey).sort(), [
       "filamentDiameter",
       "materialType",
       "netWeight",
       "nozzleTemperature",
     ]);
+    assert.equal(enriched.images.find((item) => item.sourcePath === "images/color.jpg")?.role, "color");
+    assert.equal(enriched.images.find((item) => item.sourcePath === "images/0027.jpg")?.role, "evidence-only");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

@@ -197,6 +197,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   const colors = arrayValue(data.colors).map((color, index) => mapColor(color, index, productKey));
   const images = arrayValue(data.images).flatMap((value, index) => {
     const image = objectValue(value);
+    if (text(image.role) === "evidence-only") return [];
     const url = publicAssetUrl(text(image.r2ObjectKey));
     return url ? [{
       id: text(image.imageId) || `image-${index + 1}`,

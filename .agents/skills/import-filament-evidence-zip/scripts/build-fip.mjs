@@ -598,6 +598,9 @@ const parameterMerge = mergeParameterCandidates([], [
   ...parameterEnrichment.candidates.map(normalizeAssembledCandidate),
 ]);
 const parameters = parameterMerge.candidates;
+const parameterEvidencePaths = new Set(parameters
+  .map((item) => text(item.sourceFile))
+  .filter((path) => path && files[path]));
 
 const imageByPath = new Map(imageIndex.map((item) => [text(item.localPath), item]));
 const missingColorImages = mappings.filter((item) => !text(item.imagePath) || !files[text(item.imagePath)]);
@@ -628,12 +631,15 @@ for (const path of prioritizedProductPaths) {
 }
 const images = [...retainedPaths].sort().map((sourcePath) => {
   const image = imageByPath.get(sourcePath) || {};
+  const isColorImage = mappings.some((item) => text(item.imagePath) === sourcePath);
   return {
     imageId: text(image.id) || `image-${basename(sourcePath)}`,
     sourcePath,
     packagePath: `assets/${sourcePath}`,
     sourceUrl: text(image.originalUrl),
-    role: mappings.some((item) => text(item.imagePath) === sourcePath) ? "color" : "product",
+    role: isColorImage
+      ? "color"
+      : parameterEvidencePaths.has(sourcePath) ? "evidence-only" : "product",
     byteSize: files[sourcePath]?.byteLength || 0,
     brandId,
     productLineId,
