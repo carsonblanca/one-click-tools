@@ -16,6 +16,15 @@ import {
   parseOfficialPhysicalProperties,
   selectOfficialPhysicalPropertyTable,
 } from "./physical-property-table.mjs";
+import {
+  enrichParameterTables,
+  mergeParameterCandidates,
+  ParameterEnrichmentError,
+} from "./parameter-enrichment.mjs";
+import {
+  adaptParameterTablesInput,
+  ParameterTablesAdapterError,
+} from "./parameter-tables-adapter.mjs";
 
 function fail(message) {
   process.stderr.write(`${message}\n`);
@@ -91,6 +100,12 @@ function officialColorKey(productLineId, item, index) {
   return `${productLineId}:${suffix}`;
 }
 
+function colorNameFromMapping(item) {
+  const captured = text(item.colorName);
+  if (captured) return captured;
+  return text(item.sourceText).match(/[（(]([^()（）]+)[）)]/)?.[1]?.trim() || "";
+}
+
 function productLineFrom(capture, meta) {
   const capturedProductLine = text(capture.productIdentity?.productLine);
   if (capturedProductLine) return capturedProductLine;
@@ -136,6 +151,7 @@ function candidate(field, rawValue, normalizedValue, unit, confidence, status, s
     officialRawName: options.officialRawName || field,
     originalName: options.officialRawName || field,
     trusted: status === "official",
+    ...(options.evidenceId ? { evidenceId: options.evidenceId, evidenceIds: [options.evidenceId] } : {}),
   };
 }
 
@@ -190,7 +206,7 @@ function explicitDiameterAndWeight(files, meta, mappings, productLineId, product
       "official",
       evidence.sourceText,
       null,
-      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "线径" },
+      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "线径", evidenceId: "parameter-basics" },
     ));
   }
   if (weightValues.length === 1) {
@@ -204,7 +220,7 @@ function explicitDiameterAndWeight(files, meta, mappings, productLineId, product
       "official",
       evidence.sourceText,
       null,
-      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "净重" },
+      { sourceFile: evidence.sourceFile, productLineId, officialRawName: "净重", evidenceId: "parameter-basics" },
     ));
   }
   return { candidates, conflicts };
@@ -346,12 +362,13 @@ function knownAliasAtStart(value) {
   return aliases.find(({ alias }) => compact.toLowerCase().startsWith(alias.toLowerCase())) || null;
 }
 
-function recommendedPrintCandidates(table, productLineId) {
+function recommendedPrintCandidates(table, productLineId, evidenceId) {
   const result = [];
   const options = (officialRawName) => ({
     sourceFile: table.sourcePath,
     productLineId,
     officialRawName,
+    evidenceId,
   });
   for (const row of table.rows) {
     if (/(?:建议|推荐).*打印参数/.test(row.text)) continue;
@@ -390,6 +407,7 @@ function numericCandidates(productLineId, specTable) {
     sourceFile: specTable.sourcePath,
     productLineId,
     officialRawName,
+    evidenceId: "ocr-spec-table",
   });
   const result = [];
   const header = specTable.text.match(/线径\s+重量\s+公差\s*\n\s*(\d+(?:\.\d+)?)\s*mm\s+(\d+(?:\.\d+)?)\s*kg\s+[+±]\s*(\d+(?:\.\d+)?)\s*mm/i);
@@ -439,6 +457,7 @@ const meta = json(files, "page.meta.json");
 const mappings = json(files, "color-mappings.json");
 const imageIndex = json(files, "images.json");
 json(files, "parameter-evidence.json");
+const parameterTables = files["parameter-tables.json"] ? json(files, "parameter-tables.json") : null;
 if (!Array.isArray(mappings) || !Array.isArray(imageIndex)) fail("Color or image index is not an array");
 const ocr = files["ocr/ocr-raw.txt"] ? strFromU8(files["ocr/ocr-raw.txt"]) : "";
 const brand = text(capture.productIdentity?.brand).toUpperCase();
@@ -464,12 +483,79 @@ if (existingSpecTable && supplementalSpecTable) {
   fail(`Ambiguous official specification tables for ${productLine}: found 2`);
 }
 const specTable = existingSpecTable || supplementalSpecTable;
-const targetIdentity = normalizedIdentity(productLine);
-const visionTables = supplementalVisionResults.filter((table) => (
-  normalizedIdentity(table.text).includes(targetIdentity)
-  && /(?:建议|推荐).*打印参数/.test(table.text)
+const allVisionPrintTables = supplementalVisionResults.filter((table) => (
+  /(?:建议|推荐).*打印参数/.test(table.text)
 ));
+const targetIdentity = normalizedIdentity(productLine);
+const visionTables = allVisionPrintTables.filter((table) => (
+  normalizedIdentity(table.text).includes(targetIdentity)
+));
+function cleanParamName(raw) {
+  return text(raw).replace(/\s*(?:mm\s*\/?\s*s|\s*mm|°\s*C|°C|℃|\s*%)\s*$/i, "").trim();
+}
+function firstValueCol(items) {
+  const sorted = [...items].sort((a, b) => a.x - b.x);
+  if (sorted.length <= 1) return "";
+  const leftItems = items.filter((item) => item.x < 0.42);
+  const rightItems = items.filter((item) => item.x >= 0.42);
+  if (rightItems.length === 0) return "";
+  const firstRight = rightItems.sort((a, b) => a.x - b.x)[0];
+  const cluster = rightItems.filter((item) => Math.abs(item.x - firstRight.x) < 0.20);
+  const value = cluster.map((item) => text(item.text)).join(" ").trim();
+  if (!value || /^\d+$/.test(value)) return "";
+  return value;
+}
+const generatedParameterTables = allVisionPrintTables.map((table) => {
+  const rows = [];
+  let representativeModel = "";
+  for (const row of table.rows) {
+    if (/(?:建议|推荐).*打印参数/.test(row.text)) continue;
+    if (/^(?:Ps\.?|注[：:]?|所有材料|长时间|间隔时间)/i.test(row.text)) break;
+    const left = row.items.filter((item) => item.x < 0.45).map((item) => text(item.text)).join(" ").trim();
+    const right = firstValueCol(row.items);
+    const name = cleanParamName(left);
+    if (/^(?:代表机型|推荐机型|适用机型)/i.test(name)) {
+      representativeModel = right;
+      continue;
+    }
+    if (/^(?:Ps\.?|注[：:]?)/i.test(name)) continue;
+    if (!name || !right) continue;
+    if (name === right || right === name) continue;
+    rows.push({ name, value: right });
+  }
+  const headerText = table.rows[0]?.text || "";
+  const tableProductTitle = headerText.replace(/建议打印参数\s*$/i, "").trim();
+  return {
+    sourceImage: table.sourcePath,
+    tableType: "printing_parameter",
+    productLine,
+    productTitle: tableProductTitle,
+    materialType: material,
+    representativeModel,
+    rows,
+  };
+}).filter((table) => table.rows.length > 0);
+const existingParameterTableItems = parameterTables?.tables
+  ? parameterTables.tables
+  : Array.isArray(parameterTables) ? parameterTables : parameterTables ? [parameterTables] : [];
+const mergedParameterTables = [...existingParameterTableItems, ...generatedParameterTables];
 const explicitBasics = explicitDiameterAndWeight(files, meta, mappings, productLineId, productLine);
+let parameterEnrichment;
+try {
+  parameterEnrichment = enrichParameterTables(
+    adaptParameterTablesInput(
+      { tables: mergedParameterTables },
+      { currentProductTitle: productLine, materialType: material },
+    ),
+    { productLineId },
+  );
+} catch (error) {
+  fail(
+    error instanceof ParameterEnrichmentError || error instanceof ParameterTablesAdapterError
+      ? error.message
+      : "Invalid parameter-tables.json",
+  );
+}
 const materialParameter = candidate(
   "materialType",
   material,
@@ -479,18 +565,39 @@ const materialParameter = candidate(
   "official",
   `${productLine} / ${material}`,
   null,
-  { sourceFile: "capture.json", productLineId, officialRawName: "材料类型" },
+  { sourceFile: "capture.json", productLineId, officialRawName: "材料类型", evidenceId: "identity" },
 );
 const collectedParameters = [
   ...(specTable ? numericCandidates(productLineId, specTable) : []),
   materialParameter,
   ...explicitBasics.candidates,
-  ...visionTables.flatMap((table) => recommendedPrintCandidates(table, productLineId)),
+  ...visionTables.flatMap((table, index) => recommendedPrintCandidates(table, productLineId, `ocr-print-table-${index + 1}`)),
 ];
-const parameters = [...new Map(collectedParameters.map((item) => [
-  item.canonicalKey || `unmapped:${item.officialRawName}`,
-  item,
-])).values()];
+const normalizedPrintKeys = new Set([
+  "chamberTemperature", "nozzleTemperature", "nozzleDiameter", "bedTemperature",
+  "coolingFan", "printingSpeed", "retractionDistance", "retractionSpeed",
+  "dryingTemperature", "dryingTime",
+]);
+function normalizeAssembledCandidate(item) {
+  if (!normalizedPrintKeys.has(item.canonicalKey)) return item;
+  const raw = text(item.rawValue || item.sourceText);
+  if (item.canonicalKey === "dryingTemperature") {
+    const match = raw.match(/([≤≥<>]?\d+(?:\.\d+)?(?:\s*[~～\-–]\s*\d+(?:\.\d+)?)?)\s*(?:℃|°C)/i);
+    return match ? { ...item, normalizedValue: normalizeRange(match[1]), unit: "°C" } : item;
+  }
+  if (item.canonicalKey === "dryingTime") {
+    const match = raw.match(/([≤≥<>]?\d+(?:\.\d+)?(?:\s*[~～\-–]\s*\d+(?:\.\d+)?)?)\s*(?:小时|h)(?:\s|$)/i);
+    return match ? { ...item, normalizedValue: normalizeRange(match[1]), unit: "h" } : item;
+  }
+  const definition = getParameterDefinition(item.canonicalKey);
+  const parsed = valueParts(raw, definition?.defaultUnit || item.unit || null);
+  return parsed.value ? { ...item, normalizedValue: parsed.value, unit: parsed.unit } : item;
+}
+const parameterMerge = mergeParameterCandidates([], [
+  ...collectedParameters.map(normalizeAssembledCandidate),
+  ...parameterEnrichment.candidates.map(normalizeAssembledCandidate),
+]);
+const parameters = parameterMerge.candidates;
 
 const imageByPath = new Map(imageIndex.map((item) => [text(item.localPath), item]));
 const missingColorImages = mappings.filter((item) => !text(item.imagePath) || !files[text(item.imagePath)]);
@@ -508,6 +615,7 @@ const assetBudgetBytes = 3_500_000;
 let retainedBytes = requiredColorPaths.reduce((sum, path) => sum + (files[path]?.byteLength || 0), 0);
 const prioritizedProductPaths = [
   ...(specTable?.sourcePath && files[specTable.sourcePath] ? [specTable.sourcePath] : []),
+  ...parameterEnrichment.evidence.map((item) => item.sourceRelativePath).filter((path) => files[path]),
   ...visionTables.map((table) => table.sourcePath).filter((path) => files[path]),
   ...candidateProductPaths,
 ];
@@ -535,6 +643,7 @@ const images = [...retainedPaths].sort().map((sourcePath) => {
 
 const colors = mappings.map((item, index) => {
   const matchKey = officialColorKey(productLineId, item, index);
+  const colorName = colorNameFromMapping(item);
   return ({
   colorId: matchKey,
   matchKey,
@@ -542,9 +651,9 @@ const colors = mappings.map((item, index) => {
   productLineId,
   productKey,
   sourceSkuId: text(item.skuId),
-  nameZh: text(item.colorName),
-  displayNameZhCN: text(item.colorName),
-  displayNameZhTW: text(item.colorName),
+  nameZh: colorName,
+  displayNameZhCN: colorName,
+  displayNameZhTW: colorName,
   displayNameEn: null,
   officialColorCode: text(item.officialColorCode) || null,
   colorCodeType: "manufacturer_sku_code",
@@ -575,11 +684,16 @@ if (!parameters.some((item) => item.field === "netWeight" && ["confirmed", "offi
 }
 if (!colors.length) requiredMissing.push("colors");
 if (missingColorImages.length) requiredMissing.push("colorImages");
+const parameterConflicts = [...explicitBasics.conflicts, ...parameterMerge.conflicts];
 const reasons = [];
 if (duplicateMatches.length) reasons.push(`EXACT_NAME_DUPLICATE:${displayName}`);
 if (requiredMissing.length) reasons.push(`MISSING_REQUIRED:${requiredMissing.join(",")}`);
 for (const conflict of explicitBasics.conflicts) reasons.push(`PARAMETER_CONFLICT:${conflict.field}=${conflict.values.join("|")}`);
-const autoPublishEligible = !duplicateMatches.length && !requiredMissing.length;
+reasons.push(...parameterEnrichment.warnings, ...parameterMerge.warnings);
+const autoPublishEligible = !duplicateMatches.length
+  && !requiredMissing.length
+  && !parameterEnrichment.requiresManualReview
+  && !parameterMerge.requiresManualReview;
 const sourceHash = hash(inputBytes);
 const sourceRunId = `opencode-${text(meta.savedAt).replace(/[^0-9]/g, "").slice(0, 14) || Date.now()}-${sourceHash.slice(0, 8)}`;
 const createdAt = new Date().toISOString();
@@ -614,7 +728,7 @@ const manifest = {
     duplicateMatches,
     requiredMissing,
     reasons,
-    parameterConflicts: explicitBasics.conflicts,
+    parameterConflicts,
     officialSpecificationTable: specTable ? "present" : "missing",
     parameterEvidenceComplete: Boolean(specTable),
     requiresManualReview: true,
@@ -678,6 +792,34 @@ const evidence = [
     fieldBindings: ["brand", "productLine", "material", "materialType"],
     notes: text(meta.url),
   },
+  {
+    evidenceId: "parameter-basics",
+    brandId,
+    productLineId,
+    productKey,
+    sourceZipFilename: basename(inputPath),
+    sourceZipHash: sourceHash,
+    sourceRelativePath: "color-mappings.json",
+    sourceType: "structured_sku_mapping",
+    extractedAssetId: null,
+    extractionMethod: "color-mappings.json",
+    cropCoordinates: null,
+    ocrText: explicitBasics.candidates.map((item) => item.sourceText).filter(Boolean).join("\n"),
+    ocrConfidence: null,
+    fieldBindings: explicitBasics.candidates.map((item) => item.canonicalKey).filter(Boolean),
+    notes: "Explicit diameter and net weight parsed from product-scoped SKU source text.",
+  },
+  ...parameterEnrichment.evidence.map((item) => ({
+    ...item,
+    brandId,
+    productLineId,
+    productKey,
+    sourceZipFilename: basename(inputPath),
+    sourceZipHash: sourceHash,
+    extractedAssetId: files[item.sourceRelativePath] ? `assets/${item.sourceRelativePath}` : null,
+    cropCoordinates: null,
+    ocrConfidence: item.productTitleMatch ? 0.95 : 0.6,
+  })),
   ...(specTable ? [{
     evidenceId: "ocr-spec-table",
     brandId,
@@ -710,7 +852,7 @@ const evidence = [
     ocrText: `${productLine} official recommended print table.`,
     ocrConfidence: 0.9,
     fieldBindings: parameters.filter((item) => item.sourceFile === table.sourcePath).map((item) => item.canonicalKey || item.field),
-    notes: "Supplemental OCR was limited to an unprocessed detail image containing the exact product identity and an official print-parameter heading.",
+    notes: "Supplemental OCR scanned all unprocessed detail images for official print-parameter tables; identity mismatch is captured in warnings.",
   })),
   ...colors.map((color, index) => ({
     evidenceId: `color-${index + 1}`,
@@ -740,7 +882,7 @@ const report = {
   fipSizeBytes: 0,
   savingRatio: null,
   ocrImageCount: Number(meta.ocrImagesCompleted) || 0,
-  supplementalOcrTableCount: visionTables.length,
+  supplementalOcrTableCount: allVisionPrintTables.length,
   officialSpecificationTable: specTable ? "present" : "missing",
   parameterEvidenceComplete: Boolean(specTable),
   requiresManualReview: true,
@@ -748,7 +890,7 @@ const report = {
   parameterCandidateCount: parameters.length,
   unresolvedCount: parameters.filter((item) => !["confirmed", "official"].includes(item.reviewStatus)).length + requiredMissing.length,
   warnings: reasons,
-  parameterConflicts: explicitBasics.conflicts,
+  parameterConflicts,
   importDecision: manifest.importDecision,
   expectedDraft: {
     parameterFieldCount: parameters.length,
@@ -802,6 +944,7 @@ const outputFiles = {
   "package-report.json": strToU8(JSON.stringify(report, null, 2)),
   "draft-patch.json": strToU8(JSON.stringify(draftPatch, null, 2)),
   "ocr/images.json": strToU8(JSON.stringify({ processed: Number(meta.ocrImagesCompleted) || 0, retainedFullText: false }, null, 2)),
+  "parameter-tables.json": strToU8(JSON.stringify(generatedParameterTables.length ? { tables: mergedParameterTables } : null, null, 2)),
 };
 for (const image of images) outputFiles[image.packagePath] = files[image.sourcePath];
 const zipped = zipSync(outputFiles, { level: 6 });
@@ -826,7 +969,7 @@ process.stdout.write(`${JSON.stringify({
   duplicateMatches,
   autoPublishEligible,
   expectedDraft: report.expectedDraft,
-  supplementalOcrTableCount: visionTables.length,
+  supplementalOcrTableCount: allVisionPrintTables.length,
   reviewReasons: reasons,
   fipBytes: zipped.byteLength,
   inputSha256: sourceHash,
