@@ -1,11 +1,29 @@
 import assert from "node:assert/strict";
-import { hasAdminScope } from "../lib/admin/permissions.ts";
-import {
+import { existsSync } from "node:fs";
+import { registerHooks } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const root = dirname(dirname(fileURLToPath(import.meta.url)));
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (!specifier.startsWith("@/")) return nextResolve(specifier, context);
+    const base = join(root, specifier.slice(2));
+    const resolved = [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts")]
+      .find((candidate) => existsSync(candidate));
+    return resolved
+      ? { url: pathToFileURL(resolved).href, shortCircuit: true }
+      : nextResolve(specifier, context);
+  },
+});
+
+const { hasAdminScope } = await import("../lib/admin/permissions.ts");
+const {
   mapPublishedDraftToCatalogRecord,
   mergePublishedWithStatic,
   validateDraftForPublish,
   validateSinglePublishRequest,
-} from "../lib/filaments/publishing/minimal-publish.ts";
+} = await import("../lib/filaments/publishing/minimal-publish.ts");
 
 const SOURCE_RUN_ID = "preview-import-1234";
 const DRAFT_ID = "preview-draft-1234";
@@ -90,7 +108,10 @@ assert.equal(record.id, PRODUCT_KEY);
 assert.equal(record.published.parameters.length, 24);
 assert.equal(record.published.colors.length, 22);
 assert.equal(record.published.images.length, 36);
+assert.equal(record.published.images.some((image) => image.role === "product"), true);
+assert.equal(record.published.images.some((image) => image.role === "color"), true);
 assert.equal(record.published.images.some((image) => image.id === "parameter-evidence"), false);
+assert.equal(draft.draft_data.images.some((image) => image.imageId === "parameter-evidence"), true);
 assert.equal(record.published.colors.filter((color) => color.imageUrl).length, 22);
 assert.equal(record.published.parameters.find((item) => item.canonicalKey === "diameterTolerance")?.value, "±0.03 mm");
 assert.equal(record.published.parameters.find((item) => item.canonicalKey === "printingSpeed")?.value, "≤150 mm/s");
