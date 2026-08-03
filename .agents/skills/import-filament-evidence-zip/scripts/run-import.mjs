@@ -12,6 +12,11 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { strFromU8, unzipSync } from "fflate";
+import {
+  buildMachineAuthHeaders,
+  isVercelPreviewUrl,
+  PREVIEW_BYPASS_KEYCHAIN_SERVICE,
+} from "./machine-auth-headers.mjs";
 import { ReadbackVerificationError, verifyReadback } from "./verify-readback.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -128,7 +133,7 @@ function readCookieFile(cookieFile, baseUrl) {
   return plain;
 }
 
-export function readKeychainToken(service) {
+export function readKeychainToken(service, credentialName = "OpenCode token") {
   const accountArgs = process.env.USER ? ["-a", process.env.USER] : [];
   const result = spawnSync("security", [
     "find-generic-password",
@@ -144,7 +149,7 @@ export function readKeychainToken(service) {
   if (result.status !== 0 || !token) {
     throw new ImportRunnerError(
       "environment_preflight",
-      "OpenCode token was not found in macOS Keychain",
+      `${credentialName} was not found in macOS Keychain`,
     );
   }
   return token;
@@ -293,7 +298,15 @@ export async function runImport(options, dependencies = {}) {
       if (!token) {
         throw new ImportRunnerError("environment_preflight", "OpenCode token was not found in macOS Keychain");
       }
-      authHeaders = { Authorization: `Bearer ${token}` };
+      let previewBypassSecret;
+      if (isVercelPreviewUrl(baseUrl)) {
+        const bypassReader = dependencies.readPreviewBypassSecret || readKeychainToken;
+        previewBypassSecret = bypassReader(
+          PREVIEW_BYPASS_KEYCHAIN_SERVICE,
+          "Vercel Preview protection bypass secret",
+        );
+      }
+      authHeaders = buildMachineAuthHeaders({ baseUrl, token, previewBypassSecret });
     }
   }
   const inputBytes = readFileSync(inputPath);

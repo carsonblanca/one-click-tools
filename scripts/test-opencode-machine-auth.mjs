@@ -125,9 +125,12 @@ test("machine authentication is not enabled for unrelated admin routes", () => {
 });
 
 test("the import runner reads Keychain credentials in memory and sends Bearer auth", () => {
-  const source = read(".agents/skills/import-filament-evidence-zip/scripts/run-import.mjs");
-  assert.match(source, /security[\s\S]*find-generic-password[\s\S]*-w/);
-  assert.match(source, /Authorization: `Bearer \$\{token\}`/);
-  assert.doesNotMatch(source, /writeFileSync\([^)]*token/);
-  assert.doesNotMatch(source, /console\.(?:log|error)\([^)]*token/);
+  const runnerSource = read(".agents/skills/import-filament-evidence-zip/scripts/run-import.mjs");
+  const headerSource = read(".agents/skills/import-filament-evidence-zip/scripts/machine-auth-headers.mjs");
+  assert.match(runnerSource, /security[\s\S]*find-generic-password[\s\S]*-w/);
+  assert.match(headerSource, /Authorization: `Bearer \$\{token\}`/);
+  assert.match(runnerSource, /PREVIEW_BYPASS_KEYCHAIN_SERVICE/);
+  assert.match(headerSource, /"x-vercel-protection-bypass"/);
+  assert.doesNotMatch(`${runnerSource}\n${headerSource}`, /writeFileSync\([^)]*token/);
+  assert.doesNotMatch(`${runnerSource}\n${headerSource}`, /console\.(?:log|error)\([^)]*token/);
 });
