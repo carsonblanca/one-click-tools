@@ -1,26 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
-const GOLDEN_SOURCE_RUN_ID = "opencode-20260718081745-d5c1e1ff-d199c528";
-const GOLDEN_PRODUCT_LINE_NAME = "THE K5 PETG M";
-
 function isPublishable({
   isAdmin,
-  sourceRunId,
   publicationStatus,
-  productLineName,
+  reviewStatus,
 }: {
   isAdmin: boolean;
-  sourceRunId: string;
   publicationStatus: string;
-  productLineName: string | null;
+  reviewStatus: string;
 }) {
   if (!isAdmin) return false;
   if (publicationStatus !== "draft") return false;
-  if (sourceRunId !== GOLDEN_SOURCE_RUN_ID) return false;
-  if ((productLineName ?? "").trim() !== GOLDEN_PRODUCT_LINE_NAME) return false;
+  if (!["pending_review", "approved"].includes(reviewStatus)) return false;
   return true;
 }
 
@@ -28,11 +23,15 @@ export default function PublishDraftButton({
   isAdmin,
   sourceRunId,
   publicationStatus,
+  reviewStatus,
+  productKey,
   productLineName,
 }: {
   isAdmin: boolean;
   sourceRunId: string;
   publicationStatus: string;
+  reviewStatus: string;
+  productKey?: string;
   productLineName: string | null;
 }) {
   const router = useRouter();
@@ -44,16 +43,15 @@ export default function PublishDraftButton({
 
   const canPublish = isPublishable({
     isAdmin,
-    sourceRunId,
     publicationStatus,
-    productLineName,
+    reviewStatus,
   });
 
   const handlePublish = useCallback(async () => {
     if (!canPublish || loading) return;
 
     const confirmed = window.confirm(
-      `即将发布 ${GOLDEN_PRODUCT_LINE_NAME}。发布后产品会出现在公开目录、品牌页和详情页。是否继续？`,
+      "即将把当前耗材草稿标记为已发布，发布后会在 Preview 前台耗材页面显示。是否继续？",
     );
     if (!confirmed) return;
 
@@ -65,7 +63,7 @@ export default function PublishDraftButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ sourceRunIds: [GOLDEN_SOURCE_RUN_ID] }),
+        body: JSON.stringify({ sourceRunIds: [sourceRunId] }),
       });
 
       const body = (await response.json().catch(() => ({}))) as {
@@ -86,7 +84,7 @@ export default function PublishDraftButton({
 
       setResult({
         type: "success",
-        message: `发布成功。${body.readback?.publicationStatus === "published" ? "当前草稿已标记为 published。" : ""}`,
+        message: `已发布到 Preview。${body.readback?.publicationStatus === "published" ? "当前草稿已标记为 published。" : ""}`,
       });
       router.refresh();
     } catch (error) {
@@ -103,8 +101,14 @@ export default function PublishDraftButton({
     return (
       <div className="inline-flex items-center gap-2">
         <span className="rounded bg-emerald-100 px-2.5 py-1 text-sm font-medium text-emerald-800">
-          已发布
+          已发布到 Preview
         </span>
+        <Link
+          href={productKey ? `/zh-cn/filaments/${productKey}` : "/zh-cn/filaments"}
+          className="text-sm font-medium text-emerald-700 underline hover:text-emerald-900"
+        >
+          查看前台
+        </Link>
       </div>
     );
   }
@@ -113,7 +117,7 @@ export default function PublishDraftButton({
     return (
       <div className="text-sm text-slate-500">
         {isAdmin
-          ? `当前草稿不满足发布条件（sourceRunId / 产品名称 / publicationStatus 不匹配）。`
+          ? `当前草稿不满足发布条件（需为 admin、publicationStatus=draft、reviewStatus=pending_review/approved）。`
           : `需要 admin 权限才能发布。`}
       </div>
     );
@@ -127,7 +131,7 @@ export default function PublishDraftButton({
         disabled={loading}
         className="inline-flex items-center rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "发布中…" : "发布当前草稿"}
+        {loading ? "发布中…" : "发布到 Preview"}
       </button>
       {result ? (
         <div
@@ -138,6 +142,14 @@ export default function PublishDraftButton({
           }`}
         >
           {result.type === "error" ? `发布失败：${result.message}` : result.message}
+          {result.type === "success" ? (
+            <Link
+              href={productKey ? `/zh-cn/filaments/${productKey}` : "/zh-cn/filaments"}
+              className="ml-3 inline-flex items-center font-medium text-emerald-700 underline hover:text-emerald-900"
+            >
+              查看前台
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </div>

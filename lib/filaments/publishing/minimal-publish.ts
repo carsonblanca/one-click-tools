@@ -135,11 +135,25 @@ function publicAssetUrl(objectKey: string) {
     : null;
 }
 
+function extractChineseColorName(rawSkuText: unknown): string {
+  const raw = text(rawSkuText);
+  if (!raw) return "";
+  const match = raw.match(/（([^）]+)）/);
+  if (!match) return "";
+  const candidate = match[1].trim();
+  // Only accept the parenthetical when it carries manufacturer Chinese color text.
+  return /[㐀-鿿]/.test(candidate) ? candidate : "";
+}
+
 function mapColor(value: unknown, index: number, productKey: string) {
   const source = objectValue(value);
-  const nameZh = text(source.displayNameZhCN) || text(source.nameZh) || `颜色 ${index + 1}`;
-  const nameEn = text(source.displayNameEn) || nameZh;
   const officialColorCode = text(source.officialColorCode);
+  const nameZh =
+    text(source.displayNameZhCN) ||
+    text(source.nameZh) ||
+    extractChineseColorName(source.rawSkuText) ||
+    `颜色 ${index + 1}`;
+  const nameEn = text(source.displayNameEn) || officialColorCode || nameZh;
   const rawHex = text(source.hexColor) || text(source.hex);
   const hex = /^#[0-9a-f]{6}$/i.test(rawHex) ? rawHex.toUpperCase() : null;
   const rgb = rgbFromHex(hex);
@@ -197,7 +211,6 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   const colors = arrayValue(data.colors).map((color, index) => mapColor(color, index, productKey));
   const images = arrayValue(data.images).flatMap((value, index) => {
     const image = objectValue(value);
-    if (text(image.role) === "evidence-only") return [];
     const url = publicAssetUrl(text(image.r2ObjectKey));
     return url ? [{
       id: text(image.imageId) || `image-${index + 1}`,

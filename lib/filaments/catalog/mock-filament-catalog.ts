@@ -58,10 +58,44 @@ export type LocalizedBrandProfileContent = {
   sourceLabels?: Record<string, string>;
 };
 
+export type SpoolVersion = {
+  version: "new" | "legacy";
+  labelZh: string;
+  labelEn: string;
+  outerDiameter: number;       // mm
+  width: number;               // mm
+  centerHoleDiameter: number;  // mm
+  emptySpoolWeight: number;    // g
+  emptySpoolWeightTolerance: string; // e.g. "±5"
+  noteZh?: string;
+  status: "current" | "legacy" | "still_possible";
+};
+
+export type PackagingVersion = {
+  version: "new" | "legacy";
+  labelZh: string;
+  labelEn: string;
+  width: number;   // mm
+  height: number;  // mm
+  depth: number;   // mm
+  status: "current" | "legacy";
+};
+
+export type SpoolAndPackaging = {
+  spoolVersions: SpoolVersion[];
+  packagingVersions: PackagingVersion[];
+  noteZh: string;
+  noteEn: string;
+  newSpoolImage?: string;       // public path e.g. /filaments/brands/kexcelled/new-spool.webp
+  legacySpoolImage?: string;    // public path
+  sourceEvidenceImage?: string; // R2 key or reference to original evidence
+};
+
 export type BrandProfile = {
   id: string;
   name: string;
   legalEntity: string | null;
+  legalEntityEvidenceLevel?: string | null;
   countryOrRegion: string | null;
   headquarters: string | null;
   productionLocations: string[];
@@ -73,6 +107,7 @@ export type BrandProfile = {
   sources: EvidenceSource[];
   verificationStatus: "verified" | "partial" | "unverified";
   lastVerifiedAt: string | null;
+  spoolAndPackaging?: SpoolAndPackaging | null;
   localized?: Partial<Record<Locale, LocalizedBrandProfileContent>>;
 };
 
@@ -208,7 +243,8 @@ export const filamentBrandProfiles: BrandProfile[] = [
   {
     id: "kexcelled",
     name: "Kexcelled",
-    legalEntity: null,
+    legalEntity: "诺思贝瑞新材料科技（苏州）有限公司",
+    legalEntityEvidenceLevel: "公开工商信息平台交叉核验",
     countryOrRegion: "CN",
     headquarters: "Suzhou, Jiangsu, CN",
     productionLocations: [
@@ -254,12 +290,68 @@ export const filamentBrandProfiles: BrandProfile[] = [
       { id: "kexcelled-about", sourceType: "manufacturerProvided", label: "Kexcelled official About page (kexcelled3d.cn/about-us)", url: "https://www.kexcelled3d.cn/about-us", lastVerifiedAt: "2026-06-20", crossVerified: true },
       { id: "kexcelled-linkedin", sourceType: "publicVerified", label: "Kexcelled LinkedIn company page", url: "https://www.linkedin.com/company/kexcelled-3d", lastVerifiedAt: "2026-06-20", crossVerified: true },
       { id: "kexcelled-social", sourceType: "publicVerified", label: "Official website footer social media links", url: "https://www.kexcelled3d.cn/", lastVerifiedAt: "2026-06-20", crossVerified: false },
+      { id: "kexcelled-baike", sourceType: "publicVerified", label: "百度百科 Kexcelled / 诺思贝瑞新材料科技（苏州）有限公司词条", url: "https://baike.baidu.com/item/Kexcelled/67245806", lastVerifiedAt: "2026-08-07", crossVerified: true },
+      { id: "kexcelled-qcc", sourceType: "publicVerified", label: "企查查 诺思贝瑞新材料科技（苏州）有限公司", url: "https://www.qcc.com/cshangbiaolist/798d6adf654b87e75a0d2e3f53dc161e", lastVerifiedAt: "2026-08-07", crossVerified: true },
+      { id: "kexcelled-aiqicha", sourceType: "publicVerified", label: "爱企查 诺思贝瑞新材料科技（苏州）有限公司", url: "https://aiqicha.baidu.com/company_detail_39293168813098", lastVerifiedAt: "2026-08-07", crossVerified: true },
+      { id: "kexcelled-tianyancha", sourceType: "publicVerified", label: "天眼查 诺思贝瑞新材料科技（苏州）有限公司", url: "https://www.tianyancha.com/company/2349358199", lastVerifiedAt: "2026-08-07", crossVerified: true },
     ],
     verificationStatus: "partial",
-    lastVerifiedAt: "2026-06-20",
+    lastVerifiedAt: "2026-08-07",
+    spoolAndPackaging: {
+      spoolVersions: [
+        {
+          version: "new",
+          labelZh: "新版料盘",
+          labelEn: "New spool",
+          outerDiameter: 200,
+          width: 66,
+          centerHoleDiameter: 55,
+          emptySpoolWeight: 220,
+          emptySpoolWeightTolerance: "±5",
+          noteZh: "含纸圈",
+          status: "current",
+        },
+        {
+          version: "legacy",
+          labelZh: "旧版料盘",
+          labelEn: "Legacy spool",
+          outerDiameter: 200,
+          width: 70,
+          centerHoleDiameter: 55,
+          emptySpoolWeight: 240,
+          emptySpoolWeightTolerance: "±5",
+          status: "legacy",
+        },
+      ],
+      packagingVersions: [
+        {
+          version: "new",
+          labelZh: "新版包装",
+          labelEn: "New packaging",
+          width: 210,
+          height: 210,
+          depth: 72,
+          status: "current",
+        },
+        {
+          version: "legacy",
+          labelZh: "旧版包装",
+          labelEn: "Legacy packaging",
+          width: 210,
+          height: 205,
+          depth: 72,
+          status: "legacy",
+        },
+      ],
+      noteZh: "新旧线盘可能随机发货，以实际收到产品为准。",
+      noteEn: "New and legacy spools may be shipped randomly; actual product received shall prevail.",
+      newSpoolImage: "/filaments/brands/kexcelled/new-spool.webp",
+      legacySpoolImage: "/filaments/brands/kexcelled/legacy-spool.webp",
+      sourceEvidenceImage: "KEXCELLED 官方「新旧线盘混发」对比图",
+    },
     localized: {
       en: {
-        legalEntity: "Official brand pages reviewed did not show a full legal entity name; pending further verification.",
+        legalEntity: "Nosberry New Materials Technology (Suzhou) Co., Ltd. (诺思贝瑞新材料科技（苏州）有限公司) — legal entity cross-verified via public business platforms (Baidu Baike, QCC, Aiqicha, Tianyancha). Manufacturer / operator / trademark-holder identities are not independently verified.",
         countryOrRegion: "China",
         headquarters: "Suzhou, Jiangsu, China",
         productionLocationLabel: "Publicly disclosed production layout",
@@ -279,7 +371,7 @@ export const filamentBrandProfiles: BrandProfile[] = [
         },
       },
       "zh-cn": {
-        legalEntity: "官方品牌页面未见完整法定主体名称，待进一步核验。",
+        legalEntity: "诺思贝瑞新材料科技（苏州）有限公司（公司主体，经百度百科、企查查、爱企查、天眼查等公开工商信息平台交叉核验；制造商 / 运营主体 / 商标权利人身份尚未独立核验）。",
         countryOrRegion: "中国",
         headquarters: "中国江苏苏州",
         productionLocationLabel: "公开披露生产布局",

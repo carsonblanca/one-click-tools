@@ -72,11 +72,11 @@ export default function ColorCard({ card, locale = "en" }: ColorCardProps) {
       </div>
 
       {hovered && hasImage ? (
-        <div className="absolute left-4 top-full z-20 mt-2 hidden h-64 w-64 overflow-hidden rounded-2xl border bg-white p-2 shadow-xl sm:block dark:border-white/10 dark:bg-[#101114]">
+        <div className="pointer-events-none absolute left-4 top-full z-20 mt-2 hidden h-64 w-64 overflow-hidden rounded-2xl border bg-white p-2 shadow-xl sm:block dark:border-white/10 dark:bg-[#101114]">
           <img
             src={safeImageUrl}
             alt={card.colorNameZh}
-            className="h-full w-full object-contain"
+            className="pointer-events-none h-full w-full object-contain"
           />
         </div>
       ) : null}

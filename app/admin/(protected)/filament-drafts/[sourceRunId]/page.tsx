@@ -38,6 +38,11 @@ function safeLink(value: unknown) {
     : "";
 }
 
+function baseOrFallback(base: unknown, fallback: string, unit: string) {
+  if (base !== null && base !== undefined && base !== "") return `${String(base)} ${unit}`;
+  return fallback || "—";
+}
+
 function draftLookupFailure(error: unknown) {
   const message = error instanceof Error ? error.message : "unknown_error";
   if (message.startsWith("missing_supabase_")) {
@@ -77,6 +82,8 @@ export default async function FilamentDraftPage({
 
   const data = objectValue(draft.draft_data);
   const productLine = objectValue(data.productLine);
+  const reviewStatus = draft.review_status;
+  const productKey = text(data.productKey) || text(productLine.productKey) || text(productLine.productLineId);
   const parameters = normalizeStoredParameters(data.parameters);
   const canonicalColors = arrayValue(data.canonicalColors);
   const colors = canonicalColors.length ? canonicalColors : arrayValue(data.colors);
@@ -121,6 +128,8 @@ export default async function FilamentDraftPage({
               isAdmin={isAdmin}
               sourceRunId={sourceRunId}
               publicationStatus={draft.publication_status}
+              reviewStatus={reviewStatus}
+              productKey={productKey}
               productLineName={draft.product_line_name || text(productLine.name)}
             />
           </div>
@@ -130,8 +139,8 @@ export default async function FilamentDraftPage({
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="font-semibold">基础资料</h2>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div><dt className="text-xs text-slate-500">线径</dt><dd>{String(productLine.diameterMm ?? "—")} mm</dd></div>
-          <div><dt className="text-xs text-slate-500">净重</dt><dd>{String(productLine.netWeightG ?? "—")} g</dd></div>
+          <div><dt className="text-xs text-slate-500">线径</dt><dd>{baseOrFallback(productLine.diameterMm, text(parameters.fields.filamentDiameter), "mm")}</dd></div>
+          <div><dt className="text-xs text-slate-500">净重</dt><dd>{baseOrFallback(productLine.netWeightG, text(parameters.fields.netWeight), "g")}</dd></div>
           <div><dt className="text-xs text-slate-500">草稿 ID</dt><dd className="break-all">{draft.id}</dd></div>
           <div><dt className="text-xs text-slate-500">状态</dt><dd>{draft.status}</dd></div>
           <div><dt className="text-xs text-slate-500">发布状态</dt><dd>{draft.publication_status}</dd></div>
