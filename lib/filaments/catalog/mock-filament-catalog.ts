@@ -84,6 +84,7 @@ export type PackagingVersion = {
 export type SpoolAndPackaging = {
   spoolVersions: SpoolVersion[];
   packagingVersions: PackagingVersion[];
+  scope?: string;               // net-weight class the spool params apply to, e.g. "1kg"
   noteZh: string;
   noteEn: string;
   newSpoolImage?: string;       // public path e.g. /filaments/brands/kexcelled/new-spool.webp
@@ -298,6 +299,7 @@ export const filamentBrandProfiles: BrandProfile[] = [
     verificationStatus: "partial",
     lastVerifiedAt: "2026-08-07",
     spoolAndPackaging: {
+      scope: "1kg",
       spoolVersions: [
         {
           version: "new",

@@ -12,6 +12,17 @@ import type { Locale } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 
+function hasMultipleNetWeights(spool: CatalogRecord["spool"]) {
+  return (spool.netWeightOptionsG?.length ?? 0) > 1;
+}
+
+function formatNetWeight(spool: CatalogRecord["spool"], unknownLabel: string) {
+  const options = spool.netWeightOptionsG;
+  // Manufacturer weight options (e.g. 0.5 / 1 / 3 / 5 kg), not a computed value.
+  if (options && options.length > 1) return `${options.map((g) => String(g / 1000)).join(" / ")} kg`;
+  return spool.netFilamentWeight ? `${spool.netFilamentWeight} g` : unknownLabel;
+}
+
 const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
   en: {
     unknown: "No reliable public evidence found yet",
@@ -61,6 +72,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     netWeight: "Net filament weight",
     emptyWeight: "Empty spool weight",
     fullWeight: "Full spool weight",
+    fullWeightComputed: "Full spool weight (computed)",
     outerDiameter: "Outer diameter",
     width: "Width",
     hubDiameter: "Hub hole diameter",
@@ -141,6 +153,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     netWeight: "净线材重量",
     emptyWeight: "空盘重量",
     fullWeight: "满盘重量",
+    fullWeightComputed: "满盘总重（计算值）",
     outerDiameter: "外径",
     width: "宽度",
     hubDiameter: "中心孔直径",
@@ -221,6 +234,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     netWeight: "淨線材重量",
     emptyWeight: "空盤重量",
     fullWeight: "滿盤重量",
+    fullWeightComputed: "滿盤總重（計算值）",
     outerDiameter: "外徑",
     width: "寬度",
     hubDiameter: "中心孔直徑",
@@ -672,6 +686,14 @@ function ResolvedFilamentDetailPage({ record, locale }: { record: CatalogRecord;
               const legacySpool = sp.spoolVersions.find((s) => s.version === "legacy");
               const newPkg = sp.packagingVersions.find((p) => p.version === "new");
               const legacyPkg = sp.packagingVersions.find((p) => p.version === "legacy");
+              const netWt = record.spool.netFilamentWeight;
+              // The brand-level spool evidence only covers the 1 kg net-weight class, so a
+              // multi-spec product (e.g. ABS 0.5 / 1 / 3 / 5 kg) must not show one full-spool weight.
+              const canShowFull =
+                sp.scope === "1kg" &&
+                !hasMultipleNetWeights(record.spool) &&
+                typeof netWt === "number" &&
+                netWt === 1000;
               const spoolRow = (spool: NonNullable<typeof newSpool>, img: string | undefined, label: string) => (
                 <div className="grid gap-4 sm:grid-cols-[130px_1fr] items-start">
                   <div>
@@ -693,6 +715,10 @@ function ResolvedFilamentDetailPage({ record, locale }: { record: CatalogRecord;
                     <FieldRow label={t.width} value={`${spool.width} mm`} unknownLabel={t.unknown} />
                     <FieldRow label={t.hubDiameter} value={`${spool.centerHoleDiameter} mm`} unknownLabel={t.unknown} />
                     <FieldRow label={t.emptyWeight} value={`${spool.emptySpoolWeight} ${spool.emptySpoolWeightTolerance} g`} unknownLabel={t.unknown} />
+                    {canShowFull && (
+                      <FieldRow label={t.fullWeightComputed} value={`${netWt + spool.emptySpoolWeight} ${spool.emptySpoolWeightTolerance} g`} unknownLabel={t.unknown} />
+                    )}
+                    <FieldRow label={t.spoolMaterial} value={record.spool.spoolMaterial || t.unknown} unknownLabel={t.unknown} />
                     {spool.noteZh && (
                       <p className={`pt-1 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>{spool.noteZh}</p>
                     )}
@@ -727,9 +753,7 @@ function ResolvedFilamentDetailPage({ record, locale }: { record: CatalogRecord;
                   )}
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>{t.officialNote}：{sp.noteZh}</p>
                   <div className={`grid gap-3 border-t pt-3 sm:grid-cols-2 text-sm ${isDark ? "border-white/5" : "border-[#E5DED0]/60"}`}>
-                    <FieldRow label={t.netWeight} value={record.spool.netFilamentWeight ? `${record.spool.netFilamentWeight} g` : t.unknown} unknownLabel={t.unknown} />
-                    <FieldRow label={t.fullWeight} value={record.spool.fullSpoolWeight ? `${record.spool.fullSpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
-                    <FieldRow label={t.spoolMaterial} value={record.spool.spoolMaterial || t.unknown} unknownLabel={t.unknown} />
+                    <FieldRow label={t.netWeight} value={formatNetWeight(record.spool, t.unknown)} unknownLabel={t.unknown} />
                     <FieldRow label={t.adapterRequired} value={record.spool.adapterRequired ? t.yes : t.no} unknownLabel={t.unknown} />
                     <FieldRow label={t.refillable} value={record.spool.refillable ? t.yes : t.no} unknownLabel={t.unknown} />
                     <FieldRow label={t.cardboardSpool} value={record.spool.cardboardSpool ? t.yes : t.no} unknownLabel={t.unknown} />
@@ -753,9 +777,11 @@ function ResolvedFilamentDetailPage({ record, locale }: { record: CatalogRecord;
                 ) : (
                   <FieldRow label={t.spoolImage} value={null} unknownLabel={t.unknown} />
                 )}
-                <FieldRow label={t.netWeight} value={record.spool.netFilamentWeight ? `${record.spool.netFilamentWeight} g` : t.unknown} unknownLabel={t.unknown} />
+                <FieldRow label={t.netWeight} value={formatNetWeight(record.spool, t.unknown)} unknownLabel={t.unknown} />
                 <FieldRow label={t.emptyWeight} value={record.spool.emptySpoolWeight ? `${record.spool.emptySpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
-                <FieldRow label={t.fullWeight} value={record.spool.fullSpoolWeight ? `${record.spool.fullSpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
+                {!hasMultipleNetWeights(record.spool) && (
+                  <FieldRow label={t.fullWeight} value={record.spool.fullSpoolWeight ? `${record.spool.fullSpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
+                )}
                 <FieldRow label={t.outerDiameter} value={record.spool.spoolOuterDiameter ? `${record.spool.spoolOuterDiameter} mm` : t.unknown} unknownLabel={t.unknown} />
                 <FieldRow label={t.width} value={record.spool.spoolWidth ? `${record.spool.spoolWidth} mm` : t.unknown} unknownLabel={t.unknown} />
                 <FieldRow label={t.hubDiameter} value={record.spool.hubDiameter ? `${record.spool.hubDiameter} mm` : t.unknown} unknownLabel={t.unknown} />

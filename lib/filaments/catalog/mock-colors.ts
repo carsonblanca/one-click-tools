@@ -28,6 +28,12 @@ export type PhysicalSwatch = {
 
 export type SpoolSpec = {
   netFilamentWeight: number;
+  /**
+   * Official net-weight options in grams when the product is sold in more than one
+   * net-weight spec (e.g. KEXCELLED ABS: 0.5 / 1 / 3 / 5 kg).
+   * Absent or single-entry means the product has one net weight.
+   */
+  netWeightOptionsG?: number[];
   emptySpoolWeight: number | null;
   fullSpoolWeight: number | null;
   spoolOuterDiameter: number | null;

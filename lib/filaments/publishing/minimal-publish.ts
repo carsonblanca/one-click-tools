@@ -203,6 +203,33 @@ function netWeightGrams(value: string, fallback: unknown) {
   return numberValue(fallback) || 0;
 }
 
+/**
+ * Official multi-spec net weights, scoped to the exact KEXCELLED product line.
+ * This set belongs ONLY to KEXCELLED THE K5 ABS (sold as 0.5 / 1 / 3 / 5 kg); it must
+ * never be applied by materialType, otherwise every other brand's single-1kg ABS would
+ * be wrongly presented as a multi-spec product.
+ */
+const OFFICIAL_NET_WEIGHT_OPTIONS_BY_PRODUCT: Record<string, number[]> = {
+  "kexcelled-k5-abs": [500, 1000, 3000, 5000],
+};
+
+function declaredNetWeightsGrams(value: string) {
+  const isKg = /kg/i.test(value);
+  const parsed = (value.match(/\d+(?:\.\d+)?/g) || [])
+    .map(Number)
+    .filter((item) => Number.isFinite(item) && item > 0)
+    .map((item) => (isKg ? item * 1000 : item));
+  return Array.from(new Set(parsed));
+}
+
+function netWeightOptionsGrams(value: string, productKey: string) {
+  // Priority A: a draft that already declares multiple net weights needs no fallback.
+  const declared = declaredNetWeightsGrams(value);
+  if (declared.length > 1) return declared;
+  const official = OFFICIAL_NET_WEIGHT_OPTIONS_BY_PRODUCT[productKey.trim().toLowerCase()];
+  return official && official.length > 1 ? [...official] : undefined;
+}
+
 export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): CatalogRecord {
   const data = objectValue(row.draft_data);
   const productLine = objectValue(data.productLine);
@@ -224,12 +251,15 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     value,
   }));
   const primary = colors[0]?.color || mapColor({}, 0, productKey).color;
+  const materialType = text(row.material_type) || text(productLine.materialType);
+  const netWeightField = normalizedParameters.fields.netWeight || "";
+  const netWeightOptionsG = netWeightOptionsGrams(netWeightField, productKey);
   return {
     id: productKey,
     brand: "Kexcelled",
     brandZh: "Kexcelled",
-    materialType: text(row.material_type) || text(productLine.materialType),
-    materialTypeZh: text(row.material_type) || text(productLine.materialType),
+    materialType,
+    materialTypeZh: materialType,
     variant: text(row.variant) || text(productLine.variant) || "Matte",
     variantZh: "哑光",
     productLine: text(row.product_line_name) || text(productLine.name),
@@ -237,7 +267,8 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     parameterStatus: "complete",
     color: primary,
     spool: {
-      netFilamentWeight: netWeightGrams(normalizedParameters.fields.netWeight || "", productLine.netWeightG),
+      netFilamentWeight: netWeightGrams(netWeightField, productLine.netWeightG),
+      netWeightOptionsG,
       emptySpoolWeight: null,
       fullSpoolWeight: null,
       spoolOuterDiameter: null,
