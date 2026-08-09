@@ -39,6 +39,7 @@ export type SpoolSpec = {
   amsFit: "yes" | "conditional" | "no";
   adapterRequired: boolean;
   spoolImagePlaceholder: string | null;
+  netWeightOptionsG?: number[];
 };
 
 export type CatalogColor = {

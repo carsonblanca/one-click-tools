@@ -58,6 +58,40 @@ export type LocalizedBrandProfileContent = {
   sourceLabels?: Record<string, string>;
 };
 
+export type SpoolVersion = {
+  version: "new" | "legacy";
+  labelZh: string;
+  labelEn: string;
+  outerDiameter: number;       // mm
+  width: number;               // mm
+  centerHoleDiameter: number;  // mm
+  emptySpoolWeight: number;    // g
+  emptySpoolWeightTolerance: string; // e.g. "±5"
+  noteZh?: string;
+  status: "current" | "legacy" | "still_possible";
+};
+
+export type PackagingVersion = {
+  version: "new" | "legacy";
+  labelZh: string;
+  labelEn: string;
+  width: number;   // mm
+  height: number;  // mm
+  depth: number;   // mm
+  status: "current" | "legacy";
+};
+
+export type SpoolAndPackaging = {
+  scope?: "1kg";
+  spoolVersions: SpoolVersion[];
+  packagingVersions: PackagingVersion[];
+  noteZh: string;
+  noteEn: string;
+  newSpoolImage?: string;       // public path e.g. /filaments/brands/kexcelled/new-spool.webp
+  legacySpoolImage?: string;    // public path
+  sourceEvidenceImage?: string; // R2 key or reference to original evidence
+};
+
 export type BrandProfile = {
   id: string;
   name: string;
@@ -73,6 +107,7 @@ export type BrandProfile = {
   sources: EvidenceSource[];
   verificationStatus: "verified" | "partial" | "unverified";
   lastVerifiedAt: string | null;
+  spoolAndPackaging?: SpoolAndPackaging | null;
   localized?: Partial<Record<Locale, LocalizedBrandProfileContent>>;
 };
 
@@ -257,6 +292,59 @@ export const filamentBrandProfiles: BrandProfile[] = [
     ],
     verificationStatus: "partial",
     lastVerifiedAt: "2026-06-20",
+    spoolAndPackaging: {
+      scope: "1kg",
+      spoolVersions: [
+        {
+          version: "new",
+          labelZh: "新版料盘",
+          labelEn: "New spool",
+          outerDiameter: 200,
+          width: 66,
+          centerHoleDiameter: 55,
+          emptySpoolWeight: 220,
+          emptySpoolWeightTolerance: "±5",
+          noteZh: "含纸圈",
+          status: "current",
+        },
+        {
+          version: "legacy",
+          labelZh: "旧版料盘",
+          labelEn: "Legacy spool",
+          outerDiameter: 200,
+          width: 70,
+          centerHoleDiameter: 55,
+          emptySpoolWeight: 240,
+          emptySpoolWeightTolerance: "±5",
+          status: "legacy",
+        },
+      ],
+      packagingVersions: [
+        {
+          version: "new",
+          labelZh: "新版包装",
+          labelEn: "New packaging",
+          width: 210,
+          height: 210,
+          depth: 72,
+          status: "current",
+        },
+        {
+          version: "legacy",
+          labelZh: "旧版包装",
+          labelEn: "Legacy packaging",
+          width: 210,
+          height: 205,
+          depth: 72,
+          status: "legacy",
+        },
+      ],
+      noteZh: "新旧线盘可能随机发货，以实际收到产品为准。",
+      noteEn: "New and legacy spools may be shipped randomly; actual product received shall prevail.",
+      newSpoolImage: "/filaments/brands/kexcelled/new-spool.webp",
+      legacySpoolImage: "/filaments/brands/kexcelled/legacy-spool.webp",
+      sourceEvidenceImage: "KEXCELLED 官方「新旧线盘混发」对比图",
+    },
     localized: {
       en: {
         legalEntity: "Official brand pages reviewed did not show a full legal entity name; pending further verification.",

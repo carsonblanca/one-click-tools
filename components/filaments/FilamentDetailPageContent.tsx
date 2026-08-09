@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
 import { getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
 import {
   getLocalizedColorFamilyLabel,
@@ -68,6 +69,14 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     nozzleTempShort: "Nozzle temperature",
     flow: "Flow",
     spoolInfo: "Spool information",
+    spoolAndPackaging: "Spool & packaging",
+    newSpool: "New spool",
+    legacySpool: "Legacy spool",
+    newPackaging: "New packaging",
+    legacyPackaging: "Legacy packaging",
+    packagingSize: "Packaging size",
+    officialNote: "Official note",
+    fullWeightComputed: "Full spool weight (computed)",
     spoolImage: "Spool image",
     netWeight: "Net filament weight",
     emptyWeight: "Empty spool weight",
@@ -156,6 +165,14 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     nozzleTempShort: "喷嘴温度",
     flow: "流量",
     spoolInfo: "料盘信息",
+    spoolAndPackaging: "料盘与包装",
+    newSpool: "新版料盘",
+    legacySpool: "旧版料盘",
+    newPackaging: "新版包装",
+    legacyPackaging: "旧版包装",
+    packagingSize: "包装尺寸",
+    officialNote: "官方说明",
+    fullWeightComputed: "满盘总重（计算值）",
     spoolImage: "料盘图片",
     netWeight: "净线材重量",
     emptyWeight: "空盘重量",
@@ -244,6 +261,14 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     nozzleTempShort: "噴嘴溫度",
     flow: "流量",
     spoolInfo: "料盤資訊",
+    spoolAndPackaging: "料盤與包裝",
+    newSpool: "新版料盤",
+    legacySpool: "舊版料盤",
+    newPackaging: "新版包裝",
+    legacyPackaging: "舊版包裝",
+    packagingSize: "包裝尺寸",
+    officialNote: "官方說明",
+    fullWeightComputed: "滿盤總重（計算值）",
     spoolImage: "料盤圖片",
     netWeight: "淨線材重量",
     emptyWeight: "空盤重量",
@@ -282,6 +307,17 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     crossVerified: "交叉核驗",
   },
 };
+
+function hasMultipleNetWeights(spool: CatalogRecord["spool"]) {
+  return (spool.netWeightOptionsG?.length ?? 0) > 1;
+}
+
+function formatNetWeight(spool: CatalogRecord["spool"], unknownLabel: string) {
+  const options = spool.netWeightOptionsG;
+  // Manufacturer weight options (e.g. 0.5 / 1 / 3 / 5 kg), not a computed value.
+  if (options && options.length > 1) return `${options.map((g) => String(g / 1000)).join(" / ")} kg`;
+  return spool.netFilamentWeight ? `${spool.netFilamentWeight} g` : unknownLabel;
+}
 
 function downloadJson(fileName: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -328,6 +364,37 @@ function FieldRow({ label, value, unknownLabel = DETAIL_LABELS.en.unknown }: { l
     <div className={`flex justify-between gap-2 py-2 text-sm border-b ${isDark ? "border-white/5 text-white/70" : "border-[#E5DED0]/60 text-[#6B665D]"} last:border-0`}>
       <span className="shrink-0">{label}</span>
       <span className={`text-right font-medium ${isDark ? "text-white/90" : "text-[#18181B]"}`}>{display}</span>
+    </div>
+  );
+}
+
+function ImageWithPlaceholder({
+  src,
+  alt,
+  className,
+  containerClassName,
+  objectClassName,
+  noImageLabel,
+}: {
+  src: string | null;
+  alt: string;
+  className?: string;
+  containerClassName?: string;
+  objectClassName?: string;
+  noImageLabel: string;
+}) {
+  const { isDark } = useTheme();
+  const [error, setError] = useState(false);
+  const hasImage = Boolean(src) && !error;
+  return (
+    <div className={`relative overflow-hidden ${containerClassName ?? ""} ${className ?? ""}`}>
+      {hasImage ? (
+        <img src={src!} alt={alt} className={objectClassName ?? "h-full w-full object-contain"} onError={() => setError(true)} />
+      ) : (
+        <div className={`flex h-full w-full items-center justify-center ${isDark ? "bg-white/5 text-white/30" : "bg-slate-100 text-slate-400"}`}>
+          <span className="text-sm">{noImageLabel}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -517,21 +584,119 @@ export default function FilamentDetailPageContent({
             </div>
           </DetailSection>
 
-          <DetailSection title={t.spoolInfo}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FieldRow label={t.spoolImage} value={record.spool.spoolImagePlaceholder || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.netWeight} value={record.spool.netFilamentWeight ? `${record.spool.netFilamentWeight} g` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.emptyWeight} value={record.spool.emptySpoolWeight ? `${record.spool.emptySpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.fullWeight} value={record.spool.fullSpoolWeight ? `${record.spool.fullSpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.outerDiameter} value={record.spool.spoolOuterDiameter ? `${record.spool.spoolOuterDiameter} mm` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.width} value={record.spool.spoolWidth ? `${record.spool.spoolWidth} mm` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.hubDiameter} value={record.spool.hubDiameter ? `${record.spool.hubDiameter} mm` : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.spoolMaterial} value={record.spool.spoolMaterial || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.adapterRequired} value={record.spool.adapterRequired ? t.yes : t.no} unknownLabel={t.unknown} />
-              <FieldRow label={t.refillable} value={record.spool.refillable ? t.yes : t.no} unknownLabel={t.unknown} />
-              <FieldRow label={t.cardboardSpool} value={record.spool.cardboardSpool ? t.yes : t.no} unknownLabel={t.unknown} />
-              <FieldRow label={t.amsFit} value={amsLabel} unknownLabel={t.unknown} />
-            </div>
+          <DetailSection title={t.spoolAndPackaging}>
+            {(brandData?.spoolAndPackaging) ? (() => {
+              const sp = brandData.spoolAndPackaging;
+              const newSpool = sp.spoolVersions.find((s) => s.version === "new");
+              const legacySpool = sp.spoolVersions.find((s) => s.version === "legacy");
+              const newPkg = sp.packagingVersions.find((p) => p.version === "new");
+              const legacyPkg = sp.packagingVersions.find((p) => p.version === "legacy");
+              const netWt = record.spool.netFilamentWeight;
+              // The brand-level spool evidence only covers the 1 kg net-weight class, so a
+              // multi-spec product (e.g. ABS 0.5 / 1 / 3 / 5 kg) must not show one full-spool weight.
+              const canShowFull =
+                sp.scope === "1kg" &&
+                !hasMultipleNetWeights(record.spool) &&
+                typeof netWt === "number" &&
+                netWt === 1000;
+              const spoolRow = (spool: NonNullable<typeof newSpool>, img: string | undefined, label: string) => (
+                <div className="grid gap-4 sm:grid-cols-[130px_1fr] items-start">
+                  <div>
+                    {img ? (
+                      <ImageWithPlaceholder
+                        src={img}
+                        alt={label}
+                        containerClassName={`aspect-square w-full overflow-hidden rounded-xl border ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}
+                        objectClassName="h-full w-full object-contain"
+                        noImageLabel={t.noImage}
+                      />
+                    ) : (
+                      <FieldRow label={t.spoolImage} value={null} unknownLabel={t.unknown} />
+                    )}
+                    <p className={`mt-1 text-center text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>{label}</p>
+                  </div>
+                  <div className="space-y-0.5 text-sm">
+                    <FieldRow label={t.outerDiameter} value={`${spool.outerDiameter} mm`} unknownLabel={t.unknown} />
+                    <FieldRow label={t.width} value={`${spool.width} mm`} unknownLabel={t.unknown} />
+                    <FieldRow label={t.hubDiameter} value={`${spool.centerHoleDiameter} mm`} unknownLabel={t.unknown} />
+                    <FieldRow label={t.emptyWeight} value={`${spool.emptySpoolWeight} ${spool.emptySpoolWeightTolerance} g`} unknownLabel={t.unknown} />
+                    {canShowFull && (
+                      <FieldRow label={t.fullWeightComputed} value={`${netWt + spool.emptySpoolWeight} ${spool.emptySpoolWeightTolerance} g`} unknownLabel={t.unknown} />
+                    )}
+                    <FieldRow label={t.spoolMaterial} value={record.spool.spoolMaterial || t.unknown} unknownLabel={t.unknown} />
+                    {spool.noteZh && (
+                      <p className={`pt-1 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>{spool.noteZh}</p>
+                    )}
+                  </div>
+                </div>
+              );
+              return (
+                <div className="space-y-5">
+                  {newSpool && (
+                    <div className="space-y-2">
+                      <p className={`text-sm font-medium ${isDark ? "text-white/90" : "text-[#463F33]"}`}>{t.newSpool}</p>
+                      {spoolRow(newSpool, sp.newSpoolImage, t.newSpool)}
+                      {newPkg && (
+                        <div className="pt-1">
+                          <p className={`text-sm font-medium ${isDark ? "text-white/90" : "text-[#463F33]"}`}>{t.newPackaging}</p>
+                          <FieldRow label={t.packagingSize} value={`${newPkg.width} × ${newPkg.height} × ${newPkg.depth} mm`} unknownLabel={t.unknown} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {legacySpool && (
+                    <div className={`rounded-xl border p-3 space-y-2 opacity-90 ${isDark ? "border-white/5 bg-white/[0.02]" : "border-[#E5DED0]/60 bg-[#FBF9F4]"}`}>
+                      <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#6B665D]"}`}>{t.legacySpool}</p>
+                      {spoolRow(legacySpool, sp.legacySpoolImage, t.legacySpool)}
+                      {legacyPkg && (
+                        <div className="pt-1">
+                          <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#6B665D]"}`}>{t.legacyPackaging}</p>
+                          <FieldRow label={t.packagingSize} value={`${legacyPkg.width} × ${legacyPkg.height} × ${legacyPkg.depth} mm`} unknownLabel={t.unknown} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <p className={`text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>{t.officialNote}：{sp.noteZh}</p>
+                  <div className={`grid gap-3 border-t pt-3 sm:grid-cols-2 text-sm ${isDark ? "border-white/5" : "border-[#E5DED0]/60"}`}>
+                    <FieldRow label={t.netWeight} value={formatNetWeight(record.spool, t.unknown)} unknownLabel={t.unknown} />
+                    <FieldRow label={t.adapterRequired} value={record.spool.adapterRequired ? t.yes : t.no} unknownLabel={t.unknown} />
+                    <FieldRow label={t.refillable} value={record.spool.refillable ? t.yes : t.no} unknownLabel={t.unknown} />
+                    <FieldRow label={t.cardboardSpool} value={record.spool.cardboardSpool ? t.yes : t.no} unknownLabel={t.unknown} />
+                    <FieldRow label={t.amsFit} value={amsLabel} unknownLabel={t.unknown} />
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {record.spool.spoolImagePlaceholder ? (
+                  <div className={`flex items-center justify-between gap-2 py-2 text-sm border-b ${isDark ? "border-white/5 text-white/70" : "border-[#E5DED0]/60 text-[#6B665D]"} last:border-0`}>
+                    <span className="shrink-0">{t.spoolImage}</span>
+                    <ImageWithPlaceholder
+                      src={record.spool.spoolImagePlaceholder}
+                      alt={t.spoolImage}
+                      containerClassName="h-16 w-16 overflow-hidden rounded-lg border border-[#E5DED0] dark:border-white/10"
+                      objectClassName="h-full w-full object-contain"
+                      noImageLabel={t.noImage}
+                    />
+                  </div>
+                ) : (
+                  <FieldRow label={t.spoolImage} value={null} unknownLabel={t.unknown} />
+                )}
+                <FieldRow label={t.netWeight} value={formatNetWeight(record.spool, t.unknown)} unknownLabel={t.unknown} />
+                <FieldRow label={t.emptyWeight} value={record.spool.emptySpoolWeight ? `${record.spool.emptySpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
+                {!hasMultipleNetWeights(record.spool) && (
+                  <FieldRow label={t.fullWeight} value={record.spool.fullSpoolWeight ? `${record.spool.fullSpoolWeight} g` : t.unknown} unknownLabel={t.unknown} />
+                )}
+                <FieldRow label={t.outerDiameter} value={record.spool.spoolOuterDiameter ? `${record.spool.spoolOuterDiameter} mm` : t.unknown} unknownLabel={t.unknown} />
+                <FieldRow label={t.width} value={record.spool.spoolWidth ? `${record.spool.spoolWidth} mm` : t.unknown} unknownLabel={t.unknown} />
+                <FieldRow label={t.hubDiameter} value={record.spool.hubDiameter ? `${record.spool.hubDiameter} mm` : t.unknown} unknownLabel={t.unknown} />
+                <FieldRow label={t.spoolMaterial} value={record.spool.spoolMaterial || t.unknown} unknownLabel={t.unknown} />
+                <FieldRow label={t.adapterRequired} value={record.spool.adapterRequired ? t.yes : t.no} unknownLabel={t.unknown} />
+                <FieldRow label={t.refillable} value={record.spool.refillable ? t.yes : t.no} unknownLabel={t.unknown} />
+                <FieldRow label={t.cardboardSpool} value={record.spool.cardboardSpool ? t.yes : t.no} unknownLabel={t.unknown} />
+                <FieldRow label={t.amsFit} value={amsLabel} unknownLabel={t.unknown} />
+              </div>
+            )}
           </DetailSection>
         </div>
 
