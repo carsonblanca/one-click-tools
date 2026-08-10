@@ -171,6 +171,42 @@ export function fieldsAcceptedFromCandidates(candidates: unknown): Record<string
   }));
 }
 
+export function parameterSourceEvidence(parameters: unknown, evidence: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(parameters)) return [];
+  const evidenceRecords = Array.isArray(evidence)
+    ? evidence.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    : [];
+  const selected = new Map<string, Record<string, unknown>>();
+  const textValue = (value: unknown) => typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+  const add = (record: Record<string, unknown>) => {
+    const key = textValue(record.evidenceId)
+      || `${textValue(record.sourceFile) || textValue(record.sourceRelativePath)}|${textValue(record.sourceText) || textValue(record.ocrText)}`;
+    if (key) selected.set(key, record);
+  };
+  for (const raw of parameters) {
+    const candidate = normalizeParameterCandidate(raw);
+    const sourceFile = textValue(candidate.sourceFile) || textValue(candidate.sourceRelativePath) || textValue(candidate.sourceImage);
+    const ids = new Set([
+      textValue(candidate.evidenceId),
+      ...(Array.isArray(candidate.evidenceIds) ? candidate.evidenceIds.map(textValue) : []),
+    ].filter(Boolean));
+    const matches = evidenceRecords.filter((record) => {
+      const recordId = textValue(record.evidenceId);
+      const recordFile = textValue(record.sourceFile) || textValue(record.sourceRelativePath) || textValue(record.sourceImage);
+      return (recordId && ids.has(recordId)) || (sourceFile && recordFile === sourceFile);
+    });
+    matches.forEach(add);
+    if (!matches.length && sourceFile) {
+      add({
+        ...(textValue(candidate.evidenceId) ? { evidenceId: textValue(candidate.evidenceId) } : {}),
+        sourceFile,
+        sourceText: textValue(candidate.sourceText) || textValue(candidate.ocrSnippet),
+      });
+    }
+  }
+  return [...selected.values()];
+}
+
 export function unmappedFieldsAcceptedFromCandidates(candidates: unknown): Record<string, string> {
   if (!Array.isArray(candidates)) return {};
   return Object.fromEntries(candidates.flatMap((value) => {
