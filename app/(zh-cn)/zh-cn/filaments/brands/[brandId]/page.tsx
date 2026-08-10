@@ -19,7 +19,12 @@ export async function generateMetadata({
   params: Promise<{ brandId: string }>;
 }): Promise<Metadata> {
   const { brandId } = await params;
-  const brand = getBrandProfile(brandId);
+  const catalogRecords = await getVisibleCatalogRecords();
+  const matchingRecord = catalogRecords.find((record) => record.published?.brandId === brandId);
+  const genericProfile = getBrandProfile("generic-profiles");
+  const brand = getBrandProfile(brandId) || (matchingRecord && genericProfile
+    ? { ...genericProfile, id: brandId, name: matchingRecord.brand }
+    : null);
   if (!brand) {
     return { title: "品牌未找到 | OneClick Tools" };
   }
@@ -46,8 +51,12 @@ export default async function SimplifiedChineseBrandPage({
   params: Promise<{ brandId: string }>;
 }) {
   const { brandId } = await params;
-  const brand = getBrandProfile(brandId);
   const catalogRecords = await getVisibleCatalogRecords();
+  const matchingRecord = catalogRecords.find((record) => record.published?.brandId === brandId);
+  const genericProfile = getBrandProfile("generic-profiles");
+  const brand = getBrandProfile(brandId) || (matchingRecord && genericProfile
+    ? { ...genericProfile, id: brandId, name: matchingRecord.brand }
+    : null);
 
   if (!brand) {
     return (

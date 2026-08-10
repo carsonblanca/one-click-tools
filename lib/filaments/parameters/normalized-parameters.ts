@@ -40,6 +40,7 @@ export const FILAMENT_PARAMETER_DEFINITIONS = Object.freeze([
   definition("bedTemperature", "热床温度", ["buildPlateTemperature", "bed temperature", "build plate temperature", "底板温度", "底盘温度", "平台温度", "热床温度"], "°C", "打印", 110),
   definition("coolingFan", "冷却风扇", ["cooling fan", "fan speed", "冷却风扇", "风扇", "风扇速度"], "%", "打印", 115),
   definition("printingSpeed", "打印速度", ["printSpeed", "recommendedPrintSpeed", "print speed", "printing speed", "打印速度"], "mm/s", "打印", 120),
+  definition("maxVolumetricSpeed", "最大体积速度", ["max volumetric speed", "maximum volumetric speed", "maxVolumetricSpeedMm3s", "最大体积速度", "最大体积流量"], "mm³/s", "打印", 125),
   definition("retractionDistance", "回抽距离", ["retraction distance", "回抽距离", "回抽长度"], "mm", "打印", 130),
   definition("retractionSpeed", "回抽速度", ["retraction speed", "回抽速度"], "mm/s", "打印", 140),
   definition("buildPlateSurface", "底板材质", ["build plate surface", "build plate material", "底板材质", "平台材质", "打印平台"], null, "打印", 150),

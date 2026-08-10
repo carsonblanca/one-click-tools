@@ -1,34 +1,26 @@
 import Link from "next/link";
+import FilamentAdminTable from "@/components/admin/FilamentAdminTable";
 import { requireAdminScope } from "@/lib/admin/auth";
-import { CATALOG_RECORDS } from "@/lib/filaments/catalog";
+import { hasAdminScope } from "@/lib/admin/permissions";
+import { summarizeFilamentDraft } from "@/lib/filaments/admin/filament-admin";
+import { listAllFilamentDrafts } from "@/lib/filaments/imports/supabase-import-repository";
 
 export default async function FilamentListPage() {
-  await requireAdminScope("display.view");
+  const session = await requireAdminScope("display.view");
+  const drafts = await listAllFilamentDrafts();
+  const items = drafts.map(summarizeFilamentDraft);
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-2xl font-semibold text-[#18202A]">耗材管理</h1>
-        <p className="mt-1 text-sm text-[#667281]">主线目录共 {CATALOG_RECORDS.length} 条耗材颜色记录。</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-2xl font-semibold text-[#18202A]">耗材管理</h1>
+        <p className="mt-1 text-sm text-[#667281]">数据库中共 {items.length} 个耗材产品记录，可按品牌、产品线、材料和状态管理。</p></div>
+        {session.role === "admin" && hasAdminScope(session.role, "archive.execute") ? <Link href="/admin/filaments/reset" className="rounded-lg border border-[#D16B6B] px-4 py-2 text-sm text-[#8C1D18]">安全备份与清空</Link> : null}
       </header>
-      <div className="overflow-x-auto rounded-xl border border-[#D9E0E7] bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-[#F4F6F8] text-[#667281]">
-            <tr><th className="px-4 py-3">品牌</th><th className="px-4 py-3">产品线</th><th className="px-4 py-3">材料</th><th className="px-4 py-3">颜色</th><th className="px-4 py-3">操作</th></tr>
-          </thead>
-          <tbody className="divide-y divide-[#E5E9ED]">
-            {CATALOG_RECORDS.map((record) => (
-              <tr key={record.id}>
-                <td className="px-4 py-3 font-medium text-[#18202A]">{record.brand}</td>
-                <td className="px-4 py-3">{record.productLine}</td>
-                <td className="px-4 py-3">{record.materialType}</td>
-                <td className="px-4 py-3">{record.color.colorNameZh || record.color.colorNameEn}</td>
-                <td className="px-4 py-3"><Link className="text-[#1F5FAF] hover:underline" href={`/admin/filaments/${encodeURIComponent(record.id)}`}>查看</Link></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <FilamentAdminTable
+        items={items}
+        canBatchEdit={session.role === "admin" && hasAdminScope(session.role, "candidate.edit.any")}
+      />
     </div>
   );
 }

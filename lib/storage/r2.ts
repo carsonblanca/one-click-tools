@@ -200,6 +200,36 @@ export async function deleteFipAssetFromR2(objectKey: string) {
   }));
 }
 
+
+export async function uploadFilamentBusinessBackup(input: {
+  bytes: Uint8Array;
+  filename: string;
+}) {
+  const config = getR2Config();
+  const filename = safeImportFilename(input.filename).replace(/\.zip$/i, ".json");
+  const objectKey = `backups/filament-reset/${filename}`;
+  await getR2Client().send(new PutObjectCommand({
+    Bucket: config.importsBucket,
+    Key: objectKey,
+    Body: input.bytes,
+    ContentType: "application/json",
+  }));
+  return { bucket: config.importsBucket, objectKey, size: input.bytes.byteLength };
+}
+
+export async function readFilamentBusinessBackup(objectKey: string) {
+  const config = getR2Config();
+  if (!/^backups\/filament-reset\/[a-z0-9._-]+\.json$/.test(objectKey)) {
+    throw new Error("invalid_filament_backup_key");
+  }
+  const result = await getR2Client().send(new GetObjectCommand({
+    Bucket: config.importsBucket,
+    Key: objectKey,
+  }));
+  if (!result.Body) throw new Error("filament_backup_not_found");
+  return result.Body.transformToByteArray();
+}
+
 export async function deleteImportObjectFromR2(input: {
   bucket: string;
   objectKey: string;

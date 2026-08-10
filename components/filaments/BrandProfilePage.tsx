@@ -149,6 +149,21 @@ function localizedField<T>(localizedValue: T | undefined, fallback: T) {
   return localizedValue === undefined ? fallback : localizedValue;
 }
 
+
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+}
+
+function textList(value: unknown) {
+  return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+}
+
 function ChannelList({ channels, t }: { channels: OfficialChannel[]; t: Record<string, string> }) {
   if (channels.length === 0) {
     return <p className="text-sm opacity-65">{t.unknown}</p>;
@@ -181,17 +196,28 @@ export default function BrandProfilePage({ brand, locale = "en", catalogRecords 
   const { isDark } = useTheme();
   const t = BRAND_LABELS[locale] || BRAND_LABELS.en;
   const content = brandLocaleContent(brand, locale);
-  const filaments = (catalogRecords || getRecordsByBrand(brand.name)).filter((record) => record.brand === brand.name);
+  const allFilaments = catalogRecords || getRecordsByBrand(brand.name);
+  const filaments = allFilaments.filter((record) => record.published?.brandId === brand.id || record.brand.toLowerCase() === brand.name.toLowerCase());
+  const brandDefaults = objectValue(filaments.find((record) => record.published?.brandDefaults)?.published?.brandDefaults);
+  const displayName = textValue(brandDefaults.name) || brand.name;
+  const logoPath = textValue(brandDefaults.logo) || null;
   const panelClass = `rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
-  const backHref = locale === "en" ? "/tools/bambu-filament-preset-generator" : `/${locale}/tools/bambu-filament-preset-generator`;
-  const summary = content?.summary ?? brand.summary;
-  const legalEntity = localizedField(content?.legalEntity, brand.legalEntity);
-  const countryOrRegion = localizedField(content?.countryOrRegion, brand.countryOrRegion);
-  const headquarters = localizedField(content?.headquarters, brand.headquarters);
-  const productionLocations = localizedField(content?.productionLocations, brand.productionLocations);
+  const catalogBaseHref = locale === "en" ? "/filaments" : `/${locale}/filaments`;
+  const backHref = catalogBaseHref;
+  const summary = textValue(brandDefaults.description) || textValue(brandDefaults.summary) || content?.summary || brand.summary;
+  const legalEntity = textValue(brandDefaults.legalEntity) || localizedField(content?.legalEntity, brand.legalEntity);
+  const countryOrRegion = textValue(brandDefaults.countryOrRegion) || localizedField(content?.countryOrRegion, brand.countryOrRegion);
+  const headquarters = textValue(brandDefaults.headquarters) || localizedField(content?.headquarters, brand.headquarters);
+  const productionLocations = textList(brandDefaults.productionLocations).length
+    ? textList(brandDefaults.productionLocations)
+    : localizedField(content?.productionLocations, brand.productionLocations);
   const productionLocationLabel = content?.productionLocationLabel ?? t.productionLocation;
   const factoryStatus = content?.factoryStatusLabel ?? (brand.factoryStatus === "unknown" ? t.unknown : brand.factoryStatus);
-  const website = brand.website ? localizeChannel(brand.website, content) : null;
+  const staticWebsite = brand.website ? localizeChannel(brand.website, content) : null;
+  const websiteUrl = textValue(brandDefaults.website);
+  const website = websiteUrl
+    ? { ...(staticWebsite || { platform: "Website", displayName, verificationStatus: "official", verifiedAt: null, sourceType: "manufacturerProvided" }), url: websiteUrl, displayName }
+    : staticWebsite;
   const officialStores = brand.officialStores.map((channel) => localizeChannel(channel, content));
   const socialAccounts = brand.socialAccounts.map((channel) => localizeChannel(channel, content));
 
@@ -200,8 +226,8 @@ export default function BrandProfilePage({ brand, locale = "en", catalogRecords 
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <BrandLogo brand={brand.name} size={36} />
-            <h1 className="text-4xl font-semibold tracking-tight">{brand.name}</h1>
+            <BrandLogo brand={brand.name} size={36} logoPath={logoPath} />
+            <h1 className="text-4xl font-semibold tracking-tight">{displayName}</h1>
           </div>
           <p className={isDark ? "mt-3 max-w-3xl text-white/60" : "mt-3 max-w-3xl text-[#6B665D]"}>
             {summary}
@@ -259,7 +285,7 @@ export default function BrandProfilePage({ brand, locale = "en", catalogRecords 
             {filaments.length > 0 ? filaments.map((item) => (
               <Link
                 key={item.id}
-                href={`/filaments/${item.id}`}
+                href={`${catalogBaseHref}/${item.id}`}
                 className="block rounded-2xl border border-current/10 p-4 transition hover:opacity-80"
               >
                 <strong>{item.productLine}</strong>

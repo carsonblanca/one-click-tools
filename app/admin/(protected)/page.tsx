@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdminScope } from "@/lib/admin/auth";
-import { BRAND_CATALOG, CATALOG_RECORDS } from "@/lib/filaments/catalog";
+import { listAllFilamentDrafts } from "@/lib/filaments/imports/supabase-import-repository";
 
 const sections = [
   { href: "/admin/filaments", label: "耗材管理", description: "查看主线目录中的耗材与颜色记录。" },
@@ -12,6 +12,10 @@ const sections = [
 
 export default async function AdminHomePage() {
   await requireAdminScope("display.view");
+  const drafts = await listAllFilamentDrafts();
+  const brandCount = new Set(drafts.map((draft) => draft.brand_id).filter(Boolean)).size;
+  const publishedCount = drafts.filter((draft) => draft.publication_status === "published").length;
+  const unpublishedCount = drafts.length - publishedCount;
 
   return (
     <div className="space-y-6">
@@ -21,12 +25,13 @@ export default async function AdminHomePage() {
       </header>
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-[#D9E0E7] bg-white p-5">
-          <p className="text-sm text-[#667281]">目录耗材</p>
-          <p className="mt-2 text-3xl font-semibold text-[#18202A]">{CATALOG_RECORDS.length}</p>
+          <p className="text-sm text-[#667281]">耗材记录</p>
+          <p className="mt-2 text-3xl font-semibold text-[#18202A]">{drafts.length}</p>
+          <p className="mt-1 text-xs text-[#667281]">Draft {unpublishedCount} · Published {publishedCount}</p>
         </div>
         <div className="rounded-xl border border-[#D9E0E7] bg-white p-5">
           <p className="text-sm text-[#667281]">品牌</p>
-          <p className="mt-2 text-3xl font-semibold text-[#18202A]">{BRAND_CATALOG.length}</p>
+          <p className="mt-2 text-3xl font-semibold text-[#18202A]">{brandCount}</p>
         </div>
       </section>
       <section className="grid gap-4 md:grid-cols-2">

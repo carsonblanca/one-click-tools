@@ -20,13 +20,20 @@ function findAsset(brand: string): BrandAsset | undefined {
 export default function BrandLogo({
   brand,
   size = 28,
+  logoPath: logoOverride,
 }: {
   brand: string;
   size?: number;
+  logoPath?: string | null;
 }) {
   const asset = findAsset(brand);
   const [failed, setFailed] = useState(false);
-  const logoPath = asset?.logoPath && asset.verificationStatus === "verified" ? asset.logoPath : null;
+  const safeOverride = logoOverride?.startsWith("filament-imports/")
+    ? `/api/filament-assets?key=${encodeURIComponent(logoOverride)}`
+    : logoOverride?.startsWith("/") && !logoOverride.startsWith("//")
+      ? logoOverride
+      : null;
+  const logoPath = safeOverride || (asset?.logoPath && asset.verificationStatus === "verified" ? asset.logoPath : null);
   const fallback = "/filament-brands/generic-spool.svg";
 
   const handleError = useCallback(() => setFailed(true), []);

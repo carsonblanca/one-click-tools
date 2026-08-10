@@ -194,6 +194,141 @@ export async function listRecentFilamentDrafts(limit = 50) {
   }>;
 }
 
+
+export type FilamentDraftRow = {
+  id: string;
+  import_id: string;
+  draft_key: string;
+  source_run_id: string;
+  product_index: number;
+  status: string;
+  review_status: string;
+  publication_status: string;
+  brand_id: string;
+  product_line_name: string | null;
+  material_type: string | null;
+  variant: string | null;
+  draft_data: JsonValue;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+};
+
+const FILAMENT_DRAFT_COLUMNS = "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at,created_by,updated_by";
+
+export async function listAllFilamentDrafts(limit = 5000): Promise<FilamentDraftRow[]> {
+  const safeLimit = Math.max(1, Math.min(limit, 20_000));
+  const pageSize = 500;
+  const rows: FilamentDraftRow[] = [];
+  for (let offset = 0; offset < safeLimit; offset += pageSize) {
+    const last = Math.min(offset + pageSize, safeLimit) - 1;
+    const { data, error } = await getServerSupabaseClient()
+      .from("filament_drafts")
+      .select(FILAMENT_DRAFT_COLUMNS)
+      .order("updated_at", { ascending: false })
+      .range(offset, last);
+    if (error) throw repositoryError("list_all_drafts");
+    const page = (data ?? []) as FilamentDraftRow[];
+    rows.push(...page);
+    if (page.length < last - offset + 1) break;
+  }
+  return rows;
+}
+
+export async function getFilamentDraftById(id: string): Promise<FilamentDraftRow | null> {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(FILAMENT_DRAFT_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw repositoryError("get_draft_by_id");
+  return data as FilamentDraftRow | null;
+}
+
+export async function updateFilamentDraftById(input: {
+  id: string;
+  expectedUpdatedAt?: string;
+  actorId: string;
+  brandId: string;
+  productLineName: string | null;
+  materialType: string | null;
+  variant: string | null;
+  reviewStatus: string;
+  publicationStatus: string;
+  status: string;
+  draftData: JsonValue;
+}): Promise<FilamentDraftRow> {
+  let query = getServerSupabaseClient()
+    .from("filament_drafts")
+    .update({
+      brand_id: input.brandId,
+      product_line_name: input.productLineName,
+      material_type: input.materialType,
+      variant: input.variant,
+      review_status: input.reviewStatus,
+      publication_status: input.publicationStatus,
+      status: input.status,
+      draft_data: input.draftData,
+      updated_by: input.actorId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.id);
+  if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
+  const { data, error } = await query.select(FILAMENT_DRAFT_COLUMNS).maybeSingle();
+  if (error) throw repositoryError("update_draft_by_id");
+  if (!data) throw new Error("filament_draft_update_conflict");
+  return data as FilamentDraftRow;
+}
+
+async function readAllSnapshotRows(table: "filament_imports" | "filament_drafts") {
+  const pageSize = 500;
+  const rows: Array<Record<string, JsonValue>> = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await getServerSupabaseClient()
+      .from(table)
+      .select("*")
+      .order("id", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw repositoryError(`snapshot_${table}`);
+    const page = (data ?? []) as Array<Record<string, JsonValue>>;
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
+
+export async function readFilamentBusinessSnapshot() {
+  const [imports, drafts] = await Promise.all([
+    readAllSnapshotRows("filament_imports"),
+    readAllSnapshotRows("filament_drafts"),
+  ]);
+  return { imports, drafts };
+}
+
+async function deleteExactIds(table: "filament_drafts" | "filament_imports", ids: string[]) {
+  let removed = 0;
+  for (let index = 0; index < ids.length; index += 100) {
+    const batch = ids.slice(index, index + 100);
+    if (!batch.length) continue;
+    const { count, error } = await getServerSupabaseClient()
+      .from(table)
+      .delete({ count: "exact" })
+      .in("id", batch);
+    if (error) throw repositoryError(`clear_${table}`);
+    removed += count ?? 0;
+  }
+  return removed;
+}
+
+export async function clearExactFilamentBusinessRecords(input: {
+  draftIds: string[];
+  importIds: string[];
+}) {
+  const deletedDrafts = await deleteExactIds("filament_drafts", input.draftIds);
+  const deletedImports = await deleteExactIds("filament_imports", input.importIds);
+  return { deletedDrafts, deletedImports };
+}
+
 export async function appendAdminAuditLog(input: {
   actorId: string;
   action: string;
