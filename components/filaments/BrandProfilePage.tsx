@@ -7,7 +7,7 @@ import {
   type OfficialChannel,
   type SourceType,
 } from "@/lib/filaments/catalog/mock-filament-catalog";
-import { getRecordsByBrand } from "@/lib/filaments/catalog/mock-catalog-ext";
+import { getRecordsByBrand, type CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import BrandLogo from "./BrandLogo";
 import type { Locale } from "@/lib/i18n";
 
@@ -177,11 +177,11 @@ function ChannelList({ channels, t }: { channels: OfficialChannel[]; t: Record<s
   );
 }
 
-export default function BrandProfilePage({ brand, locale = "en" }: { brand: BrandProfile; locale?: Locale }) {
+export default function BrandProfilePage({ brand, locale = "en", catalogRecords }: { brand: BrandProfile; locale?: Locale; catalogRecords?: CatalogRecord[] }) {
   const { isDark } = useTheme();
   const t = BRAND_LABELS[locale] || BRAND_LABELS.en;
   const content = brandLocaleContent(brand, locale);
-  const filaments = getRecordsByBrand(brand.name);
+  const filaments = (catalogRecords || getRecordsByBrand(brand.name)).filter((record) => record.brand === brand.name);
   const panelClass = `rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
   const backHref = locale === "en" ? "/tools/bambu-filament-preset-generator" : `/${locale}/tools/bambu-filament-preset-generator`;
   const summary = content?.summary ?? brand.summary;

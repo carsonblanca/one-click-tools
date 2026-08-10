@@ -4,6 +4,7 @@ import PageShell from "@/components/PageShell";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import BrandProfilePage from "@/components/filaments/BrandProfilePage";
+import { getVisibleCatalogRecords } from "@/lib/filaments/catalog/published-catalog";
 import { filamentBrandProfiles, getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
 
 const baseUrl = "https://one-click-tools.com";
@@ -19,7 +20,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
-
   if (!brand) {
     return { title: "品牌未找到 | OneClick Tools" };
   }
@@ -47,6 +47,7 @@ export default async function SimplifiedChineseBrandPage({
 }) {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
+  const catalogRecords = await getVisibleCatalogRecords();
 
   if (!brand) {
     return (
@@ -66,7 +67,7 @@ export default async function SimplifiedChineseBrandPage({
   return (
     <PageShell>
       <SiteHeader locale="zh-cn" />
-      <BrandProfilePage brand={brand} locale="zh-cn" />
+      <BrandProfilePage brand={brand} locale="zh-cn" catalogRecords={catalogRecords} />
       <SiteFooter locale="zh-cn" />
     </PageShell>
   );

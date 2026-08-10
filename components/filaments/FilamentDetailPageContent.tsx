@@ -409,15 +409,23 @@ function brandProfileIdForBrand(brand: string) {
 export default function FilamentDetailPageContent({
   filamentId,
   locale = "en",
+  catalogRecord,
 }: {
   filamentId: string;
   locale?: Locale;
+  catalogRecord?: CatalogRecord | null;
 }) {
   const { isDark } = useTheme();
   const t = DETAIL_LABELS[locale] || DETAIL_LABELS.en;
-  const record = getCatalogRecord(filamentId);
+  const record = catalogRecord || getCatalogRecord(filamentId);
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
   const [printerIdGlobal, setPrinterIdGlobal] = useState(printerOptions[0]?.id || "");
+  const printerOptsThis = getBambuPrinterOptions();
+  const generated = useMemo(() => {
+    if (!printerIdGlobal || !record) return null;
+    const all = generateBambuFilamentPresetSet(printerIdGlobal);
+    return all.find((p) => p.material.type === record.materialType) || null;
+  }, [printerIdGlobal, record]);
 
   if (!record) {
     return (
@@ -440,14 +448,6 @@ export default function FilamentDetailPageContent({
   const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
   const hasVerifiedParams = hasPresetParameters(record);
-
-  const printerOptsThis = getBambuPrinterOptions();
-  const generated = useMemo(() => {
-    if (!printerIdGlobal) return null;
-    const all = generateBambuFilamentPresetSet(printerIdGlobal);
-    const match = all.find((p) => p.material.type === record.materialType);
-    return match || null;
-  }, [printerIdGlobal, record.materialType]);
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">

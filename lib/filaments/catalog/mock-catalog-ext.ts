@@ -19,6 +19,13 @@ export type CatalogRecord = {
   rating: number;
   reviewCount: number;
   createdAt: string;
+  published?: {
+    sourceRunId: string;
+    publicationStatus: "published";
+    parameters: Array<{ canonicalKey: string; labelZh: string; value: string }>;
+    colors: unknown[];
+    images: Array<{ id: string; role: string; url: string }>;
+  };
 };
 
 function dc(

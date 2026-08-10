@@ -146,6 +146,22 @@ export async function updateFilamentImportBySourceRunId(input: {
   }
 }
 
+/** Read-only catalog source: only explicitly published drafts are visible publicly. */
+export async function listPublishedFilamentDrafts() {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select("id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at")
+    .eq("publication_status", "published")
+    .order("updated_at", { ascending: false });
+  if (error) throw repositoryError("list_published_drafts");
+  return (data ?? []) as Array<{
+    id: string; import_id: string; draft_key: string; source_run_id: string; product_index: number;
+    status: string; review_status: string; publication_status: string; brand_id: string;
+    product_line_name: string | null; material_type: string | null; variant: string | null;
+    draft_data: JsonValue; created_at: string; updated_at: string;
+  }>;
+}
+
 export async function listRecentFilamentDrafts(limit = 50) {
   const safeLimit = Math.max(1, Math.min(limit, 100));
   const { data, error } = await getServerSupabaseClient()

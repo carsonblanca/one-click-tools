@@ -26,6 +26,7 @@ import {
   hasPresetParameters,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
 import BrandLogo from "./BrandLogo";
 
@@ -276,19 +277,19 @@ function getDisplayBrand(brand: string): string {
   return BRAND_SHORT_MAP[brand] || brand;
 }
 
-function variantCount(materialType: string, variant: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType && r.variant === variant).length;
+function variantCount(source: CatalogRecord[], materialType: string, variant: string): number {
+  return source.filter((r) => r.materialType === materialType && r.variant === variant).length;
 }
 
-function materialCount(materialType: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType).length;
+function materialCount(source: CatalogRecord[], materialType: string): number {
+  return source.filter((r) => r.materialType === materialType).length;
 }
 
-function brandCount(brandName: string): number {
-  return CATALOG_RECORDS.filter((r) => r.brand === brandName).length;
+function brandCount(source: CatalogRecord[], brandName: string): number {
+  return source.filter((r) => r.brand === brandName).length;
 }
 
-export default function BambuFilamentCatalogExperience({ locale = "en" }: { locale?: Locale }) {
+export default function BambuFilamentCatalogExperience({ locale = "en", catalogRecords = CATALOG_RECORDS }: { locale?: Locale; catalogRecords?: CatalogRecord[] }) {
   const { isDark } = useTheme();
   const t = LABELS[locale] || LABELS.en;
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
@@ -322,17 +323,17 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
 
   const realBrandCounts = useMemo(() => {
     const map = new Map<string, number>();
-    for (const r of CATALOG_RECORDS) {
+    for (const r of catalogRecords) {
       map.set(r.brand, (map.get(r.brand) || 0) + 1);
     }
     return map;
-  }, []);
+  }, [catalogRecords]);
 
   const availableVariants = useMemo(() => {
     if (!selectedMaterial) return [];
     const all = MATERIAL_VARIANTS[selectedMaterial] || [];
-    return all.filter((v) => variantCount(selectedMaterial, v) > 0);
-  }, [selectedMaterial]);
+    return all.filter((v) => variantCount(catalogRecords, selectedMaterial, v) > 0);
+  }, [selectedMaterial, catalogRecords]);
 
   const records = useMemo(
     () => filterCatalogRecords({
@@ -346,13 +347,14 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
       hasPhysicalSwatch: filters.hasPhysicalSwatch,
       hasVerifiedPreset: filters.hasVerifiedPreset,
       selectedPerformanceTags: [],
+      source: catalogRecords,
     }),
-    [selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
+    [catalogRecords, selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
   );
 
   const selectedRecords = selectedIds
-    .map((id) => CATALOG_RECORDS.find((r) => r.id === id))
-    .filter((r): r is typeof CATALOG_RECORDS[number] => Boolean(r));
+    .map((id) => catalogRecords.find((r) => r.id === id))
+    .filter((r): r is typeof catalogRecords[number] => Boolean(r));
 
   const sidePanelClass = `min-w-0 rounded-[22px] border p-4 shadow-sm ${
     isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20"
@@ -385,7 +387,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(typeof reader.result === "string" ? reader.result : null);
-      const searchableRecords = CATALOG_RECORDS.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
+      const searchableRecords = catalogRecords.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
       const next = searchableRecords[Math.floor(Math.random() * searchableRecords.length)];
       if (next?.color.hex) setSearchHex(next.color.hex);
     };
@@ -539,7 +541,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
         <ToolLabel>{t.materialType}</ToolLabel>
         <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
           {MATERIAL_TYPES.map((mat) => {
-            const count = materialCount(mat);
+            const count = materialCount(catalogRecords, mat);
             return (
               <button key={mat} onClick={() => {
                 setSelectedMaterial(selectedMaterial === mat ? null : mat);
@@ -563,7 +565,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
           ) : (
             <div className="flex flex-wrap gap-2">
               {MATERIAL_VARIANTS[selectedMaterial]?.map((v) => {
-                const count = variantCount(selectedMaterial, v);
+                const count = variantCount(catalogRecords, selectedMaterial, v);
                 return (
                   <button key={v} onClick={() => setSelectedVariant(selectedVariant === v ? null : v)}
                     className={`rounded-xl px-3 py-2 text-sm transition ${selectedVariant === v ? activeClass : inactiveClass}`}

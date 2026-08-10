@@ -4,6 +4,7 @@ import PageShell from "@/components/PageShell";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import BrandProfilePage from "@/components/filaments/BrandProfilePage";
+import { getVisibleCatalogRecords } from "@/lib/filaments/catalog/published-catalog";
 import { filamentBrandProfiles, getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
 
 export function generateStaticParams() {
@@ -17,7 +18,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
-
   if (!brand) {
     return { title: "Brand Not Found | OneClick Tools" };
   }
@@ -42,6 +42,7 @@ export default async function BrandPage({
 }) {
   const { brandId } = await params;
   const brand = getBrandProfile(brandId);
+  const catalogRecords = await getVisibleCatalogRecords();
 
   if (!brand) {
     return (
@@ -61,7 +62,7 @@ export default async function BrandPage({
   return (
     <PageShell>
       <SiteHeader />
-      <BrandProfilePage brand={brand} locale="en" />
+      <BrandProfilePage brand={brand} locale="en" catalogRecords={catalogRecords} />
       <SiteFooter />
     </PageShell>
   );
