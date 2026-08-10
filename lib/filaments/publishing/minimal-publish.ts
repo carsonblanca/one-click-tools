@@ -40,6 +40,30 @@ function arrayValue(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+function hasOwn(value: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function enabled(value: unknown) {
+  return value !== false && text(value).toLowerCase() !== "false";
+}
+
+function numberList(value: unknown) {
+  return Array.isArray(value)
+    ? Array.from(new Set(value.map(numberValue).filter((item): item is number => item !== null && item > 0)))
+    : [];
+}
+
+function brandDisplayName(value: string, brandId: string) {
+  const source = value.trim();
+  if (source && source !== source.toUpperCase()) return source;
+  return brandId
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
+    .join(" ") || source;
+}
+
 function productKeyOf(row: PublishableDraftRow) {
   const data = objectValue(row.draft_data);
   const productLine = objectValue(data.productLine);
@@ -222,7 +246,10 @@ function declaredNetWeightsGrams(value: string) {
   return Array.from(new Set(parsed));
 }
 
-function netWeightOptionsGrams(value: string, productKey: string) {
+function netWeightOptionsGrams(value: string, productKey: string, explicitValue: unknown) {
+  // A product-level declaration is authoritative, including a single explicit option.
+  const explicit = numberList(explicitValue);
+  if (explicit.length) return explicit;
   // Priority A: a draft that already declares multiple net weights needs no fallback.
   const declared = declaredNetWeightsGrams(value);
   if (declared.length > 1) return declared;
@@ -230,12 +257,34 @@ function netWeightOptionsGrams(value: string, productKey: string) {
   return official && official.length > 1 ? [...official] : undefined;
 }
 
-export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): CatalogRecord {
+export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): CatalogRecord | null {
   const data = objectValue(row.draft_data);
-  const productLine = objectValue(data.productLine);
+  if (!enabled(data.enabled)) return null;
+
+  const brandDefaults = objectValue(data.brandDefaults);
+  const productOverrides = objectValue(data.productOverrides);
+  const productLine = {
+    ...objectValue(data.productLine),
+    ...objectValue(productOverrides.productLine),
+  };
+  const sourceBrand = objectValue(data.brand);
+  const overrideBrand = objectValue(productOverrides.brand);
   const normalizedParameters = normalizeStoredParameters(data.parameters);
   const productKey = productKeyOf(row);
-  const colors = arrayValue(data.colors).map((color, index) => mapColor(color, index, productKey));
+  const colors = arrayValue(data.colors)
+    .map((value, index) => ({
+      value,
+      index,
+      source: objectValue(value),
+      displayOrder: numberValue(objectValue(value).displayOrder),
+    }))
+    .filter((item) => enabled(item.source.enabled))
+    .sort((first, second) => (
+      (first.displayOrder ?? Number.MAX_SAFE_INTEGER) - (second.displayOrder ?? Number.MAX_SAFE_INTEGER)
+      || first.index - second.index
+    ))
+    .map((item, index) => mapColor(item.value, index, productKey));
+  if (!colors.length) return null;
   const images = arrayValue(data.images).flatMap((value, index) => {
     const image = objectValue(value);
     const url = publicAssetUrl(text(image.r2ObjectKey));
@@ -255,18 +304,58 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   const primary = colors[0]?.color || mapColor({}, 0, productKey).color;
   const materialType = text(row.material_type) || text(productLine.materialType);
   const netWeightField = normalizedParameters.fields.netWeight || "";
-  const netWeightOptionsG = netWeightOptionsGrams(netWeightField, productKey);
+  const explicitNetWeightOptions = hasOwn(productOverrides, "netWeightOptionsG")
+    ? productOverrides.netWeightOptionsG
+    : hasOwn(productLine, "netWeightOptionsG")
+      ? productLine.netWeightOptionsG
+      : hasOwn(data, "netWeightOptionsG")
+        ? data.netWeightOptionsG
+        : brandDefaults.netWeightOptionsG;
+  const netWeightOptionsG = netWeightOptionsGrams(netWeightField, productKey, explicitNetWeightOptions);
+  const rawBrandName = text(productOverrides.brandName)
+    || text(overrideBrand.name)
+    || text(brandDefaults.name)
+    || text(sourceBrand.name)
+    || text(data.brandName)
+    || row.brand_id;
+  const brand = brandDisplayName(rawBrandName, row.brand_id);
+  const brandZh = text(productOverrides.brandNameZh)
+    || text(overrideBrand.nameZh)
+    || text(brandDefaults.nameZh)
+    || text(sourceBrand.nameZh)
+    || text(data.brandNameZh)
+    || brand;
+  const effectiveSpoolAndPackaging = hasOwn(productOverrides, "spoolAndPackaging")
+    ? productOverrides.spoolAndPackaging
+    : hasOwn(data, "spoolAndPackaging")
+      ? data.spoolAndPackaging
+      : hasOwn(brandDefaults, "spoolAndPackaging")
+        ? brandDefaults.spoolAndPackaging
+        : undefined;
+  const published = {
+    sourceRunId: row.source_run_id,
+    publicationStatus: "published" as const,
+    brandId: row.brand_id,
+    parameters,
+    colors,
+    images,
+    brandDefaults,
+    productOverrides,
+    ...(effectiveSpoolAndPackaging !== undefined
+      ? { spoolAndPackaging: effectiveSpoolAndPackaging }
+      : {}),
+  };
   return {
     id: productKey,
-    brand: "Kexcelled",
-    brandZh: "Kexcelled",
+    brand,
+    brandZh,
     materialType,
     materialTypeZh: materialType,
-    variant: text(row.variant) || text(productLine.variant) || "Matte",
-    variantZh: "哑光",
+    variant: text(row.variant) || text(productLine.variant) || "",
+    variantZh: text(productLine.variantZh) || text(data.variantZh) || text(row.variant) || text(productLine.variant) || "",
     productLine: text(row.product_line_name) || text(productLine.name),
     productLineId: productKey,
-    parameterStatus: "complete",
+    parameterStatus: parameters.length ? "complete" : "missing",
     color: primary,
     spool: {
       netFilamentWeight: netWeightGrams(netWeightField, productLine.netWeightG),
@@ -286,13 +375,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     rating: 0,
     reviewCount: 0,
     createdAt: row.created_at,
-    published: {
-      sourceRunId: row.source_run_id,
-      publicationStatus: "published",
-      parameters,
-      colors,
-      images,
-    },
+    published,
   };
 }
 

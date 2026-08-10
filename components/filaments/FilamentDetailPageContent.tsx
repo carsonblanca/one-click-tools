@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
-import { getBrandProfile } from "@/lib/filaments/catalog/mock-filament-catalog";
+import { getBrandProfile, type SpoolAndPackaging } from "@/lib/filaments/catalog/mock-filament-catalog";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
 import {
@@ -400,10 +400,33 @@ function ImageWithPlaceholder({
 }
 
 function brandProfileIdForBrand(brand: string) {
-  if (brand === "Bambu Lab") return "bambu-lab";
-  if (brand === "Kexcelled") return "kexcelled";
-  if (brand === "R3D") return "generic-profiles";
+  const normalized = brand.trim().toLowerCase();
+  if (normalized === "bambu lab" || normalized === "bambu-lab") return "bambu-lab";
+  if (normalized === "kexcelled") return "kexcelled";
+  if (normalized === "r3d") return "generic-profiles";
   return "generic-profiles";
+}
+
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
+}
+
+function textList(value: unknown) {
+  return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
+}
+
+function isSpoolAndPackaging(value: unknown): value is SpoolAndPackaging {
+  const source = objectValue(value);
+  return Array.isArray(source.spoolVersions)
+    && Array.isArray(source.packagingVersions)
+    && typeof source.noteZh === "string"
+    && typeof source.noteEn === "string";
 }
 
 export default function FilamentDetailPageContent({
@@ -440,6 +463,28 @@ export default function FilamentDetailPageContent({
 
   const brandProfile = getBrandProfile(brandProfileIdForBrand(record.brand));
   const brandData = brandProfile || null;
+  const publishedAdmin = record.published as (NonNullable<CatalogRecord["published"]> & {
+    brandDefaults?: Record<string, unknown>;
+    productOverrides?: Record<string, unknown>;
+    spoolAndPackaging?: unknown;
+  }) | undefined;
+  const brandDefaults = objectValue(publishedAdmin?.brandDefaults);
+  const productOverrides = objectValue(publishedAdmin?.productOverrides);
+  const brandText = (key: string, fallback: string | null | undefined) => (
+    textValue(productOverrides[key]) || textValue(brandDefaults[key]) || fallback || ""
+  );
+  const defaultProductionLocations = textList(brandDefaults.productionLocations);
+  const productionLocations = textList(productOverrides.productionLocations).length
+    ? textList(productOverrides.productionLocations)
+    : defaultProductionLocations.length
+      ? defaultProductionLocations
+      : brandData?.productionLocations || [];
+  const hasPublishedSpool = Boolean(record.published)
+    && Object.prototype.hasOwnProperty.call(record.published, "spoolAndPackaging");
+  const publishedSpool = publishedAdmin?.spoolAndPackaging;
+  const spoolAndPackaging = hasPublishedSpool
+    ? isSpoolAndPackaging(publishedSpool) ? publishedSpool : null
+    : brandData?.spoolAndPackaging || null;
   const c = record.color;
   const colorName = getLocalizedFilamentColorName(c, locale);
   const familyLabel = getLocalizedColorFamilyLabel(c.colorFamily, locale);
@@ -448,6 +493,8 @@ export default function FilamentDetailPageContent({
   const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
   const hasVerifiedParams = hasPresetParameters(record);
+  const publishedParameters = (record.published?.parameters || []).filter((item) => item.value.trim());
+  const showParameterSection = !record.published || publishedParameters.length > 0;
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -531,20 +578,29 @@ export default function FilamentDetailPageContent({
             </div>
           </DetailSection>
 
-          <DetailSection title={t.parameters}>
+          {showParameterSection && <DetailSection title={t.parameters}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
-              <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
-              <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
-              <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
-              <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
-              <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
-              <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
-              <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
-              <FieldRow label={t.verificationStatus} value={getCompareValue(record, "verificationLevel")} unknownLabel={t.unknown} />
-              <FieldRow label={t.evidenceCount} value={getCompareValue(record, "evidenceCount")} unknownLabel={t.unknown} />
-              <FieldRow label={t.score} value={getCompareValue(record, "score")} unknownLabel={t.unknown} />
+              {record.published ? publishedParameters.map((item) => (
+                <FieldRow
+                  key={item.canonicalKey}
+                  label={locale === "en" ? item.canonicalKey : item.labelZh}
+                  value={item.value}
+                  unknownLabel={t.unknown}
+                />
+              )) : <>
+                <FieldRow label={t.nozzleTemperature} value={getCompareValue(record, "nozzleTemperature")} unknownLabel={t.unknown} />
+                <FieldRow label={t.bedTemperature} value={getCompareValue(record, "bedTemperature")} unknownLabel={t.unknown} />
+                <FieldRow label={t.maxVolumetricSpeed} value={getCompareValue(record, "maxVolumetricSpeed")} unknownLabel={t.unknown} />
+                <FieldRow label={t.flowRatio} value={getCompareValue(record, "flowRatio")} unknownLabel={t.unknown} />
+                <FieldRow label={t.density} value={getCompareValue(record, "density")} unknownLabel={t.unknown} />
+                <FieldRow label={t.amsCompatible} value={amsLabel} unknownLabel={t.unknown} />
+                <FieldRow label={t.dryingRecommended} value={getCompareValue(record, "dryingRecommended")} unknownLabel={t.unknown} />
+                <FieldRow label={t.enclosureRecommended} value={getCompareValue(record, "enclosureRecommended")} unknownLabel={t.unknown} />
+                <FieldRow label={t.hardenedNozzleRequired} value={getCompareValue(record, "hardenedNozzleRequired")} unknownLabel={t.unknown} />
+                <FieldRow label={t.verificationStatus} value={getCompareValue(record, "verificationLevel")} unknownLabel={t.unknown} />
+                <FieldRow label={t.evidenceCount} value={getCompareValue(record, "evidenceCount")} unknownLabel={t.unknown} />
+                <FieldRow label={t.score} value={getCompareValue(record, "score")} unknownLabel={t.unknown} />
+              </>}
             </div>
             <div className="mt-5">
               <div className={`text-sm font-medium mb-3 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.printerDownload}</div>
@@ -582,11 +638,11 @@ export default function FilamentDetailPageContent({
                 </div>
               )}
             </div>
-          </DetailSection>
+          </DetailSection>}
 
           <DetailSection title={t.spoolAndPackaging}>
-            {(brandData?.spoolAndPackaging) ? (() => {
-              const sp = brandData.spoolAndPackaging;
+            {spoolAndPackaging ? (() => {
+              const sp = spoolAndPackaging;
               const newSpool = sp.spoolVersions.find((s) => s.version === "new");
               const legacySpool = sp.spoolVersions.find((s) => s.version === "legacy");
               const newPkg = sp.packagingVersions.find((p) => p.version === "new");
@@ -707,12 +763,12 @@ export default function FilamentDetailPageContent({
               <span className={`text-lg font-semibold ${isDark ? "text-white" : "text-[#18181B]"}`}>{record.brand}</span>
             </div>
             <div className="space-y-2">
-              <FieldRow label={t.legalEntity} value={brandData?.legalEntity || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.countryRegion} value={brandData?.countryOrRegion || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.headquarters} value={brandData?.headquarters || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.productionLocation} value={brandData?.productionLocations.length ? brandData.productionLocations.join(", ") : t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.factoryStatus} value={brandData?.factoryStatus === "unknown" ? t.unknown : brandData?.factoryStatus || t.unknown} unknownLabel={t.unknown} />
-              <FieldRow label={t.lastVerified} value={brandData?.lastVerifiedAt || t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.legalEntity} value={brandText("legalEntity", brandData?.legalEntity) || t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.countryRegion} value={brandText("countryOrRegion", brandData?.countryOrRegion) || t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.headquarters} value={brandText("headquarters", brandData?.headquarters) || t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.productionLocation} value={productionLocations.length ? productionLocations.join(", ") : t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.factoryStatus} value={brandText("factoryStatus", brandData?.factoryStatus) === "unknown" ? t.unknown : brandText("factoryStatus", brandData?.factoryStatus) || t.unknown} unknownLabel={t.unknown} />
+              <FieldRow label={t.lastVerified} value={brandText("lastVerifiedAt", brandData?.lastVerifiedAt) || t.unknown} unknownLabel={t.unknown} />
             </div>
             <div className="mt-5 space-y-3">
               <h4 className={`text-sm font-medium ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>{t.officialWebSocial}</h4>

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { unstable_noStore as noStore } from "next/cache";
-import { CATALOG_RECORDS, type CatalogRecord } from "./mock-catalog-ext";
+import type { CatalogRecord } from "./mock-catalog-ext";
 import { listPublishedFilamentDrafts } from "@/lib/filaments/imports/supabase-import-repository";
 import {
   mapPublishedDraftToCatalogRecord,
@@ -10,14 +10,10 @@ import {
 
 export async function getVisibleCatalogRecords(): Promise<CatalogRecord[]> {
   noStore();
-  let publishedRows: Awaited<ReturnType<typeof listPublishedFilamentDrafts>> = [];
-  try {
-    publishedRows = await listPublishedFilamentDrafts();
-  } catch {
-    // A transient catalog read failure must not hide the static catalog.
-  }
+  const publishedRows = await listPublishedFilamentDrafts();
   const published = publishedRows.flatMap((row) => {
     const record = mapPublishedDraftToCatalogRecord(row);
+    if (!record) return [];
     const colors = Array.isArray(record.published?.colors) ? record.published.colors : [];
     if (!colors.length) return [record];
     return colors.map((entry, index) => {
@@ -28,7 +24,7 @@ export async function getVisibleCatalogRecords(): Promise<CatalogRecord[]> {
       return { ...record, id: `${record.productLineId}?color=${encodeURIComponent(code)}`, color };
     });
   });
-  return mergePublishedWithStatic(published, CATALOG_RECORDS);
+  return mergePublishedWithStatic(published, []);
 }
 
 export async function getVisibleCatalogRecord(id: string) {

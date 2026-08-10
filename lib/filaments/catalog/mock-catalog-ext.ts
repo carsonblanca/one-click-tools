@@ -22,9 +22,13 @@ export type CatalogRecord = {
   published?: {
     sourceRunId: string;
     publicationStatus: "published";
+    brandId?: string;
     parameters: Array<{ canonicalKey: string; labelZh: string; value: string }>;
     colors: unknown[];
     images: Array<{ id: string; role: string; url: string }>;
+    brandDefaults?: Record<string, unknown>;
+    productOverrides?: Record<string, unknown>;
+    spoolAndPackaging?: unknown;
   };
 };
 
@@ -314,7 +318,7 @@ function inferColorFamily(name: string, hex: string | null): ColorFamily {
 
 // Variant name maps for R3D (simplified — same as displayed variant)
 function r3dVariantZh(variant: string): string {
-  var m: Record<string, string> = {
+  const m: Record<string, string> = {
     "Standard": "标准", "Matte": "哑光", "Tough": "高韧性", "Silk": "丝绸",
     "Glow": "夜光", "Marble": "大理石", "Wood": "木质", "Rainbow": "彩虹",
     "Temperature": "温变", "UV": "UV", "CF": "碳纤维", "PEBA": "PEBA",
@@ -324,7 +328,7 @@ function r3dVariantZh(variant: string): string {
 
 function buildR3dRecords(): CatalogRecord[] {
   return r3dProductLines.productLines.map(function (pl) {
-    var color: CatalogColor = {
+    const color: CatalogColor = {
       colorNameZh: "颜色信息待补充", colorNameEn: "Color information pending",
       colorFamily: "gray", hex: null, rgb: null,
       finish: "semi-glossy", transparency: "opaque",
