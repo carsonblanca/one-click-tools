@@ -91,6 +91,26 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+function ProductImage({ record }: { record: CatalogRecord }) {
+  const [unavailable, setUnavailable] = useState(false);
+  const sourceRunId = record.published?.sourceRunId;
+  const hasProductImage = record.published?.images.some((image) => image.role === "product" && image.url);
+
+  if (!sourceRunId || !hasProductImage || unavailable) {
+    return <BrandLogo brand={record.brand} size={36} />;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt={`${record.brand} ${record.productLine}`}
+      className="h-full w-full rounded-xl object-contain"
+      onError={() => setUnavailable(true)}
+      src={`/api/filaments/product-image?sourceRunId=${encodeURIComponent(sourceRunId)}`}
+    />
+  );
+}
+
 function getBrandProfilePath(brand: string) {
   if (brand === "Bambu Lab") return "/filaments/brands/bambu-lab";
   if (brand === "Generic") return "/filaments/brands/generic-profiles";
@@ -716,7 +736,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                       </div>
 
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-current/10 bg-white">
-                        <BrandLogo brand={record.brand} size={36} />
+                        <ProductImage record={record} />
                       </div>
 
                       <div className="min-w-0 self-center">

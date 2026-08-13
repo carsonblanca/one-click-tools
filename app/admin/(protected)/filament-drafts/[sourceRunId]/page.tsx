@@ -90,7 +90,7 @@ export default async function FilamentDraftPage({
           {draft.product_line_name || text(productLine.name) || "未命名耗材"}
         </h1>
         <p className="mt-2 text-sm text-slate-600">
-          {draft.brand_id.toUpperCase()} · {draft.material_type || text(productLine.materialType) || "材料待补充"} · 未发布
+          {draft.brand_id.toUpperCase()} · {draft.material_type || text(productLine.materialType) || "材料待补充"} · {draft.publication_status === "published" ? "已发布" : "未发布"}
         </p>
       </header>
 
