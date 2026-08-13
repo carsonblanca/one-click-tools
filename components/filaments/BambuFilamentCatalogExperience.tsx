@@ -709,6 +709,9 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                 const colorName = getLocalizedFilamentColorName(c, locale);
                 const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
                 const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
+                const detailProductKey = record.productLineId || record.id.split("?")[0];
+                const detailColorCode = c.digitalSwatch?.officialColorCode || "";
+                const detailHref = `/filaments/${encodeURIComponent(detailProductKey)}${detailColorCode ? `?color=${encodeURIComponent(detailColorCode)}` : ""}`;
 
                 return (
                   <article key={record.id}
@@ -731,8 +734,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                       <div className="min-w-0">
                         <h3 className="line-clamp-2 text-base font-semibold leading-snug">
                           {colorName}
-                          {effectLabel ? ` (${effectLabel})` : ""}
                         </h3>
+                        {effectLabel ? (
+                          <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] ${isDark ? "border-white/10 text-white/45" : "border-[#D8CCB8] text-[#8A8173]"}`}>
+                            {effectLabel}
+                          </span>
+                        ) : null}
                       </div>
 
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-current/10 bg-white">
@@ -807,7 +814,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                     </div>
 
                     <div className="mt-3 flex gap-2">
-                      <Link href={`/filaments/${record.id}`}
+                      <Link href={detailHref}
                         className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
                           isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"
                         }`}

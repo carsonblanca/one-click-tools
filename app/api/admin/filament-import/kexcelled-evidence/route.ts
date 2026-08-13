@@ -101,14 +101,18 @@ function draftData(input: {
   assetKeys: Map<string, string>;
 }) {
   const product = input.product;
+  const productKey = stringValue(product.productKey) || stringValue(product.productLineId);
   const colors = mapColors(input.colors, input.images, input.assetKeys);
   const candidates = input.parameters.map(normalizeParameterCandidate);
   const fields = fieldsAcceptedFromCandidates(candidates);
   return {
     source: { zipFilename: input.fileName },
     brand: { name: "KEXCELLED" },
+    productKey,
     productLine: {
       name: stringValue(product.productLine),
+      productKey,
+      productLineId: productKey,
       materialType: stringValue(product.materialType),
       variant: stringValue(product.variant),
       diameterMm: numberValue(product.diameterMm),
