@@ -177,7 +177,7 @@ function mapColor(value: unknown, index: number, productKey: string) {
     text(source.nameZh) ||
     extractChineseColorName(source.rawSkuText) ||
     `颜色 ${index + 1}`;
-  const nameEn = text(source.displayNameEn) || officialColorCode || nameZh;
+  const nameEn = text(source.displayNameEn);
   const rawHex = text(source.hexColor) || text(source.hex);
   const hex = /^#[0-9a-f]{6}$/i.test(rawHex) ? rawHex.toUpperCase() : null;
   const rgb = rgbFromHex(hex);

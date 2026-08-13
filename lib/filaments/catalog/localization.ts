@@ -23,7 +23,7 @@ function firstText(...values: Array<string | null | undefined>) {
 
 export function getLocalizedFilamentColorName(color: ColorWithLocalizedNames, locale: Locale) {
   if (locale === "en") {
-    return firstText(color.names?.en, color.colorNameEn, color.officialName, color.colorNameZh, "Unknown color");
+    return firstText(color.names?.en, color.colorNameEn, "Color name pending");
   }
 
   if (locale === "zh-cn") {
