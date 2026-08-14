@@ -59,6 +59,15 @@ export function hasPresetParameters(record: CatalogRecord) {
   return true;
 }
 
+/** Published manufacturer records need an explicit product preset payload.
+ * Material-template generation is a separate generic tool and must not be
+ * presented as a manufacturer/product preset download.
+ */
+export function hasDownloadableProductPreset(record: CatalogRecord) {
+  if (record.published) return false;
+  return hasPresetParameters(record);
+}
+
 export function parameterStatusLabel(record: CatalogRecord) {
   return hasPresetParameters(record) ? "Available" : "Parameters pending";
 }

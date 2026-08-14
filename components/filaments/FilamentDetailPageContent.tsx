@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
-import { getCatalogRecord, getCompareValue, hasPresetParameters } from "@/lib/filaments/catalog/catalog-view-model";
+import { getCatalogRecord, getCompareValue, hasDownloadableProductPreset } from "@/lib/filaments/catalog/catalog-view-model";
 import { getBrandProfile, type SpoolAndPackaging } from "@/lib/filaments/catalog/mock-filament-catalog";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import { getBambuPrinterOptions, generateBambuFilamentPresetSet, getPresetDisplayValue } from "@/lib/bambu-filament-presets";
@@ -63,7 +63,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     downloadPreset: "Download preset",
     noPreset: "No preset available",
     paramsPending: "Parameters Pending",
-    presetsUnavailable: "Verified print parameters are not yet available.",
+    presetsUnavailable: "No verified manufacturer or product preset is available.",
     retractionSource: "Retraction source",
     inheritedPrinter: "Inherited from selected printer template",
     nozzleTempShort: "Nozzle temperature",
@@ -159,7 +159,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     downloadPreset: "下载预设",
     noPreset: "暂无可用预设",
     paramsPending: "参数待补充",
-    presetsUnavailable: "该系列缺少可验证打印参数，暂不可生成预设。",
+    presetsUnavailable: "该系列暂无已验证的厂家或产品预设。",
     retractionSource: "回抽来源",
     inheritedPrinter: "继承自所选打印机模板",
     nozzleTempShort: "喷嘴温度",
@@ -255,7 +255,7 @@ const DETAIL_LABELS: Record<Locale, Record<string, string>> = {
     downloadPreset: "下載預設",
     noPreset: "暫無可用預設",
     paramsPending: "參數待補充",
-    presetsUnavailable: "該系列缺少可驗證列印參數，暫不可產生預設。",
+    presetsUnavailable: "該系列暫無已驗證的廠家或產品預設。",
     retractionSource: "回抽來源",
     inheritedPrinter: "繼承自所選印表機模板",
     nozzleTempShort: "噴嘴溫度",
@@ -492,7 +492,7 @@ export default function FilamentDetailPageContent({
   const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
   const variantLabel = getLocalizedVariantEffectLabel(record.variant, locale);
   const amsLabel = record.spool.amsFit === "yes" ? t.compatible : record.spool.amsFit === "conditional" ? t.conditional : t.notCompatible;
-  const hasVerifiedParams = hasPresetParameters(record);
+  const hasDownloadablePreset = hasDownloadableProductPreset(record);
   const publishedParameters = (record.published?.parameters || []).filter((item) => item.value.trim());
   const showParameterSection = !record.published || publishedParameters.length > 0;
 
@@ -583,7 +583,7 @@ export default function FilamentDetailPageContent({
               {record.published ? publishedParameters.map((item) => (
                 <FieldRow
                   key={item.canonicalKey}
-                  label={locale === "en" ? item.canonicalKey : item.labelZh}
+                  label={locale === "en" ? item.labelEn || item.canonicalKey : item.labelZh}
                   value={item.value}
                   unknownLabel={t.unknown}
                 />
@@ -618,19 +618,19 @@ export default function FilamentDetailPageContent({
                 </select>
                 <button
                   onClick={() => {
-                    if (generated && hasVerifiedParams) downloadJson(buildPresetDownloadFileName(record), generated.preset);
+                    if (generated && hasDownloadablePreset) downloadJson(buildPresetDownloadFileName(record), generated.preset);
                   }}
-                  disabled={!generated || !hasVerifiedParams}
+                  disabled={!generated || !hasDownloadablePreset}
                   className={`rounded-2xl px-5 py-3 text-sm font-medium transition ${
-                    !generated || !hasVerifiedParams
+                    !generated || !hasDownloadablePreset
                       ? "opacity-40 cursor-not-allowed"
                       : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
                   }`}
                 >
-                  {!hasVerifiedParams ? t.paramsPending : (generated ? t.downloadPreset : t.noPreset)}
+                  {!hasDownloadablePreset ? t.noPreset : (generated ? t.downloadPreset : t.noPreset)}
                 </button>
               </div>
-              {generated && (
+              {generated && hasDownloadablePreset && (
                 <div className={`mt-4 grid gap-2 text-sm sm:grid-cols-2 ${isDark ? "text-white/60" : "text-[#6B665D]"}`}>
                   <p>{t.nozzleTempShort}: {getPresetDisplayValue(generated.preset, "nozzle_temperature_initial_layer")} / {getPresetDisplayValue(generated.preset, "nozzle_temperature")} °C</p>
                   <p>{t.flow}: {getPresetDisplayValue(generated.preset, "filament_flow_ratio")}</p>

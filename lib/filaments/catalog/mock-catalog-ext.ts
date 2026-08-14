@@ -23,7 +23,7 @@ export type CatalogRecord = {
     sourceRunId: string;
     publicationStatus: "published";
     brandId?: string;
-    parameters: Array<{ canonicalKey: string; labelZh: string; value: string }>;
+    parameters: Array<{ canonicalKey: string; labelZh: string; labelEn?: string; value: string }>;
     colors: unknown[];
     images: Array<{ id: string; role: string; url: string }>;
     brandDefaults?: Record<string, unknown>;

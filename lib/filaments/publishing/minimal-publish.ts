@@ -1,6 +1,7 @@
 import type { CatalogColor, ColorFamily, Finish, Transparency } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import {
+  FILAMENT_PARAMETER_SCHEMA_VERSION,
   getParameterDefinition,
   normalizeStoredParameters,
 } from "@/lib/filaments/parameters/normalized-parameters";
@@ -85,6 +86,26 @@ export function validateSinglePublishRequest(value: unknown): string[] {
   return [];
 }
 
+export function validatePublishedParameterContract(row: PublishableDraftRow): string[] {
+  const data = objectValue(row.draft_data);
+  const rawParameters = objectValue(data.parameters);
+  const normalized = normalizeStoredParameters(rawParameters);
+  const issues: string[] = [];
+  const schemaVersion = text(rawParameters.parameterSchemaVersion);
+  if (schemaVersion !== FILAMENT_PARAMETER_SCHEMA_VERSION) {
+    issues.push(`parameterSchemaVersion 必须为 ${FILAMENT_PARAMETER_SCHEMA_VERSION}。`);
+  }
+  const unknownFieldKeys = Object.keys(normalized.unmappedFields);
+  if (unknownFieldKeys.length) issues.push(`存在未知正式参数：${unknownFieldKeys.join(",")}。`);
+  const unknownCandidateKeys = normalized.candidates.flatMap((candidate) => (
+    text(candidate.unknownCanonicalKey) ? [text(candidate.unknownCanonicalKey)] : []
+  ));
+  if (unknownCandidateKeys.length) {
+    issues.push(`存在未知候选参数 canonicalKey：${[...new Set(unknownCandidateKeys)].join(",")}。`);
+  }
+  return issues;
+}
+
 export function validateDraftForPublish(
   row: PublishableDraftRow | null,
   publishedRows: PublishableDraftRow[],
@@ -119,6 +140,7 @@ export function validateDraftForPublish(
   if (colors.some((item) => !text(objectValue(item).localImagePath))) issues.push("存在没有图片关系的颜色。");
   if (serialized.includes("PC K7")) issues.push("仍包含 PC K7 污染。");
   if (serialized.includes("英文名待补充")) issues.push("仍包含英文名待补充。");
+  issues.push(...validatePublishedParameterContract(row));
 
   const duplicate = publishedRows.find((item) => item.id !== row.id && (
     item.source_run_id === row.source_run_id || productKeyOf(item) === productKey
@@ -299,6 +321,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   const parameters = Object.entries(normalizedParameters.fields).map(([canonicalKey, value]) => ({
     canonicalKey,
     labelZh: getParameterDefinition(canonicalKey)?.zhCNLabel || canonicalKey,
+    labelEn: getParameterDefinition(canonicalKey)?.labelEn || canonicalKey,
     value,
   }));
   const primary = colors[0]?.color || mapColor({}, 0, productKey).color;
