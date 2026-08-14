@@ -64,6 +64,21 @@ assert.equal(invalidDraft.failed.length, 1);
 assert.equal(invalidDraft.failed[0].sourceRunId, "missing-source-run");
 assert.equal(writeCount, 0);
 
+rows.set("schema-invalid", {
+  id: "draft-schema-invalid",
+  sourceRunId: "schema-invalid",
+  status: "draft",
+  publicationStatus: "draft",
+  validationIssues: ["parameterSchemaVersion 不兼容。"],
+});
+const invalidSchema = await publishDraftBatch({
+  sourceRunIds: ["schema-invalid"],
+  actorId: "test-admin",
+}, dependencies);
+assert.deepEqual(invalidSchema.published, []);
+assert.match(invalidSchema.failed[0].error, /parameterSchemaVersion/);
+assert.equal(writeCount, 0);
+
 const single = await publishDraftBatch({
   sourceRunIds: [batchIds[0]],
   actorId: "test-admin",

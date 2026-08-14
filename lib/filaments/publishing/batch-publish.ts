@@ -5,6 +5,7 @@ export type PublishDraftState = {
   sourceRunId: string;
   status: string;
   publicationStatus: string;
+  validationIssues?: string[];
 };
 
 export type PublishFailure = {
@@ -95,6 +96,7 @@ function validateDraftState(
   if (expectedDraftId && draft.id !== expectedDraftId) issues.push("draftId 不匹配。");
   if (draft.status !== "draft") issues.push("status 必须为 draft。");
   if (draft.publicationStatus !== "draft") issues.push("publication_status 必须为 draft。");
+  issues.push(...(draft.validationIssues ?? []));
   return issues;
 }
 

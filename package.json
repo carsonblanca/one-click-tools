@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:filament-parameter-pipeline-v1": "node --experimental-strip-types scripts/test-filament-parameter-pipeline-v1.mjs",
     "validate:tools": "node scripts/validate-tools.mjs",
     "validate:analytics": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-analytics.mjs",
     "validate:image-compressor": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-image-compressor.mjs",

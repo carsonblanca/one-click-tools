@@ -6,6 +6,7 @@ import {
   fipImageEntries,
   FipValidationError,
   parseKexcelledFip,
+  projectKexcelledFipParameters,
 } from "@/lib/filaments/imports/kexcelled-fip";
 import {
   appendAdminAuditLog,
@@ -22,8 +23,7 @@ import {
   uploadFipPackageToR2,
 } from "@/lib/storage/r2";
 import {
-  fieldsAcceptedFromCandidates,
-  normalizeParameterCandidate,
+  FILAMENT_PARAMETER_SCHEMA_VERSION,
   parameterSourceEvidence,
 } from "@/lib/filaments/parameters/normalized-parameters";
 
@@ -98,13 +98,17 @@ function draftData(input: {
   parameters: Record<string, unknown>[];
   images: Record<string, unknown>[];
   evidence: unknown;
+  expectedParameterFields: Record<string, string>;
+  parameterCoverage: Record<string, unknown>;
   assetKeys: Map<string, string>;
 }) {
   const product = input.product;
   const productKey = stringValue(product.productKey) || stringValue(product.productLineId);
   const colors = mapColors(input.colors, input.images, input.assetKeys);
-  const candidates = input.parameters.map(normalizeParameterCandidate);
-  const fields = fieldsAcceptedFromCandidates(candidates);
+  const { candidates, fields } = projectKexcelledFipParameters(
+    input.parameters,
+    input.expectedParameterFields,
+  );
   return {
     source: { zipFilename: input.fileName },
     brand: { name: "KEXCELLED" },
@@ -121,8 +125,10 @@ function draftData(input: {
     colors,
     canonicalColors: colors,
     parameters: {
+      parameterSchemaVersion: FILAMENT_PARAMETER_SCHEMA_VERSION,
       fields,
       candidates,
+      coverage: input.parameterCoverage,
       sourceEvidence: parameterSourceEvidence(candidates, input.evidence),
       status: Object.keys(fields).length ? "official_partial" : "missing",
     },
@@ -254,6 +260,8 @@ export async function POST(request: NextRequest) {
         parameters: parsed.parameters,
         images: parsed.images,
         evidence: parsed.evidence,
+        expectedParameterFields: parsed.expectedParameterFields,
+        parameterCoverage: parsed.parameterCoverage,
         assetKeys,
       })),
       actorId,

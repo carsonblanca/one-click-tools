@@ -1,10 +1,21 @@
 import { strFromU8, unzipSync } from "fflate";
+import {
+  FILAMENT_CANONICAL_PARAMETER_KEYS,
+  FILAMENT_PARAMETER_SCHEMA_VERSION,
+  fieldsAcceptedFromCandidates,
+  isSupportedCanonicalParameterKey,
+  normalizeParameterCandidate,
+} from "@/lib/filaments/parameters/normalized-parameters";
 
 const REQUIRED_FILES = [
   "manifest.json",
   "products.json",
   "evidence.json",
   "package-report.json",
+  "parameter-candidates.json",
+  "parameter-schema.json",
+  "parameter-coverage.json",
+  "draft-patch.json",
 ] as const;
 
 type JsonObject = Record<string, unknown>;
@@ -15,6 +26,10 @@ export type ParsedKexcelledFip = {
   products: JsonObject[];
   evidence: unknown;
   report: JsonObject;
+  parameterSchema: JsonObject;
+  parameterCoverage: JsonObject;
+  draftPatch: JsonObject;
+  expectedParameterFields: Record<string, string>;
   colors: JsonObject[];
   parameters: JsonObject[];
   images: JsonObject[];
@@ -58,6 +73,76 @@ function unsafePath(name: string) {
     || name.includes("\0");
 }
 
+function stringFields(value: unknown): Record<string, string> {
+  return Object.fromEntries(Object.entries(objectValue(value)).flatMap(([key, rawValue]) => {
+    const normalized = typeof rawValue === "string" || typeof rawValue === "number"
+      ? String(rawValue).trim()
+      : "";
+    return normalized ? [[key, normalized]] : [];
+  }));
+}
+
+function validateParameterContract(input: {
+  manifest: JsonObject;
+  parameterSchema: JsonObject;
+  parameters: JsonObject[];
+  draftPatch: JsonObject;
+}) {
+  const manifestVersion = String(input.manifest.parameterSchemaVersion ?? "").trim();
+  const schemaVersion = String(input.parameterSchema.schemaVersion ?? "").trim();
+  if (manifestVersion !== FILAMENT_PARAMETER_SCHEMA_VERSION || schemaVersion !== FILAMENT_PARAMETER_SCHEMA_VERSION) {
+    throw new FipValidationError(
+      "FIP 参数规范版本不兼容",
+      `期望 ${FILAMENT_PARAMETER_SCHEMA_VERSION}，manifest=${manifestVersion || "缺失"}，schema=${schemaVersion || "缺失"}`,
+    );
+  }
+
+  const schemaKeys = arrayOfObjects(input.parameterSchema.definitions)
+    .map((item) => String(item.canonicalKey ?? "").trim())
+    .filter(Boolean)
+    .sort();
+  const currentKeys = [...FILAMENT_CANONICAL_PARAMETER_KEYS].sort();
+  if (schemaKeys.length !== currentKeys.length || schemaKeys.some((key, index) => key !== currentKeys[index])) {
+    throw new FipValidationError("FIP 参数规范不兼容", "parameter-schema.json 与当前 Production canonical schema 不一致");
+  }
+
+  const unknownCandidateKeys = [...new Set(input.parameters.flatMap((candidate) => {
+    const key = String(candidate.canonicalKey ?? "").trim();
+    return key && !isSupportedCanonicalParameterKey(key) ? [key] : [];
+  }))];
+  const expectedFields = stringFields(objectValue(input.draftPatch.parameters).fields);
+  const unknownFieldKeys = Object.keys(expectedFields).filter((key) => !isSupportedCanonicalParameterKey(key));
+  const unknownKeys = [...new Set([...unknownCandidateKeys, ...unknownFieldKeys])];
+  if (unknownKeys.length) {
+    throw new FipValidationError("FIP 包含未知参数字段", `UNKNOWN_CANONICAL_KEYS:${unknownKeys.join(",")}`);
+  }
+  return expectedFields;
+}
+
+function sortedFields(value: Record<string, string>) {
+  return Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+export function projectKexcelledFipParameters(
+  parameters: JsonObject[],
+  expectedParameterFields: Record<string, string>,
+) {
+  const candidates = parameters.map(normalizeParameterCandidate);
+  const fields = fieldsAcceptedFromCandidates(candidates);
+  if (JSON.stringify(sortedFields(fields)) !== JSON.stringify(sortedFields(expectedParameterFields))) {
+    const missing = Object.keys(expectedParameterFields).filter((key) => !(key in fields));
+    const added = Object.keys(fields).filter((key) => !(key in expectedParameterFields));
+    const changed = Object.keys(fields).filter((key) => (
+      key in expectedParameterFields && fields[key] !== expectedParameterFields[key]
+    ));
+    throw new FipValidationError(
+      "FIP 参数投影与 Draft 不一致",
+      `PARAMETER_PROJECTION_MISMATCH:missing=${missing.join(",") || "none"};added=${added.join(",") || "none"};changed=${changed.join(",") || "none"}`,
+    );
+  }
+  return { candidates, fields };
+}
+
 export function parseKexcelledFip(bytes: Uint8Array): ParsedKexcelledFip {
   let files: Record<string, Uint8Array>;
   try {
@@ -80,6 +165,9 @@ export function parseKexcelledFip(bytes: Uint8Array): ParsedKexcelledFip {
   const products = arrayOfObjects(readJson(files, "products.json"));
   const evidence = readJson(files, "evidence.json");
   const report = objectValue(readJson(files, "package-report.json"));
+  const parameterSchema = objectValue(readJson(files, "parameter-schema.json"));
+  const parameterCoverage = objectValue(readJson(files, "parameter-coverage.json"));
+  const draftPatch = objectValue(readJson(files, "draft-patch.json"));
   const brand = String(manifest.brand ?? "").trim().toUpperCase();
   if (brand !== "KEXCELLED") {
     throw new FipValidationError("不是合法 KEXCELLED FIP", `manifest.brand 为 ${brand || "空"}`);
@@ -92,6 +180,13 @@ export function parseKexcelledFip(bytes: Uint8Array): ParsedKexcelledFip {
   if (!sourceRunId) {
     throw new FipValidationError("不是合法 FIP", "manifest.sourceRunId 缺失");
   }
+  const parameters = arrayOfObjects(readJson(files, "parameter-candidates.json"));
+  const expectedParameterFields = validateParameterContract({
+    manifest,
+    parameterSchema,
+    parameters,
+    draftPatch,
+  });
 
   return {
     files,
@@ -99,10 +194,12 @@ export function parseKexcelledFip(bytes: Uint8Array): ParsedKexcelledFip {
     products,
     evidence,
     report,
+    parameterSchema,
+    parameterCoverage,
+    draftPatch,
+    expectedParameterFields,
     colors: files["colors.json"] ? arrayOfObjects(readJson(files, "colors.json")) : [],
-    parameters: files["parameter-candidates.json"]
-      ? arrayOfObjects(readJson(files, "parameter-candidates.json"))
-      : [],
+    parameters,
     images: files["images.json"] ? arrayOfObjects(readJson(files, "images.json")) : [],
     sourceRunId,
   };

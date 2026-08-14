@@ -17,7 +17,10 @@ registerHooks({
   },
 });
 
-const { mapPublishedDraftToCatalogRecord } = await import("../lib/filaments/publishing/minimal-publish.ts");
+const {
+  mapPublishedDraftToCatalogRecord,
+  validatePublishedParameterContract,
+} = await import("../lib/filaments/publishing/minimal-publish.ts");
 
 const spoolDefault = {
   scope: "1kg",
@@ -63,6 +66,7 @@ const baseDraft = {
       netWeightOptionsG: [500, 1000, 3000],
     },
     parameters: {
+      parameterSchemaVersion: "oneclick.filament-parameters.v1",
       fields: {
         materialType: "PETG",
         netWeight: "1000 g",
@@ -89,6 +93,7 @@ assert.deepEqual(record.spool.netWeightOptionsG, [500, 1000, 3000]);
 assert.deepEqual(record.published.colors.map((item) => item.id), ["early", "late"]);
 assert.deepEqual(record.published.images.map((item) => item.id), ["product"]);
 assert.equal(record.published.parameters.length, 2);
+assert.equal(record.published.parameters.find((item) => item.canonicalKey === "materialType")?.labelEn, "Material type");
 assert.equal(record.published.parameters.some((item) => item.value === ""), false);
 assert.equal(record.published.brandDefaults.legalEntity, "Managed Brand Ltd.");
 assert.equal(record.published.spoolAndPackaging.noteZh, "产品覆盖");
@@ -115,5 +120,17 @@ const defaultsOnly = mapPublishedDraftToCatalogRecord({
 assert.ok(defaultsOnly);
 assert.equal(defaultsOnly.brand, "Managed Brand");
 assert.equal(defaultsOnly.published.spoolAndPackaging.noteZh, "品牌默认");
+
+assert.deepEqual(validatePublishedParameterContract(baseDraft), []);
+assert.match(validatePublishedParameterContract({
+  ...baseDraft,
+  draft_data: {
+    ...baseDraft.draft_data,
+    parameters: {
+      ...baseDraft.draft_data.parameters,
+      fields: { ...baseDraft.draft_data.parameters.fields, futureUnknownField: "1" },
+    },
+  },
+})[0], /未知正式参数/);
 
 console.log("published catalog admin mapping tests passed");

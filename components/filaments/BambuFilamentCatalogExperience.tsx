@@ -23,7 +23,7 @@ import {
   getLocalizedFinishLabel,
   getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
-  hasPresetParameters,
+  hasDownloadableProductPreset,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
@@ -168,7 +168,7 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPhysicalSwatch: "No physical swatch",
     selectPrinter: "Select printer",
     paramsPending: "Parameters Pending",
-    presetsUnavailable: "Verified print parameters are not yet available.",
+    presetsUnavailable: "No verified manufacturer or product preset is available.",
     presetNoGcode: "Filament preset only. No G-code is included.",
     compareHint: "2-4 items",
   },
@@ -222,7 +222,7 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPhysicalSwatch: "暂无实拍",
     selectPrinter: "选择打印机",
     paramsPending: "参数待补充",
-    presetsUnavailable: "该系列缺少可验证打印参数，暂不可生成预设。",
+    presetsUnavailable: "该系列暂无已验证的厂家或产品预设。",
     presetNoGcode: "仅生成耗材预设，不包含 G-code。",
     compareHint: "2-4 款",
   },
@@ -276,7 +276,7 @@ const LABELS: Record<Locale, Record<string, string>> = {
     noPhysicalSwatch: "暫無實拍",
     selectPrinter: "選擇印表機",
     paramsPending: "參數待補充",
-    presetsUnavailable: "該系列缺少可驗證列印參數，暫不可產生預設。",
+    presetsUnavailable: "該系列暫無已驗證的廠家或產品預設。",
     presetNoGcode: "僅產生線材預設，不包含 G-code。",
     compareHint: "2-4 款",
   },
@@ -703,8 +703,8 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                 const cardPrinterId = cardPrinters[record.id] || printerOptions[0]?.id || "";
                 const generatedPreset = generateBambuFilamentPresetSet(cardPrinterId);
                 const matchPreset = generatedPreset.find((p) => p.material.type === record.materialType);
-                const hasVerifiedParams = hasPresetParameters(record);
-                const presetsDisabled = !hasVerifiedParams;
+                const hasDownloadablePreset = hasDownloadableProductPreset(record);
+                const presetsDisabled = !hasDownloadablePreset;
                 const c = record.color;
                 const colorName = getLocalizedFilamentColorName(c, locale);
                 const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
@@ -805,7 +805,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                               : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
                           }`}
                         >
-                          {presetsDisabled ? t.paramsPending : (matchPreset ? t.downloadPreset : t.noPreset)}
+                          {presetsDisabled ? t.noPreset : (matchPreset ? t.downloadPreset : t.noPreset)}
                         </button>
                       </div>
                       <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>

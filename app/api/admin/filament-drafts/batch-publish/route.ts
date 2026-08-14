@@ -11,6 +11,7 @@ import {
   type PublishDraftState,
 } from "@/lib/filaments/publishing/batch-publish";
 import { publishSupabaseFilamentDraft } from "@/lib/filaments/publishing/supabase-publish-repository";
+import { validatePublishedParameterContract } from "@/lib/filaments/publishing/minimal-publish";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ function draftState(row: NonNullable<Awaited<ReturnType<typeof getFilamentDraftB
     sourceRunId: row.source_run_id,
     status: row.status,
     publicationStatus: row.publication_status,
+    validationIssues: validatePublishedParameterContract(row),
   };
 }
 
