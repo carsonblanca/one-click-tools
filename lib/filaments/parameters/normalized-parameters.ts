@@ -35,6 +35,7 @@ export const FILAMENT_PARAMETER_DEFINITIONS = Object.freeze([
   definition("density", "密度", ["density", "密度"], "g/cm³", "物性", 40),
   definition("diameterTolerance", "线径公差", ["tolerance", "diameter tolerance", "线径公差", "公差", "直径公差"], "mm", "基础", 50),
   definition("meltFlowIndex", "熔融指数", ["mfi", "mfr", "melt flow index", "melt flow rate", "熔融指数", "熔体流动指数", "熔融流动指数", "熔体流动速率"], "g/10min", "物性", 60),
+  definition("chamberTemperature", "腔室温度", ["chamber temperature", "ambient chamber temperature", "腔室温度", "腔体温度"], null, "打印", 90),
   definition("nozzleTemperature", "喷嘴温度", ["printingTemperature", "nozzle temperature", "printing temperature", "打印温度", "喷嘴温度", "喷头温度", "挤出温度"], "°C", "打印", 100),
   definition("nozzleDiameter", "喷嘴口径", ["nozzle diameter", "喷嘴口径", "喷嘴直径"], "mm", "打印", 105),
   definition("bedTemperature", "热床温度", ["buildPlateTemperature", "bed temperature", "build plate temperature", "底板温度", "底盘温度", "平台温度", "热床温度"], "°C", "打印", 110),
