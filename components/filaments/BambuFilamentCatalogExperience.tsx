@@ -29,6 +29,7 @@ import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
 import BrandLogo from "./BrandLogo";
+import { ColorCardImage } from "./FilamentRoleImages";
 
 type MaterialVariantMap = Record<string, string[]>;
 
@@ -88,26 +89,6 @@ function Stars({ value }: { value: number }) {
         <span key={star}>{star <= Math.round(value) ? "\u2605" : "\u2606"}</span>
       ))}
     </span>
-  );
-}
-
-function ProductImage({ record }: { record: CatalogRecord }) {
-  const [unavailable, setUnavailable] = useState(false);
-  const sourceRunId = record.published?.sourceRunId;
-  const hasProductImage = record.published?.images.some((image) => image.role === "product" && image.url);
-
-  if (!sourceRunId || !hasProductImage || unavailable) {
-    return <BrandLogo brand={record.brand} size={36} />;
-  }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      alt={`${record.brand} ${record.productLine}`}
-      className="h-full w-full rounded-xl object-contain"
-      onError={() => setUnavailable(true)}
-      src={`/api/filaments/product-image?sourceRunId=${encodeURIComponent(sourceRunId)}`}
-    />
   );
 }
 
@@ -719,19 +700,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                       isDark ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20 hover:border-[#2563EB]/30"
                     }`}
                   >
-                    <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 gap-y-2">
-                      {c.hasDigitalSwatch && c.hex ? (
-                        <div
-                          className="h-11 w-11 rounded-xl border border-current/10"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                      ) : (
-                        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>
-                          --
-                        </div>
-                      )}
+                    <div className="grid grid-cols-[minmax(0,2fr)_minmax(112px,1fr)] items-center gap-4">
+                      <div className="flex min-w-0 items-center justify-center" data-color-image-region>
+                        <ColorCardImage record={record} />
+                      </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 self-stretch py-1">
                         <h3 className="line-clamp-2 text-base font-semibold leading-snug">
                           {colorName}
                         </h3>
@@ -740,15 +714,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                             {effectLabel}
                           </span>
                         ) : null}
-                      </div>
-
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-current/10 bg-white">
-                        <ProductImage record={record} />
-                      </div>
-
-                      <div className="min-w-0 self-center">
-                        <div className={`truncate text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
-                          {getDisplayBrand(record.brand)}{" \u00B7 "}{record.productLine}
+                        <div className={`mt-4 flex min-w-0 items-center gap-2 text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`} data-brand-logo-slot>
+                          <BrandLogo brand={record.brand} size={20} />
+                          <span className="min-w-0 truncate">{getDisplayBrand(record.brand)}</span>
+                        </div>
+                        <div className={`mt-1 line-clamp-2 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>
+                          {record.productLine}
                         </div>
                         <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                           <Stars value={record.rating} />
