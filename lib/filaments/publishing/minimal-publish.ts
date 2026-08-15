@@ -233,6 +233,7 @@ function mapColor(value: unknown, index: number, productKey: string) {
   };
   return {
     id: text(source.colorId) || text(source.matchKey) || `${productKey}-color-${index + 1}`,
+    productLineId: text(source.productLineId) || productKey,
     nameZh,
     nameEn,
     officialColorCode,

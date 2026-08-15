@@ -21,6 +21,7 @@ const {
   mapPublishedDraftToCatalogRecord,
   validatePublishedParameterContract,
 } = await import("../lib/filaments/publishing/minimal-publish.ts");
+const { getColorCardImageUrl } = await import("../lib/filaments/catalog/image-roles.ts");
 
 const spoolDefault = {
   scope: "1kg",
@@ -91,6 +92,21 @@ assert.equal(record.brand, "Product Brand");
 assert.equal(record.brandZh, "管理品牌");
 assert.deepEqual(record.spool.netWeightOptionsG, [500, 1000, 3000]);
 assert.deepEqual(record.published.colors.map((item) => item.id), ["early", "late"]);
+assert.deepEqual(record.published.colors.map((item) => item.productLineId), ["test-material", "test-material"]);
+assert.equal(record.published.colors[0].officialColorCode, "E");
+assert.equal(record.published.colors[0].imageUrl, "/api/filament-assets?key=filament-imports%2Ftest%2Fearly.jpg");
+assert.equal(getColorCardImageUrl(record), "/api/filament-assets?key=filament-imports%2Ftest%2Fearly.jpg");
+assert.equal(getColorCardImageUrl({
+  ...record,
+  productLineId: "another-product",
+}), null);
+assert.equal(getColorCardImageUrl({
+  ...record,
+  color: {
+    ...record.color,
+    digitalSwatch: { ...record.color.digitalSwatch, officialColorCode: "UNKNOWN" },
+  },
+}), null);
 assert.deepEqual(record.published.images.map((item) => item.id), ["product"]);
 assert.equal(record.published.parameters.length, 2);
 assert.equal(record.published.parameters.find((item) => item.canonicalKey === "materialType")?.labelEn, "Material type");

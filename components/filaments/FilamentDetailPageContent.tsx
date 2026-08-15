@@ -14,6 +14,7 @@ import {
   getLocalizedVariantEffectLabel,
 } from "@/lib/filaments/catalog/localization";
 import BrandLogo from "./BrandLogo";
+import { PublishedProductImage } from "./FilamentRoleImages";
 import type { Locale } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 
@@ -513,11 +514,9 @@ export default function FilamentDetailPageContent({
         <div className="space-y-6">
           <DetailSection title={t.productInfo}>
             <div className="flex items-start gap-4 mb-5">
-              {c.hasDigitalSwatch && c.hex ? (
-                <div className="h-14 w-14 shrink-0 rounded-2xl border border-current/10" style={{ backgroundColor: c.hex }} />
-              ) : (
-                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-dashed text-xs ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>--</div>
-              )}
+              <div className="h-32 w-32 shrink-0" data-product-image-slot>
+                <PublishedProductImage record={record} />
+              </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <BrandLogo brand={record.brand} size={24} />

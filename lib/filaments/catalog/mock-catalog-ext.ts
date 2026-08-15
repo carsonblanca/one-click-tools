@@ -24,7 +24,15 @@ export type CatalogRecord = {
     publicationStatus: "published";
     brandId?: string;
     parameters: Array<{ canonicalKey: string; labelZh: string; labelEn?: string; value: string }>;
-    colors: unknown[];
+    colors: Array<{
+      id: string;
+      productLineId: string;
+      nameZh: string;
+      nameEn: string;
+      officialColorCode: string;
+      imageUrl: string | null;
+      color: CatalogColor;
+    }>;
     images: Array<{ id: string; role: string; url: string }>;
     brandDefaults?: Record<string, unknown>;
     productOverrides?: Record<string, unknown>;
