@@ -21,7 +21,15 @@ export async function getVisibleCatalogRecords(): Promise<CatalogRecord[]> {
       const code = entry && typeof entry === "object" && "officialColorCode" in entry
         ? String((entry as { officialColorCode?: unknown }).officialColorCode || index + 1)
         : String(index + 1);
-      return { ...record, id: `${record.productLineId}?color=${encodeURIComponent(code)}`, color };
+      const colorId = entry && typeof entry === "object" && "id" in entry
+        ? String((entry as { id?: unknown }).id || index + 1)
+        : String(index + 1);
+      return {
+        ...record,
+        id: `${record.productLineId}?color=${encodeURIComponent(code)}&colorId=${encodeURIComponent(colorId)}`,
+        publishedColorId: colorId,
+        color,
+      };
     });
   });
   return mergePublishedWithStatic(published, []);

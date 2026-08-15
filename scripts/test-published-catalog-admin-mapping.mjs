@@ -22,6 +22,7 @@ const {
   validatePublishedParameterContract,
 } = await import("../lib/filaments/publishing/minimal-publish.ts");
 const { getColorCardImageUrl } = await import("../lib/filaments/catalog/image-roles.ts");
+const { resolvePublishedColorAsset } = await import("../lib/filaments/catalog/color-image-access.ts");
 
 const spoolDefault = {
   scope: "1kg",
@@ -94,8 +95,8 @@ assert.deepEqual(record.spool.netWeightOptionsG, [500, 1000, 3000]);
 assert.deepEqual(record.published.colors.map((item) => item.id), ["early", "late"]);
 assert.deepEqual(record.published.colors.map((item) => item.productLineId), ["test-material", "test-material"]);
 assert.equal(record.published.colors[0].officialColorCode, "E");
-assert.equal(record.published.colors[0].imageUrl, "/api/filament-assets?key=filament-imports%2Ftest%2Fearly.jpg");
-assert.equal(getColorCardImageUrl(record), "/api/filament-assets?key=filament-imports%2Ftest%2Fearly.jpg");
+assert.equal(record.published.colors[0].imageUrl, "/api/filaments/color-image?sourceRunId=source-1&productKey=test-material&officialColorCode=E&colorId=early");
+assert.equal(getColorCardImageUrl({ ...record, publishedColorId: "early" }), record.published.colors[0].imageUrl);
 assert.equal(getColorCardImageUrl({
   ...record,
   productLineId: "another-product",
@@ -106,6 +107,34 @@ assert.equal(getColorCardImageUrl({
     ...record.color,
     digitalSwatch: { ...record.color.digitalSwatch, officialColorCode: "UNKNOWN" },
   },
+}), null);
+assert.equal(resolvePublishedColorAsset({
+  ...baseDraft.draft_data,
+  colors: [{ ...baseDraft.draft_data.colors[2], productLineId: "test-material" }],
+  images: [{
+    imageId: "early",
+    role: "color",
+    productLineId: "test-material",
+    r2ObjectKey: "filament-imports/test/early.jpg",
+  }],
+}, {
+  productKey: "test-material",
+  officialColorCode: "E",
+  colorId: "early",
+}), "filament-imports/test/early.jpg");
+assert.equal(resolvePublishedColorAsset({
+  ...baseDraft.draft_data,
+  colors: [{ ...baseDraft.draft_data.colors[2], productLineId: "test-material" }],
+  images: [{
+    imageId: "product",
+    role: "product",
+    productLineId: "test-material",
+    r2ObjectKey: "filament-imports/test/early.jpg",
+  }],
+}, {
+  productKey: "test-material",
+  officialColorCode: "E",
+  colorId: "early",
 }), null);
 assert.deepEqual(record.published.images.map((item) => item.id), ["product"]);
 assert.equal(record.published.parameters.length, 2);

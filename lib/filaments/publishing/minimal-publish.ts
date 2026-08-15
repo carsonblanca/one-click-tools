@@ -181,6 +181,23 @@ function publicAssetUrl(objectKey: string) {
     : null;
 }
 
+function colorImageUrl(input: {
+  assetKey: string;
+  colorId: string;
+  officialColorCode: string;
+  productKey: string;
+  sourceRunId: string;
+}) {
+  if (!input.assetKey.startsWith("filament-imports/")) return null;
+  const params = new URLSearchParams({
+    sourceRunId: input.sourceRunId,
+    productKey: input.productKey,
+    officialColorCode: input.officialColorCode,
+    colorId: input.colorId,
+  });
+  return `/api/filaments/color-image?${params.toString()}`;
+}
+
 function extractChineseColorName(rawSkuText: unknown): string {
   const raw = text(rawSkuText);
   if (!raw) return "";
@@ -191,9 +208,10 @@ function extractChineseColorName(rawSkuText: unknown): string {
   return /[㐀-鿿]/.test(candidate) ? candidate : "";
 }
 
-function mapColor(value: unknown, index: number, productKey: string) {
+function mapColor(value: unknown, index: number, productKey: string, sourceRunId: string) {
   const source = objectValue(value);
   const officialColorCode = text(source.officialColorCode);
+  const colorId = text(source.colorId) || text(source.matchKey) || `${productKey}-color-${index + 1}`;
   const nameZh =
     text(source.displayNameZhCN) ||
     text(source.nameZh) ||
@@ -203,7 +221,13 @@ function mapColor(value: unknown, index: number, productKey: string) {
   const rawHex = text(source.hexColor) || text(source.hex);
   const hex = /^#[0-9a-f]{6}$/i.test(rawHex) ? rawHex.toUpperCase() : null;
   const rgb = rgbFromHex(hex);
-  const imageUrl = publicAssetUrl(text(source.localImagePath));
+  const imageUrl = colorImageUrl({
+    assetKey: text(source.localImagePath),
+    colorId,
+    officialColorCode,
+    productKey,
+    sourceRunId,
+  });
   const color: CatalogColor = {
     colorNameZh: nameZh,
     colorNameEn: nameEn,
@@ -232,7 +256,7 @@ function mapColor(value: unknown, index: number, productKey: string) {
     }] : [],
   };
   return {
-    id: text(source.colorId) || text(source.matchKey) || `${productKey}-color-${index + 1}`,
+    id: colorId,
     productLineId: text(source.productLineId) || productKey,
     nameZh,
     nameEn,
@@ -306,7 +330,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
       (first.displayOrder ?? Number.MAX_SAFE_INTEGER) - (second.displayOrder ?? Number.MAX_SAFE_INTEGER)
       || first.index - second.index
     ))
-    .map((item, index) => mapColor(item.value, index, productKey));
+    .map((item, index) => mapColor(item.value, index, productKey, row.source_run_id));
   if (!colors.length) return null;
   const images = arrayValue(data.images).flatMap((value, index) => {
     const image = objectValue(value);
@@ -325,7 +349,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     labelEn: getParameterDefinition(canonicalKey)?.labelEn || canonicalKey,
     value,
   }));
-  const primary = colors[0]?.color || mapColor({}, 0, productKey).color;
+  const primary = colors[0]?.color || mapColor({}, 0, productKey, row.source_run_id).color;
   const materialType = text(row.material_type) || text(productLine.materialType);
   const netWeightField = normalizedParameters.fields.netWeight || "";
   const explicitNetWeightOptions = hasOwn(productOverrides, "netWeightOptionsG")
