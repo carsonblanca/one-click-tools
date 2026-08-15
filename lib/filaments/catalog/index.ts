@@ -5,3 +5,4 @@ export * from "./category-trees";
 export * from "./catalog-view-model";
 export * from "./brand-catalog";
 export * from "./localization";
+export * from "./material-taxonomy";

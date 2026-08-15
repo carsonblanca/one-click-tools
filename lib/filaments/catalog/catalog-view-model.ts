@@ -3,6 +3,7 @@ import { bambuPrinterTemplates } from "@/lib/filaments/presets/bambu/printers";
 import { CATALOG_RECORDS, type CatalogRecord } from "./mock-catalog-ext";
 import { approximateColorDistance, resolveColorFamily } from "./color-search";
 import type { ColorFamily, Finish } from "./mock-colors";
+import { recordMatchesTaxonomy } from "./material-taxonomy";
 
 export type PerformanceTag =
   | "easy-print" | "high-speed" | "high-strength" | "high-toughness"
@@ -156,8 +157,8 @@ export function getCompareValue(record: CatalogRecord, key: string) {
 }
 
 export function filterCatalogRecords({
-  selectedMaterial,
-  selectedVariant,
+  selectedMaterialId,
+  selectedSubtypeId,
   selectedBrand,
   selectedColorFamily,
   minRating,
@@ -168,8 +169,8 @@ export function filterCatalogRecords({
   searchHex,
   source = CATALOG_RECORDS,
 }: {
-  selectedMaterial: string | null;
-  selectedVariant: string | null;
+  selectedMaterialId: string | null;
+  selectedSubtypeId: string | null;
   selectedBrand: string | null;
   selectedColorFamily: ColorFamily | null;
   minRating: number;
@@ -182,11 +183,8 @@ export function filterCatalogRecords({
 }) {
   let records = [...source];
 
-  if (selectedMaterial) {
-    records = records.filter((record) => record.materialType === selectedMaterial);
-  }
-  if (selectedVariant) {
-    records = records.filter((record) => record.variant === selectedVariant);
+  if (selectedMaterialId || selectedSubtypeId) {
+    records = records.filter((record) => recordMatchesTaxonomy(record, selectedMaterialId, selectedSubtypeId));
   }
   if (selectedBrand) {
     records = records.filter((record) => record.brand === selectedBrand);

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import FilamentAdminEditor, { type FilamentAdminEditorDraft } from "@/components/admin/FilamentAdminEditor";
 import { requireAdminScope } from "@/lib/admin/auth";
 import { getFilamentDraftById } from "@/lib/filaments/imports/supabase-import-repository";
+import { legacySubtypeDefaults } from "@/lib/filaments/catalog/material-taxonomy";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -28,15 +29,32 @@ export default async function FilamentEditPage({ params }: { params: Promise<{ f
   const parameters = objectValue(data.parameters);
   const colors = objectArray(data.colors).length ? objectArray(data.colors) : objectArray(data.canonicalColors);
   const productKey = String(data.productKey || productLine.productKey || productLine.productLineId || row.draft_key);
+  const taxonomy = objectValue(productLine.taxonomy);
+  const materialType = row.material_type || String(productLine.materialType || "");
+  const variant = row.variant || String(productLine.variant || "");
+  const materialId = String(taxonomy.materialId || `material:${materialType.toLocaleLowerCase("en-US")}`);
+  const legacyTaxonomy = legacySubtypeDefaults({ materialType, productKey, productLine: row.product_line_name || String(productLine.name || ""), variant });
+  const storedLabelZh = String(productLine.variantZh || data.variantZh || "");
+  const meaningfulLabelZh = storedLabelZh && storedLabelZh.toLocaleLowerCase("en-US") !== variant.toLocaleLowerCase("en-US")
+    ? storedLabelZh
+    : legacyTaxonomy.zh;
   const editorDraft: FilamentAdminEditorDraft = {
     id: row.id,
     sourceRunId: row.source_run_id,
     productName: row.product_line_name || String(productLine.name || ""),
     productKey,
     brandId: row.brand_id,
-    materialType: row.material_type || String(productLine.materialType || ""),
+    materialType,
     series: String(productLine.series || ""),
-    variant: row.variant || String(productLine.variant || ""),
+    variant,
+    taxonomy: {
+      materialId,
+      subtypeId: String(taxonomy.subtypeId || `subtype:${materialId}:${legacyTaxonomy.id}`),
+      labelZh: String(taxonomy.labelZh || meaningfulLabelZh),
+      labelEn: String(taxonomy.labelEn || legacyTaxonomy.en),
+      sortOrder: typeof taxonomy.sortOrder === "number" && Number.isFinite(taxonomy.sortOrder) ? taxonomy.sortOrder : legacyTaxonomy.order,
+      enabled: taxonomy.enabled !== false,
+    },
     netWeightG: positiveNumber(productLine.netWeightG),
     netWeightOptionsG: Array.isArray(productLine.netWeightOptionsG) ? productLine.netWeightOptionsG.filter((item): item is number => typeof item === "number" && item > 0) : [],
     filamentDiameterMm: positiveNumber(productLine.diameterMm),

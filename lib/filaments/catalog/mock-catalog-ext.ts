@@ -14,6 +14,14 @@ export type CatalogRecord = {
   productLine: string;
   productLineId?: string;
   publishedColorId?: string;
+  taxonomy?: {
+    materialId: string;
+    subtypeId: string;
+    labelZh: string;
+    labelEn: string;
+    sortOrder: number;
+    enabled: boolean;
+  };
   parameterStatus?: "complete" | "partial" | "missing";
   color: CatalogColor;
   spool: SpoolSpec;
