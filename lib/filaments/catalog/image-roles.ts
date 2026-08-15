@@ -8,8 +8,9 @@ export function getColorCardImageUrl(record: CatalogRecord) {
   const matching = record.published?.colors.find((color) => (
     color.productLineId === productKey
     && color.officialColorCode === officialColorCode
+    && (!record.publishedColorId || color.id === record.publishedColorId)
   ));
-  return matching?.imageUrl?.startsWith("/api/filament-assets?key=")
+  return matching?.imageUrl?.startsWith("/api/filaments/color-image?")
     ? matching.imageUrl
     : null;
 }

@@ -13,6 +13,7 @@ export type CatalogRecord = {
   variantZh: string;
   productLine: string;
   productLineId?: string;
+  publishedColorId?: string;
   parameterStatus?: "complete" | "partial" | "missing";
   color: CatalogColor;
   spool: SpoolSpec;
