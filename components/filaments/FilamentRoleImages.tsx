@@ -13,13 +13,13 @@ export function ColorCardImage({ record }: { record: CatalogRecord }) {
 
   return (
     <div
-      className="group/color-image relative z-0 aspect-square w-[43%] max-w-[111px] min-w-[80px] lg:hover:z-30"
+      className="group/color-image relative z-0 aspect-square w-[120px] max-w-full lg:hover:z-30"
       data-color-image-slot
       data-product-key={productKey}
       data-official-color-code={officialColorCode}
     >
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl transition-transform duration-200 ease-out lg:group-hover/color-image:scale-[1.7]" data-color-image-frame>
+        <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl transition-transform duration-200 ease-out lg:group-hover/color-image:scale-[1.7] 2xl:group-hover/color-image:scale-[1.5]" data-color-image-frame>
           {available ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
