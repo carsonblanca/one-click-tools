@@ -21,36 +21,15 @@ import {
   type BrandSort,
   getLocalizedFilamentColorName,
   getLocalizedFinishLabel,
-  getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
   hasDownloadableProductPreset,
+  buildMaterialTaxonomy,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
 import BrandLogo from "./BrandLogo";
 import { ColorCardImage } from "./FilamentRoleImages";
-
-type MaterialVariantMap = Record<string, string[]>;
-
-const MATERIAL_VARIANTS: MaterialVariantMap = {
-  PLA: ["Basic", "Matte", "Silk", "High Speed", "Tough", "Aero", "CF", "Glow", "Wood", "Marble"],
-  PETG: ["Basic", "HF", "CF", "GF", "Translucent", "ESD"],
-  PET: ["CF"],
-  TPU: ["85A", "90A", "95A", "98A", "AMS Compatible"],
-  ABS: ["Basic"],
-  ASA: ["Basic"],
-  PA: ["Basic", "CF", "GF"],
-  PC: ["Basic"],
-  PVA: ["Basic"],
-  HIPS: ["Basic"],
-  Support: ["Basic"],
-  PEEK: ["Basic"],
-  PEI: ["Basic"],
-  Other: ["Basic"],
-};
-
-const MATERIAL_TYPES = ["PLA", "PETG", "PET", "TPU", "ABS", "ASA", "PA", "PC", "PEEK", "PEI", "PVA", "HIPS", "Support", "Other"];
 
 function downloadJson(fileName: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -143,10 +122,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     sortLabel: "Sort",
     uploadImage: "Upload image",
     any: "Any",
-    colorCode: "Color code",
-    physicalReference: "Physical swatch",
-    images: "images",
-    noPhysicalSwatch: "No physical swatch",
     selectPrinter: "Select printer",
     paramsPending: "Parameters Pending",
     presetsUnavailable: "No verified manufacturer or product preset is available.",
@@ -197,10 +172,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     sortLabel: "排序",
     uploadImage: "上传图片",
     any: "不限",
-    colorCode: "颜色编码",
-    physicalReference: "实拍参考",
-    images: "张图片",
-    noPhysicalSwatch: "暂无实拍",
     selectPrinter: "选择打印机",
     paramsPending: "参数待补充",
     presetsUnavailable: "该系列暂无已验证的厂家或产品预设。",
@@ -251,10 +222,6 @@ const LABELS: Record<Locale, Record<string, string>> = {
     sortLabel: "排序",
     uploadImage: "上傳圖片",
     any: "不限",
-    colorCode: "顏色編碼",
-    physicalReference: "實拍參考",
-    images: "張圖片",
-    noPhysicalSwatch: "暫無實拍",
     selectPrinter: "選擇印表機",
     paramsPending: "參數待補充",
     presetsUnavailable: "該系列暫無已驗證的廠家或產品預設。",
@@ -278,14 +245,6 @@ function getDisplayBrand(brand: string): string {
   return BRAND_SHORT_MAP[brand] || brand;
 }
 
-function variantCount(source: CatalogRecord[], materialType: string, variant: string): number {
-  return source.filter((r) => r.materialType === materialType && r.variant === variant).length;
-}
-
-function materialCount(source: CatalogRecord[], materialType: string): number {
-  return source.filter((r) => r.materialType === materialType).length;
-}
-
 function brandCount(source: CatalogRecord[], brandName: string): number {
   return source.filter((r) => r.brand === brandName).length;
 }
@@ -296,8 +255,8 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
 
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
+  const [selectedSubtypeId, setSelectedSubtypeId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     minRating: 0,
     selectedFinish: null as Finish | null,
@@ -330,16 +289,17 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
     return map;
   }, [catalogRecords]);
 
-  const availableVariants = useMemo(() => {
-    if (!selectedMaterial) return [];
-    const all = MATERIAL_VARIANTS[selectedMaterial] || [];
-    return all.filter((v) => variantCount(catalogRecords, selectedMaterial, v) > 0);
-  }, [selectedMaterial, catalogRecords]);
+  const taxonomyRecords = useMemo(
+    () => selectedBrand ? catalogRecords.filter((record) => record.brand === selectedBrand) : catalogRecords,
+    [catalogRecords, selectedBrand],
+  );
+  const materialTaxonomy = useMemo(() => buildMaterialTaxonomy(taxonomyRecords, locale), [taxonomyRecords, locale]);
+  const selectedMaterial = materialTaxonomy.find((material) => material.id === selectedMaterialId) || null;
 
   const records = useMemo(
     () => filterCatalogRecords({
-      selectedMaterial,
-      selectedVariant,
+      selectedMaterialId,
+      selectedSubtypeId,
       selectedBrand,
       selectedColorFamily: null,
       searchHex,
@@ -350,7 +310,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
       selectedPerformanceTags: [],
       source: catalogRecords,
     }),
-    [catalogRecords, selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
+    [catalogRecords, selectedMaterialId, selectedSubtypeId, selectedBrand, searchHex, filters],
   );
 
   const selectedRecords = selectedIds
@@ -396,8 +356,8 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
   };
 
   const resetFilters = () => {
-    setSelectedMaterial(null);
-    setSelectedVariant(null);
+    setSelectedMaterialId(null);
+    setSelectedSubtypeId(null);
     setSelectedBrand(null);
     setSearchHex(null);
     setColorQuery("");
@@ -408,13 +368,13 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
     setFilters({ minRating: 0, selectedFinish: null, hasPhysicalSwatch: false, hasVerifiedPreset: false });
   };
 
-  const hasActiveFilters = selectedBrand || selectedMaterial || selectedVariant || searchHex
+  const hasActiveFilters = selectedBrand || selectedMaterialId || selectedSubtypeId || searchHex
     || filters.minRating > 0 || filters.selectedFinish || filters.hasPhysicalSwatch || filters.hasVerifiedPreset;
 
   const summaryParts: string[] = [];
   if (selectedBrand) summaryParts.push(selectedBrand);
-  if (selectedMaterial) summaryParts.push(selectedMaterial);
-  if (selectedVariant) summaryParts.push(getLocalizedVariantEffectLabel(selectedVariant, locale));
+  if (selectedMaterial) summaryParts.push(selectedMaterial.label);
+  if (selectedSubtypeId) summaryParts.push(selectedMaterial?.subtypes.find((subtype) => subtype.id === selectedSubtypeId)?.label || selectedSubtypeId);
 
   const btnClass = (active: boolean) =>
     `rounded-xl px-3 py-2 text-sm whitespace-nowrap transition ${active ? activeClass : inactiveClass}`;
@@ -541,17 +501,15 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
       <div className={sidePanelClass}>
         <ToolLabel>{t.materialType}</ToolLabel>
         <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
-          {MATERIAL_TYPES.map((mat) => {
-            const count = materialCount(catalogRecords, mat);
+          {materialTaxonomy.map((material) => {
             return (
-              <button key={mat} onClick={() => {
-                setSelectedMaterial(selectedMaterial === mat ? null : mat);
-                setSelectedVariant(null);
+              <button key={material.id} data-taxonomy-id={material.id} onClick={() => {
+                setSelectedMaterialId(selectedMaterialId === material.id ? null : material.id);
+                setSelectedSubtypeId(null);
               }}
-                className={`rounded-xl px-3 py-2 text-sm transition ${selectedMaterial === mat ? activeClass : inactiveClass}`}
+                className={`rounded-xl px-3 py-2 text-sm transition ${selectedMaterialId === material.id ? activeClass : inactiveClass}`}
               >
-                {mat}
-                {count > 0 ? ` (${count})` : ""}
+                {material.label} ({material.count})
               </button>
             );
           })}
@@ -565,14 +523,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
             <p className={`text-xs ${isDark ? "text-white/40" : "text-[#8A8173]"}`}>{t.selectMaterialFirst}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {MATERIAL_VARIANTS[selectedMaterial]?.map((v) => {
-                const count = variantCount(catalogRecords, selectedMaterial, v);
+              {selectedMaterial.subtypes.map((subtype) => {
                 return (
-                  <button key={v} onClick={() => setSelectedVariant(selectedVariant === v ? null : v)}
-                    className={`rounded-xl px-3 py-2 text-sm transition ${selectedVariant === v ? activeClass : inactiveClass}`}
+                  <button key={subtype.id} data-taxonomy-id={subtype.id} onClick={() => setSelectedSubtypeId(selectedSubtypeId === subtype.id ? null : subtype.id)}
+                    className={`rounded-xl px-3 py-2 text-sm transition ${selectedSubtypeId === subtype.id ? activeClass : inactiveClass}`}
                   >
-                    {getLocalizedVariantEffectLabel(v, locale)}
-                    {count > 0 ? ` (${count})` : ""}
+                    {subtype.label} ({subtype.count})
                   </button>
                 );
               })}
@@ -689,71 +645,46 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                 const c = record.color;
                 const colorName = getLocalizedFilamentColorName(c, locale);
                 const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
-                const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
                 const detailProductKey = record.productLineId || record.id.split("?")[0];
                 const detailColorCode = c.digitalSwatch?.officialColorCode || "";
                 const detailHref = `/filaments/${encodeURIComponent(detailProductKey)}${detailColorCode ? `?color=${encodeURIComponent(detailColorCode)}` : ""}`;
 
                 return (
-                  <article key={record.id}
-                    className={`min-w-0 rounded-[22px] border p-4 shadow-sm transition ${
+                  <article key={record.id} data-filament-color-card
+                    className={`min-w-0 rounded-[22px] border p-3.5 shadow-sm transition ${
                       isDark ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20 hover:border-[#2563EB]/30"
                     }`}
                   >
-                    <div className="grid grid-cols-[minmax(0,2fr)_minmax(112px,1fr)] items-center gap-4">
-                      <div className="flex min-w-0 items-center justify-center" data-color-image-region>
+                    <div className="grid grid-cols-[minmax(0,2fr)_minmax(112px,1fr)] items-center gap-3">
+                      <div className="flex min-h-[160px] min-w-0 items-center justify-center sm:min-h-[170px]" data-color-image-region>
                         <ColorCardImage record={record} />
                       </div>
 
-                      <div className="min-w-0 self-stretch py-1">
+                      <div className="min-w-0 self-stretch">
                         <h3 className="line-clamp-2 text-base font-semibold leading-snug">
                           {colorName}
                         </h3>
                         {effectLabel ? (
-                          <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] ${isDark ? "border-white/10 text-white/45" : "border-[#D8CCB8] text-[#8A8173]"}`}>
+                          <span className={`mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] ${isDark ? "border-white/10 text-white/45" : "border-[#D8CCB8] text-[#8A8173]"}`}>
                             {effectLabel}
                           </span>
                         ) : null}
-                        <div className={`mt-4 flex min-w-0 items-center gap-2 text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`} data-brand-logo-slot>
+                        <div className={`mt-3 flex min-w-0 items-center gap-2 text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`} data-brand-logo-slot>
                           <BrandLogo brand={record.brand} size={20} />
                           <span className="min-w-0 truncate">{getDisplayBrand(record.brand)}</span>
                         </div>
-                        <div className={`mt-1 line-clamp-2 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>
+                        <div className={`mt-1.5 line-clamp-2 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>
                           {record.productLine}
                         </div>
-                        <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
+                        {detailColorCode ? <div className={`mt-1 font-mono text-xs ${isDark ? "text-white/60" : "text-[#6B665D]"}`} data-official-color-code>{detailColorCode}</div> : null}
+                        <div className={`mt-1.5 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                           <Stars value={record.rating} />
                           <span className="whitespace-nowrap">{record.rating.toFixed(1)} ({record.reviewCount})</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Info grid */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.colorCode}</div>
-                        {c.hasDigitalSwatch && c.hex && c.rgb ? (
-                          <>
-                            <div className={isDark ? "text-white/80" : "text-[#18181B]"}>HEX: {c.hex}</div>
-                            <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>RGB: {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</div>
-                          </>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{colorName}</div>
-                        )}
-                      </div>
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.physicalReference}</div>
-                        {c.hasPhysicalSwatch ? (
-                          <div className={isDark ? "text-white/80" : "text-[#18181B]"}>{c.physicalSwatchCount} {t.images}</div>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{t.noPhysicalSwatch}</div>
-                        )}
-                        <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>{transLabel}</div>
-                      </div>
-                    </div>
-
-
-                    <div className="mt-4">
+                    <div className="mt-2">
                       <div className="flex gap-2">
                         <select
                           value={cardPrinters[record.id] || ""}
@@ -779,12 +710,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                           {presetsDisabled ? t.noPreset : (matchPreset ? t.downloadPreset : t.noPreset)}
                         </button>
                       </div>
-                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
+                      <p className={`mt-3 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
                         {presetsDisabled ? t.presetsUnavailable : t.presetNoGcode}
                       </p>
                     </div>
 
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-5 flex gap-2">
                       <Link href={detailHref}
                         className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
                           isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"

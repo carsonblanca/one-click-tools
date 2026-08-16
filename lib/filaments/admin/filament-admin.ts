@@ -8,6 +8,14 @@ export type FilamentAdminPatch = {
   materialType?: string;
   series?: string;
   variant?: string;
+  taxonomy?: {
+    materialId: string;
+    subtypeId: string;
+    labelZh: string;
+    labelEn: string;
+    sortOrder: number;
+    enabled: boolean;
+  };
   netWeightG?: number | null;
   netWeightOptionsG?: number[];
   filamentDiameterMm?: number | null;
@@ -94,7 +102,7 @@ export function summarizeFilamentDraft(row: FilamentDraftRow) {
 export function applyFilamentAdminPatch(row: FilamentDraftRow, patch: FilamentAdminPatch) {
   if (!patch || typeof patch !== "object" || Array.isArray(patch)) throw new Error("invalid_patch");
   const allowed = new Set([
-    "productName", "productKey", "brandId", "materialType", "series", "variant",
+    "productName", "productKey", "brandId", "materialType", "series", "variant", "taxonomy",
     "netWeightG", "netWeightOptionsG", "filamentDiameterMm", "colors", "parameters",
     "parameterUpdates", "clearParameterKeys", "images", "spoolAndPackaging", "compatibility", "notes", "evidence", "reviewStatus",
     "publicationStatus", "enabled", "brandDefaults", "productOverrides",
@@ -123,6 +131,16 @@ export function applyFilamentAdminPatch(row: FilamentDraftRow, patch: FilamentAd
   if (patch.materialType !== undefined) productLine.materialType = requiredText(patch.materialType, "material_type").toUpperCase();
   if (patch.series !== undefined) productLine.series = cleanText(patch.series, "series");
   if (patch.variant !== undefined) productLine.variant = cleanText(patch.variant, "variant");
+  if (patch.taxonomy !== undefined) {
+    const taxonomy = patch.taxonomy;
+    if (!taxonomy || typeof taxonomy !== "object" || Array.isArray(taxonomy)) throw new Error("invalid_taxonomy");
+    const materialId = requiredText(taxonomy.materialId, "taxonomy_material_id");
+    const subtypeId = requiredText(taxonomy.subtypeId, "taxonomy_subtype_id");
+    const labelZh = requiredText(taxonomy.labelZh, "taxonomy_label_zh");
+    const labelEn = requiredText(taxonomy.labelEn, "taxonomy_label_en");
+    if (typeof taxonomy.sortOrder !== "number" || !Number.isFinite(taxonomy.sortOrder)) throw new Error("invalid_taxonomy_sort_order");
+    productLine.taxonomy = { materialId, subtypeId, labelZh, labelEn, sortOrder: taxonomy.sortOrder, enabled: taxonomy.enabled !== false };
+  }
   if (patch.netWeightG !== undefined) productLine.netWeightG = positiveNumberOrNull(patch.netWeightG, "net_weight");
   if (patch.filamentDiameterMm !== undefined) productLine.diameterMm = positiveNumberOrNull(patch.filamentDiameterMm, "diameter");
   if (patch.netWeightOptionsG !== undefined) {

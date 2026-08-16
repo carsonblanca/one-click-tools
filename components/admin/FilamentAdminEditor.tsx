@@ -14,6 +14,14 @@ export type FilamentAdminEditorDraft = {
   materialType: string;
   series: string;
   variant: string;
+  taxonomy: {
+    materialId: string;
+    subtypeId: string;
+    labelZh: string;
+    labelEn: string;
+    sortOrder: number;
+    enabled: boolean;
+  };
   netWeightG: number | null;
   netWeightOptionsG: number[];
   filamentDiameterMm: number | null;
@@ -60,6 +68,12 @@ function optionalPositiveNumber(value: string, field: string) {
   return parsed;
 }
 
+function finiteNumber(value: string, field: string) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) throw new Error(`${field} 必须是数字。`);
+  return parsed;
+}
+
 function numberList(value: string) {
   if (!value.trim()) return [];
   const parsed = value.split(/[,，\s]+/).filter(Boolean).map(Number);
@@ -91,6 +105,10 @@ export default function FilamentAdminEditor({ draft }: { draft: FilamentAdminEdi
   const [materialType, setMaterialType] = useState(draft.materialType);
   const [series, setSeries] = useState(draft.series);
   const [variant, setVariant] = useState(draft.variant);
+  const [taxonomyLabelZh, setTaxonomyLabelZh] = useState(draft.taxonomy.labelZh);
+  const [taxonomyLabelEn, setTaxonomyLabelEn] = useState(draft.taxonomy.labelEn);
+  const [taxonomySortOrder, setTaxonomySortOrder] = useState(String(draft.taxonomy.sortOrder));
+  const [taxonomyEnabled, setTaxonomyEnabled] = useState(draft.taxonomy.enabled);
   const [netWeightG, setNetWeightG] = useState(draft.netWeightG?.toString() || "");
   const [netWeightOptionsG, setNetWeightOptionsG] = useState(draft.netWeightOptionsG.join(", "));
   const [filamentDiameterMm, setFilamentDiameterMm] = useState(draft.filamentDiameterMm?.toString() || "");
@@ -129,6 +147,14 @@ export default function FilamentAdminEditor({ draft }: { draft: FilamentAdminEdi
         materialType: materialType.trim(),
         series: series.trim(),
         variant: variant.trim(),
+        taxonomy: {
+          materialId: draft.taxonomy.materialId,
+          subtypeId: draft.taxonomy.subtypeId,
+          labelZh: taxonomyLabelZh.trim(),
+          labelEn: taxonomyLabelEn.trim(),
+          sortOrder: finiteNumber(taxonomySortOrder, "材料细分排序"),
+          enabled: taxonomyEnabled,
+        },
         netWeightG: optionalPositiveNumber(netWeightG, "净重"),
         netWeightOptionsG: numberList(netWeightOptionsG),
         filamentDiameterMm: optionalPositiveNumber(filamentDiameterMm, "线径"),
@@ -183,6 +209,20 @@ export default function FilamentAdminEditor({ draft }: { draft: FilamentAdminEdi
         <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-[#18202A]">产品资料</h2><p className="mt-1 text-sm text-[#667281]">{summary}</p></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />启用此耗材</label></div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[{ label: "产品名称", value: productName, setter: setProductName }, { label: "productKey", value: productKey, setter: setProductKey }, { label: "品牌 Slug", value: brandId, setter: setBrandId }, { label: "材料类型", value: materialType, setter: setMaterialType }, { label: "系列", value: series, setter: setSeries }, { label: "变体", value: variant, setter: setVariant }, { label: "净重（g）", value: netWeightG, setter: setNetWeightG }, { label: "多重量规格（g，逗号分隔）", value: netWeightOptionsG, setter: setNetWeightOptionsG }, { label: "线径（mm）", value: filamentDiameterMm, setter: setFilamentDiameterMm }].map((field) => <label key={field.label} className="text-sm font-medium text-[#334155]">{field.label}<input value={field.value} onChange={(event) => field.setter(event.target.value)} className="mt-1 w-full rounded-lg border border-[#CBD3DC] px-3 py-2 text-[#18202A]" /></label>)}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-[#D9E0E7] bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><h2 className="text-lg font-semibold text-[#18202A]">前台材料细分</h2><p className="mt-1 text-sm text-[#667281]">前台筛选直接读取这里的名称、排序和可见状态；稳定 ID 不使用显示文字。</p></div>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={taxonomyEnabled} onChange={(event) => setTaxonomyEnabled(event.target.checked)} />在材料细分中显示</label>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="text-sm font-medium text-[#334155]">材料 stable ID<input readOnly value={draft.taxonomy.materialId} className="mt-1 w-full rounded-lg border border-[#CBD3DC] bg-[#F4F6F8] px-3 py-2 font-mono text-xs text-[#667281]" /></label>
+          <label className="text-sm font-medium text-[#334155]">细分 stable ID<input readOnly value={draft.taxonomy.subtypeId} className="mt-1 w-full rounded-lg border border-[#CBD3DC] bg-[#F4F6F8] px-3 py-2 font-mono text-xs text-[#667281]" /></label>
+          <label className="text-sm font-medium text-[#334155]">排序<input type="number" value={taxonomySortOrder} onChange={(event) => setTaxonomySortOrder(event.target.value)} className="mt-1 w-full rounded-lg border border-[#CBD3DC] px-3 py-2 text-[#18202A]" /></label>
+          <label className="text-sm font-medium text-[#334155]">中文名称<input value={taxonomyLabelZh} onChange={(event) => setTaxonomyLabelZh(event.target.value)} className="mt-1 w-full rounded-lg border border-[#CBD3DC] px-3 py-2 text-[#18202A]" /></label>
+          <label className="text-sm font-medium text-[#334155]">英文名称<input value={taxonomyLabelEn} onChange={(event) => setTaxonomyLabelEn(event.target.value)} className="mt-1 w-full rounded-lg border border-[#CBD3DC] px-3 py-2 text-[#18202A]" /></label>
         </div>
       </section>
 

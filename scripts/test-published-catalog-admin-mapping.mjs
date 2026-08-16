@@ -64,6 +64,15 @@ const baseDraft = {
     productLine: {
       name: "TEST MATERIAL",
       materialType: "PETG",
+      variantZh: "哑光",
+      taxonomy: {
+        materialId: "material:petg",
+        subtypeId: "product:test-material",
+        labelZh: "后台哑光",
+        labelEn: "Managed Matte",
+        sortOrder: 12,
+        enabled: true,
+      },
       netWeightG: 1000,
       netWeightOptionsG: [500, 1000, 3000],
     },
@@ -91,6 +100,14 @@ const record = mapPublishedDraftToCatalogRecord(baseDraft);
 assert.ok(record);
 assert.equal(record.brand, "Product Brand");
 assert.equal(record.brandZh, "管理品牌");
+assert.deepEqual(record.taxonomy, {
+  materialId: "material:petg",
+  subtypeId: "product:test-material",
+  labelZh: "后台哑光",
+  labelEn: "Managed Matte",
+  sortOrder: 12,
+  enabled: true,
+});
 assert.deepEqual(record.spool.netWeightOptionsG, [500, 1000, 3000]);
 assert.deepEqual(record.published.colors.map((item) => item.id), ["early", "late"]);
 assert.deepEqual(record.published.colors.map((item) => item.productLineId), ["test-material", "test-material"]);
@@ -142,6 +159,30 @@ assert.equal(record.published.parameters.find((item) => item.canonicalKey === "m
 assert.equal(record.published.parameters.some((item) => item.value === ""), false);
 assert.equal(record.published.brandDefaults.legalEntity, "Managed Brand Ltd.");
 assert.equal(record.published.spoolAndPackaging.noteZh, "产品覆盖");
+
+const legacyMatte = mapPublishedDraftToCatalogRecord({
+  ...baseDraft,
+  draft_key: "kexcelled-k5-pla-m",
+  product_line_name: "THE K5™ PLA M",
+  material_type: "PLA",
+  variant: "M",
+  draft_data: {
+    ...baseDraft.draft_data,
+    productKey: "kexcelled-k5-pla-m",
+    productLine: {
+      ...baseDraft.draft_data.productLine,
+      name: "THE K5™ PLA M",
+      materialType: "PLA",
+      variant: "M",
+      variantZh: "M",
+      taxonomy: undefined,
+    },
+  },
+});
+assert.ok(legacyMatte);
+assert.equal(legacyMatte.taxonomy.subtypeId, "subtype:material:pla:matte");
+assert.equal(legacyMatte.taxonomy.labelZh, "哑光");
+assert.equal(legacyMatte.taxonomy.labelEn, "Matte");
 
 assert.equal(mapPublishedDraftToCatalogRecord({
   ...baseDraft,

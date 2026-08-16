@@ -5,6 +5,7 @@ import {
   getParameterDefinition,
   normalizeStoredParameters,
 } from "@/lib/filaments/parameters/normalized-parameters";
+import { legacySubtypeDefaults } from "@/lib/filaments/catalog/material-taxonomy";
 
 export type PublishableDraftRow = {
   id: string;
@@ -351,6 +352,28 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
   }));
   const primary = colors[0]?.color || mapColor({}, 0, productKey, row.source_run_id).color;
   const materialType = text(row.material_type) || text(productLine.materialType);
+  const taxonomySource = objectValue(productLine.taxonomy);
+  const materialId = text(taxonomySource.materialId) || `material:${materialType.toLocaleLowerCase("en-US")}`;
+  const legacyTaxonomy = legacySubtypeDefaults({
+    materialType,
+    productKey,
+    productLine: text(row.product_line_name) || text(productLine.name),
+    variant: text(row.variant) || text(productLine.variant),
+  });
+  const rawVariant = text(row.variant) || text(productLine.variant);
+  const storedLabelZh = text(productLine.variantZh) || text(data.variantZh);
+  const meaningfulLabelZh = storedLabelZh && storedLabelZh.toLocaleLowerCase("en-US") !== rawVariant.toLocaleLowerCase("en-US")
+    ? storedLabelZh
+    : legacyTaxonomy.zh;
+  const subtypeId = text(taxonomySource.subtypeId) || `subtype:${materialId}:${legacyTaxonomy.id}`;
+  const taxonomy = {
+    materialId,
+    subtypeId,
+    labelZh: text(taxonomySource.labelZh) || meaningfulLabelZh,
+    labelEn: text(taxonomySource.labelEn) || legacyTaxonomy.en,
+    sortOrder: typeof taxonomySource.sortOrder === "number" && Number.isFinite(taxonomySource.sortOrder) ? taxonomySource.sortOrder : legacyTaxonomy.order,
+    enabled: taxonomySource.enabled !== false,
+  };
   const netWeightField = normalizedParameters.fields.netWeight || "";
   const explicitNetWeightOptions = hasOwn(productOverrides, "netWeightOptionsG")
     ? productOverrides.netWeightOptionsG
@@ -403,6 +426,7 @@ export function mapPublishedDraftToCatalogRecord(row: PublishableDraftRow): Cata
     variantZh: text(productLine.variantZh) || text(data.variantZh) || text(row.variant) || text(productLine.variant) || "",
     productLine: text(row.product_line_name) || text(productLine.name),
     productLineId: productKey,
+    taxonomy,
     parameterStatus: parameters.length ? "complete" : "missing",
     color: primary,
     spool: {
