@@ -656,7 +656,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                     }`}
                   >
                     <div className="grid grid-cols-[minmax(0,2fr)_minmax(112px,1fr)] items-center gap-3">
-                      <div className="flex min-h-[220px] min-w-0 items-center justify-center sm:min-h-[242px]" data-color-image-region>
+                      <div className="flex min-h-[200px] min-w-0 items-center justify-center sm:min-h-[205px]" data-color-image-region>
                         <ColorCardImage record={record} />
                       </div>
 
@@ -665,31 +665,31 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                           {colorName}
                         </h3>
                         {effectLabel ? (
-                          <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] ${isDark ? "border-white/10 text-white/45" : "border-[#D8CCB8] text-[#8A8173]"}`}>
+                          <span className={`mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] ${isDark ? "border-white/10 text-white/45" : "border-[#D8CCB8] text-[#8A8173]"}`}>
                             {effectLabel}
                           </span>
                         ) : null}
-                        <div className={`mt-2.5 flex min-w-0 items-center gap-2 text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`} data-brand-logo-slot>
+                        <div className={`mt-3 flex min-w-0 items-center gap-2 text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`} data-brand-logo-slot>
                           <BrandLogo brand={record.brand} size={20} />
                           <span className="min-w-0 truncate">{getDisplayBrand(record.brand)}</span>
                         </div>
-                        <div className={`mt-1 line-clamp-2 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>
+                        <div className={`mt-1.5 line-clamp-2 text-xs ${isDark ? "text-white/45" : "text-[#8A8173]"}`}>
                           {record.productLine}
                         </div>
-                        {detailColorCode ? <div className={`mt-0.5 font-mono text-xs ${isDark ? "text-white/60" : "text-[#6B665D]"}`} data-official-color-code>{detailColorCode}</div> : null}
-                        <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
+                        {detailColorCode ? <div className={`mt-1 font-mono text-xs ${isDark ? "text-white/60" : "text-[#6B665D]"}`} data-official-color-code>{detailColorCode}</div> : null}
+                        <div className={`mt-1.5 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                           <Stars value={record.rating} />
                           <span className="whitespace-nowrap">{record.rating.toFixed(1)} ({record.reviewCount})</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-2.5">
+                    <div className="mt-3">
                       <div className="flex gap-2">
                         <select
                           value={cardPrinters[record.id] || ""}
                           onChange={(e) => setCardPrinters((prev) => ({ ...prev, [record.id]: e.target.value }))}
-                          className={`min-w-0 flex-1 rounded-2xl border px-3 py-2 text-xs outline-none transition ${
+                          className={`min-w-0 flex-1 rounded-2xl border px-3 py-2.5 text-xs outline-none transition ${
                             isDark ? "border-white/10 bg-black/30 text-white" : "border-[#E5DED0] bg-[#F5F2EA] text-[#18181B]"
                           }`}
                         >
@@ -701,7 +701,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                         <button
                           onClick={() => { if (matchPreset && !presetsDisabled) downloadJson(buildPresetDownloadFileName(record), matchPreset.preset); }}
                           disabled={!matchPreset || presetsDisabled}
-                          className={`shrink-0 rounded-2xl px-4 py-2 text-xs font-medium transition ${
+                          className={`shrink-0 rounded-2xl px-4 py-2.5 text-xs font-medium transition ${
                             !matchPreset || presetsDisabled
                               ? "opacity-40 cursor-not-allowed " + (isDark ? "bg-white/10 text-white/40" : "bg-[#E8DFD0] text-[#8A8173]")
                               : isDark ? "bg-lime-300 text-black hover:bg-lime-200" : "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
@@ -710,19 +710,19 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                           {presetsDisabled ? t.noPreset : (matchPreset ? t.downloadPreset : t.noPreset)}
                         </button>
                       </div>
-                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
+                      <p className={`mt-3 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
                         {presetsDisabled ? t.presetsUnavailable : t.presetNoGcode}
                       </p>
                     </div>
 
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-5 flex gap-2">
                       <Link href={detailHref}
-                        className={`flex-1 rounded-2xl border px-3 py-2 text-center text-xs font-medium transition ${
+                        className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
                           isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"
                         }`}
                       >{t.detail}</Link>
                       <button onClick={() => toggleCompare(record.id)}
-                        className={`flex-1 rounded-2xl px-3 py-2 text-xs font-medium transition ${
+                        className={`flex-1 rounded-2xl px-3 py-2.5 text-xs font-medium transition ${
                           selectedIds.includes(record.id)
                             ? (isDark ? "bg-[#3B82F6] text-white" : "bg-[#2563EB] text-white")
                             : (isDark ? "border border-white/10 text-white/60 hover:bg-white/[0.05]" : "border border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]")
