@@ -656,7 +656,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                     }`}
                   >
                     <div className="grid grid-cols-[minmax(0,2fr)_minmax(112px,1fr)] items-center gap-3">
-                      <div className="flex min-h-[200px] min-w-0 items-center justify-center sm:min-h-[205px]" data-color-image-region>
+                      <div className="flex min-h-[160px] min-w-0 items-center justify-center sm:min-h-[170px]" data-color-image-region>
                         <ColorCardImage record={record} />
                       </div>
 
@@ -684,7 +684,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", catalogR
                       </div>
                     </div>
 
-                    <div className="mt-3">
+                    <div className="mt-2">
                       <div className="flex gap-2">
                         <select
                           value={cardPrinters[record.id] || ""}
