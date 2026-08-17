@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasAdminScope } from "@/lib/admin/permissions";
+import { readAdminApiSession } from "@/lib/admin/auth";
 import { readAdminSession } from "@/lib/admin/session";
 import {
   appendAdminAuditLog,
   deleteFilamentDraftsBySourceRunId,
   deleteFilamentImport,
+  getFilamentDraftBySourceRunId,
   getFilamentImportBySourceRunId,
 } from "@/lib/filaments/imports/supabase-import-repository";
 import {
@@ -15,6 +17,45 @@ export const runtime = "nodejs";
 
 function jsonError(error: string, code: string, status: number) {
   return NextResponse.json({ error, code }, { status });
+}
+
+// Machine/Bearer authenticated, READ-ONLY import readback for the KEXCELLED canary import.
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ sourceRunId: string }> },
+) {
+  const session = await readAdminApiSession(request);
+  if (!session) {
+    return jsonError("需要认证", "UNAUTHORIZED", 401);
+  }
+  if (!hasAdminScope(session.role, "candidate.view")) {
+    return jsonError("无权查看导入记录", "FORBIDDEN", 403);
+  }
+
+  const { sourceRunId } = await params;
+  if (!sourceRunId) {
+    return jsonError("缺少 sourceRunId", "MISSING_PARAM", 400);
+  }
+
+  const importRecord = await getFilamentImportBySourceRunId(sourceRunId);
+  const draft = await getFilamentDraftBySourceRunId(sourceRunId);
+
+  if (!importRecord && !draft) {
+    return jsonError("导入记录不存在", "NOT_FOUND", 404);
+  }
+
+  return NextResponse.json({
+    sourceRunId,
+    import: importRecord,
+    draft: draft || null,
+    draftData: draft ? draft.draft_data : null,
+    draftCount: draft ? 1 : 0,
+    identity: {
+      productLineName: draft?.product_line_name ?? null,
+      materialType: draft?.material_type ?? null,
+      variant: draft?.variant ?? null,
+    },
+  });
 }
 
 export async function DELETE(
@@ -41,7 +82,6 @@ export async function DELETE(
     const importRecord = await getFilamentImportBySourceRunId(sourceRunId);
 
     if (!importRecord) {
-      // 如果导入记录已不存在（可能已删除），仍尝试清理可能的残留草稿
       removedAdminDraftCount = await deleteFilamentDraftsBySourceRunId(sourceRunId);
       return NextResponse.json({
         deletedRunId: sourceRunId,
@@ -50,13 +90,8 @@ export async function DELETE(
       });
     }
 
-    // 1. Delete drafts
     removedAdminDraftCount = await deleteFilamentDraftsBySourceRunId(sourceRunId);
-
-    // 2. Delete import record
     await deleteFilamentImport(importRecord.id);
-
-    // 3. Best-effort R2 cleanup (package only; individual assets kept for safety)
     try {
       await deleteImportObjectFromR2({
         bucket: importRecord.r2Bucket,
@@ -65,8 +100,6 @@ export async function DELETE(
     } catch {
       // Non-blocking: R2 cleanup is best-effort
     }
-
-    // 4. Audit log
     try {
       await appendAdminAuditLog({
         actorId: session.actorId,
