@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evidence Pack → FIP Builder"
+  short_description: "将耗材 Evidence Pack 机械转换为标准 FIP 包"
+  default_prompt: "Use $evidence-pack-to-fip to convert an Evidence Pack ZIP into a validated .filament-import.zip without guessing data."
