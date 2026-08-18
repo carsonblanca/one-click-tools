@@ -2,6 +2,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { hasAdminScope } from "./permissions";
+import { authenticateOpenCodeBearer } from "./machine-auth";
 import { readAdminSession } from "./session";
 import type { AdminScope } from "./types";
 
@@ -78,4 +79,13 @@ export function adminRequestContext(request: NextRequest) {
     ip: forwarded?.split(",")[0]?.trim() || null,
     userAgent: request.headers.get("user-agent"),
   };
+}
+
+
+export async function readAdminApiSession(request: Pick<NextRequest, "headers">) {
+  const authorization = request.headers.get("authorization");
+  if (authorization) {
+    return authenticateOpenCodeBearer(authorization).session;
+  }
+  return readAdminSession();
 }
