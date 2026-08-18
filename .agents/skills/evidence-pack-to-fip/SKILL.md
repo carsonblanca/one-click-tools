@@ -22,7 +22,7 @@ Omit the output argument to write beside the input. Accept legacy Evidence Pack 
 ## Enforce the conversion contract
 
 - Require `capture.json`, `color-mappings.json`, `images.json`, `page.meta.json`, `page.txt`, and `README.md`.
-- Read product identity only from `capture.json`.
+- Resolve the product line with `scripts/product-identity-resolver.mjs`, in this order: SKU strings (structured.json tmall_sku_base, then color-mappings.json) → page.txt / README.md / title (official series words only) → `capture.json.productLine` as the canonical base. Never emit an empty product line when evidence carries a clear model; never append description words (e.g. never "THE K5™ ABS T 透明高透光").
 - Read colors only from `color-mappings.json`.
 - Treat `brand + productLine + officialColorCode` as the canonical color identity. Recover a missing code only from an explicit SKU pattern in `sourceText`; fail when no official code is available.
 - Merge spool and refill SKU rows sharing that identity into one color record; retain every SKU in `skuVariants`.

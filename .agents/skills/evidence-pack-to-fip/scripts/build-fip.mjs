@@ -5,8 +5,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, resolve } from "node:path";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { CANONICAL_PARAMETER_FIELDS, buildOcrParameterCandidates, stableHash } from "./parameter-enrichment.mjs";
+import { resolveKexcelledProductLine } from "./product-identity-resolver.mjs";
 
-const BUILDER_VERSION = "evidence-pack-to-fip.v3";
+const BUILDER_VERSION = "evidence-pack-to-fip.v4";
 const REQUIRED_EVIDENCE_FILES = [
   "capture.json",
   "color-mappings.json",
@@ -188,7 +189,7 @@ function buildFip(inputPath, outputPath) {
   const sourceRunId = `capture-${captureDigits}-${inputHash.slice(0, 12)}`;
   const sourceZipName = basename(inputPath);
   const warnings = [];
-  const productLine = stringValue(identity.productLine);
+  const productLine = resolveKexcelledProductLine(evidenceFiles, identity);
   const seenVariantIds = new Set();
   const sourceImages = new Map(evidenceImageMetadata.map((image) => [
     stringValue(image.localPath),
