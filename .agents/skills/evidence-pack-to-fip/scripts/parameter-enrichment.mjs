@@ -28,6 +28,7 @@ export const CANONICAL_PARAMETER_FIELDS = [
   "density",
   "diameterTolerance",
   // product-level
+  "materialType",
   "filamentDiameter",
   "netWeight",
 ];

@@ -6,9 +6,10 @@
 // build-fip.mjs:
 //   - candidateId is a stable 16-char hex hash (recomputed and compared)
 //   - canonicalKey is in the allowlist
-//   - unit is in the allowlist (or empty for drying which carries °C)
-//   - source.sourceImage and source.ocrTextPath are present and the referenced
-//     files exist in the FIP
+//   - unit is in the allowlist (or empty for text fields such as materialType)
+//   - provenance: OCR candidates carry source.sourceImage + source.ocrTextPath
+//     (files must exist in the FIP); evidence-backed candidates carry
+//     source.sourceFile + a non-empty source.snippet
 //   - contamination count is 0 (no foreignIntrusions, identityVerified === true)
 //
 // Usage:
@@ -26,6 +27,7 @@ const CANONICAL_KEYS = new Set([
   "dryingRecommendation",
   "density",
   "diameterTolerance",
+  "materialType",
   "filamentDiameter",
   "netWeight",
 ]);
@@ -86,12 +88,21 @@ function validateCandidates(candidates, files, productLine, imagesJson) {
     const src = c.source || {};
     const sourceImage = stringValue(src.sourceImage);
     const ocrTextPath = stringValue(src.ocrTextPath);
-    if (!sourceImage) issues.push(`candidate[${i}] missing sourceImage`);
-    else if (sourcePaths.size && !sourcePaths.has(sourceImage)) {
-      issues.push(`candidate[${i}] sourceImage not in images.json: ${sourceImage}`);
+    const sourceFile = stringValue(src.sourceFile);
+    const hasSnippet = stringValue(src.snippet) !== "";
+    if (sourceImage || ocrTextPath) {
+      if (!sourceImage) issues.push(`candidate[${i}] missing sourceImage`);
+      else if (sourcePaths.size && !sourcePaths.has(sourceImage)) {
+        issues.push(`candidate[${i}] sourceImage not in images.json: ${sourceImage}`);
+      }
+      if (!ocrTextPath) issues.push(`candidate[${i}] missing ocrTextPath`);
+      else if (!files[ocrTextPath]) issues.push(`candidate[${i}] ocrTextPath not bundled: ${ocrTextPath}`);
+      if (!hasSnippet) issues.push(`candidate[${i}] missing source snippet`);
+    } else {
+      // evidence-backed: requires explicit sourceFile + snippet provenance
+      if (!sourceFile) issues.push(`candidate[${i}] missing sourceFile`);
+      if (!hasSnippet) issues.push(`candidate[${i}] missing source snippet`);
     }
-    if (!ocrTextPath) issues.push(`candidate[${i}] missing ocrTextPath`);
-    else if (!files[ocrTextPath]) issues.push(`candidate[${i}] ocrTextPath not bundled: ${ocrTextPath}`);
     // contamination
     if (Array.isArray(c.foreignIntrusions) && c.foreignIntrusions.length) contamination += 1;
     if (c.identityVerified === false) contamination += 1;

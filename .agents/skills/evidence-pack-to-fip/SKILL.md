@@ -33,7 +33,10 @@ Omit the output argument to write beside the input. Accept legacy Evidence Pack 
 - Copy an image only when its normalized status is `available` and its `imagePath` exists in the Evidence Pack.
 - Copy image bytes unchanged into `assets/`; never download, transform, inspect visually, or infer color from an image.
 - Read `parameter-evidence.json` when present and mechanically map each row to `parameter-candidates.json`.
-- Preserve the raw `sourceText`; map `candidateField` to `fieldCandidate`; keep `value` empty and `reviewStatus` pending.
+- Bridge evidence rows to canonical candidates using the production canonical schema (`lib/filaments/parameters/normalized-parameters.ts`: `FILAMENT_PARAMETER_DEFINITIONS` / `resolveCanonicalParameterKey`): `materialType` is canonical, `diameter` is an alias of `filamentDiameter`, and `manufacturer` is NOT a canonical parameter. The script keeps a minimal compat map only because it runs as plain `node` with no TS loader; keep that map in sync with the canonical schema and do not extend it with custom fields.
+- Derive a candidate value only when the evidence row carries one: `materialType` from `capture.json.productIdentity.material`, `filamentDiameter` from identity diameter or a numeric value in the row's `sourceText`. Rows with no derivable value (e.g. `manufacturer`) stay evidence-only and never become candidates. Never invent values to inflate the candidate count.
+- Every evidence-backed candidate carries `source.sourceFile` (`parameter-evidence.json`) plus a non-empty `source.snippet`; it may omit `source.sourceImage`/`source.ocrTextPath`. A candidate with no provenance fails verification.
+- Preserve the raw `sourceText`; keep `reviewStatus` pending.
 - Never split ranges, convert units, normalize values, infer parameters, or write parameter values into `products.json`.
 - Read `ocr/index.json` and its `ocr/*.txt` when present and convert official `label + value [+ unit]` rows into canonical parameter candidates during this build. Never leave that work to the upload or draft-parsing stage.
 - Accept an OCR-derived parameter only with `canonicalKey`, `value`, `unit`, `sourceImage`, and `ocrSnippet`, and only when the OCR text carries the current product identity. Reject bare numbers, price blocks, SKU lists, recommendation rails, foreign product lines, and implausible values, and record every rejection in `evidence.json`.
@@ -50,7 +53,7 @@ The script validates its generated ZIP before writing it. Confirm its JSON summa
 - `productCount: 1`
 - the expected original SKU count and final official-code color count
 - report counts for merged variants, spool primaries, and refill variants
-- `parameterCandidateCount` equal to the input evidence row count plus identity and OCR candidates, or `0` when no source is present
+- `parameterCandidateCount` equal to the number of evidence rows with a derivable canonical value plus OCR candidates, or `0` when no source is present (evidence rows without a derivable value are preserved as evidence, not candidates)
 - `ocrSourceImageCount`, `ocrParameterCandidateCount`, and `ocrRejectedCount` match the OCR text actually bundled in the Evidence Pack
 - every `available` color resolves through `images.json` to an existing `assets/` file
 - placeholder and missing colors have an empty `imagePath`
