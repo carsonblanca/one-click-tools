@@ -31,6 +31,17 @@ export const CANONICAL_PARAMETER_FIELDS = [
   "materialType",
   "filamentDiameter",
   "netWeight",
+  // physical-property table (historical parser output; keys match production
+  // lib/filaments/parameters/normalized-parameters.ts)
+  "meltFlowIndex",
+  "heatDeflectionTemperature",
+  "vicatSofteningTemperature",
+  "tensileStrength",
+  "elongationAtBreak",
+  "flexuralStrength",
+  "flexuralModulus",
+  "unnotchedImpactStrength",
+  "notchedImpactStrength",
 ];
 
 const PRODUCT_LEVEL_KEYS = new Set(["filamentDiameter", "netWeight"]);

@@ -30,9 +30,20 @@ const CANONICAL_KEYS = new Set([
   "materialType",
   "filamentDiameter",
   "netWeight",
+  // physical-property table keys (historical parser output; match production
+  // lib/filaments/parameters/normalized-parameters.ts)
+  "meltFlowIndex",
+  "heatDeflectionTemperature",
+  "vicatSofteningTemperature",
+  "tensileStrength",
+  "elongationAtBreak",
+  "flexuralStrength",
+  "flexuralModulus",
+  "unnotchedImpactStrength",
+  "notchedImpactStrength",
 ]);
 
-const ALLOWED_UNITS = new Set(["°C", "mm", "mm/s", "g/cm³", "g", "kg", ""]);
+const ALLOWED_UNITS = new Set(["°C", "mm", "mm/s", "g/cm³", "g", "kg", "g/10min", "MPa", "%", "kJ/m²", ""]);
 
 function stableHash(parts) {
   return createHash("sha256").update(parts.join("|"), "utf8").digest("hex").slice(0, 16);

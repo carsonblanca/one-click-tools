@@ -6,6 +6,7 @@ import { basename, dirname, extname, resolve } from "node:path";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { CANONICAL_PARAMETER_FIELDS, buildOcrParameterCandidates, stableHash } from "./parameter-enrichment.mjs";
 import { resolveKexcelledProductLine } from "./product-identity-resolver.mjs";
+import { isOfficialPhysicalPropertyTable, parseOfficialPhysicalProperties } from "./physical-property-table.mjs";
 
 const BUILDER_VERSION = "evidence-pack-to-fip.v4";
 const REQUIRED_EVIDENCE_FILES = [
@@ -94,6 +95,29 @@ function stringValue(value) {
 
 function rawStringValue(value) {
   return typeof value === "string" ? value : "";
+}
+
+// Official physical-property table selection. The same table is often OCRed in
+// both a page screenshot block (screenshots/*) and a standalone product image
+// block (images/*); prefer the standalone image block so duplicate tables are
+// not treated as a genuine ambiguity. Reuses the historical parser unchanged.
+function selectOfficialPhysicalPropertyTableCompat(tables, productLine) {
+  const matches = tables.filter((table) => (
+    isOfficialPhysicalPropertyTable(stringValue(table?.text), productLine)
+  ));
+  if (matches.length <= 1) return matches[0] || null;
+  const standalone = matches.filter((table) => /^images\//.test(stringValue(table?.sourcePath)));
+  if (standalone.length === 1) return standalone[0];
+  fail(`Ambiguous official specification tables for ${productLine}: found ${matches.length}`);
+}
+
+function parsedFromPhysicalValue(value) {
+  const normalized = String(value).trim().replace(/[~～—−-]/g, "–").replace(/\s*–\s*/g, "–");
+  const range = normalized.match(/^(-?\d+(?:\.\d+)?)[–](-?\d+(?:\.\d+)?)$/);
+  if (range) return { operator: "range", value: null, min: parseFloat(range[1]), max: parseFloat(range[2]) };
+  const eq = normalized.match(/^(-?\d+(?:\.\d+)?)$/);
+  if (eq) return { operator: "eq", value: parseFloat(eq[1]), min: null, max: null };
+  return { operator: "eq", value: null, min: null, max: null };
 }
 
 function jsonBytes(value) {
@@ -437,7 +461,49 @@ function buildFip(inputPath, outputPath) {
       reviewStatus: "pending_review",
     });
   }
-  const allCandidates = [...evidenceCandidates, ...ocrCandidates];
+  // Physical properties from the official specification table in ocr/ocr-raw.txt.
+  // The table parsing logic is the historical parser ported verbatim; only the
+  // table selection (standalone image block preferred) and the candidate shape
+  // are adapted to the current skill contract.
+  const ocrRawText = evidenceFiles["ocr/ocr-raw.txt"]
+    ? strFromU8(evidenceFiles["ocr/ocr-raw.txt"])
+    : "";
+  const physicalCandidates = [];
+  let officialPhysicalTableSource = null;
+  if (ocrRawText) {
+    const tables = ocrRawText.split(/(?=^SOURCE:\s)/m).map((block) => ({
+      sourcePath: stringValue(block.match(/^SOURCE:\s*(.+)$/m)?.[1]),
+      text: block,
+    }));
+    const specTable = selectOfficialPhysicalPropertyTableCompat(tables, productLine);
+    if (specTable) {
+      officialPhysicalTableSource = specTable.sourcePath;
+      for (const property of parseOfficialPhysicalProperties(specTable.text)) {
+        const parsed = parsedFromPhysicalValue(property.normalizedValue);
+        const normalizedValue = `${property.normalizedValue}${property.unit}`;
+        physicalCandidates.push({
+          candidateId: stableHash([productLine || "", property.canonicalKey, normalizedValue, ""]),
+          canonicalKey: property.canonicalKey,
+          rawValue: property.sourceText,
+          normalizedValue,
+          unit: property.unit,
+          parsed,
+          confidence: "official_table",
+          source: {
+            ocrTextPath: "",
+            sourceImage: "",
+            sourceFile: "ocr/ocr-raw.txt",
+            snippet: property.sourceText,
+          },
+          identityVerified: true,
+          foreignIntrusions: [],
+          plausible: true,
+          reviewStatus: "pending_review",
+        });
+      }
+    }
+  }
+  const allCandidates = [...evidenceCandidates, ...physicalCandidates, ...ocrCandidates];
   const product = {
     brand,
     productLine,
@@ -458,6 +524,7 @@ function buildFip(inputPath, outputPath) {
   const evidenceSourceNames = [
     ...REQUIRED_EVIDENCE_FILES,
     ...(evidenceFiles["parameter-evidence.json"] ? ["parameter-evidence.json"] : []),
+    ...(evidenceFiles["ocr/ocr-raw.txt"] ? ["ocr/ocr-raw.txt"] : []),
     ...ocrSourceNames,
   ];
   const sourceFiles = evidenceSourceNames.map((name) => `evidence/source/${name}`);
@@ -489,6 +556,11 @@ function buildFip(inputPath, outputPath) {
     capture,
     pageMeta,
     parameterCandidateEvidence: rawParameterEvidence,
+    physicalPropertyEvidence: {
+      sourceFile: officialPhysicalTableSource ? "ocr/ocr-raw.txt" : null,
+      tableSource: officialPhysicalTableSource,
+      acceptedCount: physicalCandidates.length,
+    },
     ocrParameterEvidence: {
       sourceImageCount: ocrResult.sourceImageCount,
       ocrTextCount: ocrResult.ocrTextCount,
@@ -530,6 +602,8 @@ function buildFip(inputPath, outputPath) {
     coreParameterCandidateCount: allCandidates.length,
     ocrSourceImageCount: ocrResult.sourceImageCount,
     ocrTextCount: ocrResult.ocrTextCount,
+    physicalParameterCandidateCount: physicalCandidates.length,
+    physicalTableSource: officialPhysicalTableSource,
     ocrParameterCandidateCount: ocrCandidates.length,
     ocrSuspectCandidateCount: ocrSuspectCandidates.length,
     ocrRejectedCount: ocrResult.rejections.length,
@@ -556,8 +630,8 @@ function buildFip(inputPath, outputPath) {
     builderVersion: BUILDER_VERSION,
     sourceRunId,
     productLine,
-    detectedParameters: ocrCandidates.map((c) => c.canonicalKey),
-    generatedCandidates: ocrCandidates.map((c) => ({
+    detectedParameters: [...ocrCandidates, ...physicalCandidates].map((c) => c.canonicalKey),
+    generatedCandidates: [...ocrCandidates, ...physicalCandidates].map((c) => ({
       candidateId: c.candidateId,
       canonicalKey: c.canonicalKey,
       normalizedValue: c.normalizedValue,
