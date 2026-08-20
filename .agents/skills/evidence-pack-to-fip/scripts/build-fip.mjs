@@ -97,6 +97,14 @@ function rawStringValue(value) {
   return typeof value === "string" ? value : "";
 }
 
+function text(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizedIdentity(value) {
+  return text(value).toUpperCase().replace(/[™®\s]/g, "").replace(/[^A-Z0-9]/g, "");
+}
+
 // Official physical-property table selection. The same table is often OCRed in
 // both a page screenshot block (screenshots/*) and a standalone product image
 // block (images/*); prefer the standalone image block so duplicate tables are
@@ -109,6 +117,93 @@ function selectOfficialPhysicalPropertyTableCompat(tables, productLine) {
   const standalone = matches.filter((table) => /^images\//.test(stringValue(table?.sourcePath)));
   if (standalone.length === 1) return standalone[0];
   fail(`Ambiguous official specification tables for ${productLine}: found ${matches.length}`);
+}
+
+function explicitDiameterAndWeight(files, meta, mappings, productLine) {
+  const target = normalizedIdentity(productLine);
+  const sources = [];
+  const addSource = (sourceFile, value) => {
+    for (const line of text(value).split(/\r?\n/).map((item) => item.trim()).filter(Boolean)) {
+      if (normalizedIdentity(line).includes(target)) sources.push({ sourceFile, sourceText: line });
+    }
+  };
+  for (const mapping of mappings) addSource("color-mappings.json", mapping.sourceText);
+  if (files["page.txt"]) addSource("page.txt", strFromU8(files["page.txt"]));
+  addSource("page.meta.json", text(meta.userProvidedProductName) || text(meta.pageTitle));
+
+  const patterns = [
+    /(?<![\d.])(\d+(?:\.\d+)?)\s*(mm|毫米)?\s*[\/／]\s*(\d+(?:\.\d+)?)\s*(kg|g|公斤|千克|克)(?![A-Za-z\u4e00-\u9fff])/giu,
+    /(?<![\d.])(\d+(?:\.\d+)?)\s*(mm|毫米)?\s*[-–—]\s*[A-Z0-9]{2,12}\s*[-–—]\s*(\d+(?:\.\d+)?)\s*(kg|g|公斤|千克|克)(?![A-Za-z\u4e00-\u9fff])/giu,
+  ];
+  const matches = [];
+  const seen = new Set();
+  for (const source of sources) {
+    for (const pattern of patterns) {
+      for (const match of source.sourceText.matchAll(pattern)) {
+        const diameter = Number(match[1]);
+        const weight = Number(match[3]);
+        const unit = match[4].toLowerCase();
+        const weightGrams = ["kg", "公斤", "千克"].includes(unit) ? weight * 1000 : weight;
+        if (!Number.isFinite(diameter) || !Number.isFinite(weightGrams)) continue;
+        const key = `${diameter}|${weightGrams}|${source.sourceFile}|${source.sourceText}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        matches.push({ ...source, diameter, weightGrams, rawValue: match[0] });
+      }
+    }
+  }
+
+  const diameterValues = [...new Set(matches.map((item) => item.diameter))];
+  const weightValues = [...new Set(matches.map((item) => item.weightGrams))];
+  const conflicts = [];
+  if (diameterValues.length > 1) conflicts.push({ field: "filamentDiameter", values: diameterValues.map((value) => `${value} mm`) });
+  if (weightValues.length > 1) conflicts.push({ field: "netWeight", values: weightValues.map((value) => `${value} g`) });
+  const candidates = [];
+  if (diameterValues.length === 1) {
+    const evidence = matches.find((item) => item.diameter === diameterValues[0]);
+    candidates.push({
+      candidateId: stableHash([productLine || "", "filamentDiameter", `${diameterValues[0]}mm`, ""]),
+      canonicalKey: "filamentDiameter",
+      rawValue: `${diameterValues[0]} mm`,
+      normalizedValue: `${diameterValues[0]}mm`,
+      unit: "mm",
+      parsed: { operator: "eq", value: diameterValues[0], min: null, max: null },
+      confidence: "explicit_evidence",
+      source: {
+        ocrTextPath: "",
+        sourceImage: "",
+        sourceFile: evidence.sourceFile,
+        snippet: evidence.sourceText,
+      },
+      identityVerified: true,
+      foreignIntrusions: [],
+      plausible: true,
+      reviewStatus: "pending_review",
+    });
+  }
+  if (weightValues.length === 1) {
+    const evidence = matches.find((item) => item.weightGrams === weightValues[0]);
+    candidates.push({
+      candidateId: stableHash([productLine || "", "netWeight", `${weightValues[0]}g`, ""]),
+      canonicalKey: "netWeight",
+      rawValue: `${weightValues[0]} g`,
+      normalizedValue: `${weightValues[0]}g`,
+      unit: "g",
+      parsed: { operator: "eq", value: weightValues[0], min: null, max: null },
+      confidence: "explicit_evidence",
+      source: {
+        ocrTextPath: "",
+        sourceImage: "",
+        sourceFile: evidence.sourceFile,
+        snippet: evidence.sourceText,
+      },
+      identityVerified: true,
+      foreignIntrusions: [],
+      plausible: true,
+      reviewStatus: "pending_review",
+    });
+  }
+  return { candidates, conflicts };
 }
 
 function parsedFromPhysicalValue(value) {
@@ -478,7 +573,11 @@ function buildFip(inputPath, outputPath) {
     const specTable = selectOfficialPhysicalPropertyTableCompat(tables, productLine);
     if (specTable) {
       officialPhysicalTableSource = specTable.sourcePath;
-      for (const property of parseOfficialPhysicalProperties(specTable.text)) {
+      const specTableText = specTable.text.replace(
+        /简支梁(无缺口|缺口)冲击\s*\n\s*强度/g,
+        (match, kind) => `${kind}冲击强度`,
+      );
+      for (const property of parseOfficialPhysicalProperties(specTableText)) {
         const parsed = parsedFromPhysicalValue(property.normalizedValue);
         const normalizedValue = `${property.normalizedValue}${property.unit}`;
         physicalCandidates.push({
@@ -503,7 +602,30 @@ function buildFip(inputPath, outputPath) {
       }
     }
   }
-  const allCandidates = [...evidenceCandidates, ...physicalCandidates, ...ocrCandidates];
+  const explicitDiameterWeight = explicitDiameterAndWeight(
+    evidenceFiles,
+    pageMeta,
+    rawColors,
+    productLine,
+  );
+  for (const conflict of explicitDiameterWeight.conflicts) {
+    warnings.push(
+      `explicit ${conflict.field} skipped: conflicting evidence ${conflict.values.join(", ")}`,
+    );
+  }
+  const seenCandidates = new Set();
+  const allCandidates = [];
+  for (const candidate of [
+    ...explicitDiameterWeight.candidates,
+    ...evidenceCandidates,
+    ...physicalCandidates,
+    ...ocrCandidates,
+  ]) {
+    const dedupKey = `${candidate.canonicalKey}|${candidate.normalizedValue}`;
+    if (seenCandidates.has(dedupKey)) continue;
+    seenCandidates.add(dedupKey);
+    allCandidates.push(candidate);
+  }
   const product = {
     brand,
     productLine,

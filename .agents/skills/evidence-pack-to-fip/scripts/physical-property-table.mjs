@@ -32,8 +32,19 @@ export function isOfficialPhysicalPropertyTable(tableText, productLine) {
   const identityMatches = productIdentityAliases(productLine)
     .some((alias) => normalizedTable.includes(alias));
   if (!identityMatches) return false;
-  return /基本物性指标/.test(tableText)
-    || (/密度/.test(tableText) && /测试标准/.test(tableText));
+  if (/基本物性指标/.test(tableText)) return true;
+  if (/密度/.test(tableText) && /测试标准/.test(tableText)) return true;
+  // Narrow relaxation for garbled OCR headers (e.g. ABS P density label read as
+  // "BE (g/cm?)"): accept a table only when the product identity matches AND
+  // several canonical physical-property labels are still readable AND ISO
+  // test-standard evidence is present. This admits rows whose canonical labels
+  // parse; garbled fields (BE, PASI, EE PR, ...) still produce no candidate.
+  const lines = text(tableText).split(/\r?\n/);
+  const readableLabels = PHYSICAL_PROPERTIES.filter(([, pattern]) => (
+    lines.some((line) => pattern.test(line))
+  )).length;
+  const hasIsoEvidence = /\bISO\s*\d+\b/i.test(tableText);
+  return readableLabels >= 3 && hasIsoEvidence;
 }
 
 export function selectOfficialPhysicalPropertyTable(tables, productLine) {
@@ -72,7 +83,10 @@ function numericValue(sourceText, rawName) {
     .replace(/\bISO\s*\d+\b/gi, " ");
   const range = withoutUnit.match(/(\d+(?:\.\d+)?)\s*[~～\-–—−]\s*(\d+(?:\.\d+)?)/);
   if (range) return `${range[1]}–${range[2]}`;
-  return withoutUnit.match(/(?:^|\s)(\d+(?:\.\d+)?)(?=\s|$)/)?.[1] || "";
+  // Smallest compatibility fix: accept a number immediately followed by a
+  // supported unit (e.g. 85°C, 95°C, 101°C, 40MPa, 10%) in addition to the
+  // historical whitespace/end-of-line requirement. No fuzzy value parsing.
+  return withoutUnit.match(/(?:^|\s)(\d+(?:\.\d+)?)(?=\s|$|°|℃|MPa|%|g\/|g$|kJ|KJ)/)?.[1] || "";
 }
 
 function conditionFor(field, lines, standard) {
