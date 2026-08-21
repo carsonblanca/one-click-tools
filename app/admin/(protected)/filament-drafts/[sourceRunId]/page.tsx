@@ -69,7 +69,9 @@ export default async function FilamentDraftPage({
 
   const data = objectValue(draft.draft_data);
   const productLine = objectValue(data.productLine);
-  const parameters = objectValue(objectValue(data.parameters).fields);
+  const parameterBlock = objectValue(data.parameters);
+  const parameters = objectValue(parameterBlock.fields);
+  const parameterCandidates = arrayValue(parameterBlock.candidates);
   const canonicalColors = arrayValue(data.canonicalColors);
   const colors = canonicalColors.length ? canonicalColors : arrayValue(data.colors);
   const images = arrayValue(data.images);
@@ -105,13 +107,27 @@ export default async function FilamentDraftPage({
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <h2 className="font-semibold">参数候选</h2>
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-          {Object.entries(parameters).map(([key, value]) => (
-            <div key={key}><dt className="text-xs text-slate-500">{key}</dt><dd>{String(value)}</dd></div>
-          ))}
-          {Object.keys(parameters).length === 0 ? <p className="text-sm text-slate-500">暂无参数候选</p> : null}
-        </dl>
+        <h2 className="font-semibold">参数候选{parameterCandidates.length ? `（${parameterCandidates.length}）` : ""}</h2>
+        {parameterCandidates.length ? (
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            {parameterCandidates.map((candidate, index) => (
+              <div key={text(candidate.candidateId) || index}>
+                <dt className="text-xs text-slate-500">{text(candidate.canonicalKey) || "未命名参数"}</dt>
+                <dd>{text(candidate.normalizedDisplayValue) || text(candidate.normalizedValue) || text(candidate.rawValue) || "—"}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : <p className="mt-3 text-sm text-slate-500">暂无参数候选</p>}
+        {Object.keys(parameters).length ? (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm text-slate-500">已接受参数（{Object.keys(parameters).length} 项）</summary>
+            <dl className="mt-2 grid gap-3 sm:grid-cols-2">
+              {Object.entries(parameters).map(([key, value]) => (
+                <div key={key}><dt className="text-xs text-slate-500">{key}</dt><dd>{String(value)}</dd></div>
+              ))}
+            </dl>
+          </details>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
