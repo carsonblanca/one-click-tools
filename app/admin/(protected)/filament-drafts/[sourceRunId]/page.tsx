@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
@@ -94,6 +95,12 @@ export default async function FilamentDraftPage({
         <p className="mt-2 text-sm text-slate-600">
           {draft.brand_id.toUpperCase()} · {draft.material_type || text(productLine.materialType) || "材料待补充"} · 未发布
         </p>
+        <Link
+          className="mt-4 inline-flex rounded bg-cyan-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-cyan-800"
+          href={`/admin/filament-drafts/${encodeURIComponent(sourceRunId)}/edit`}
+        >
+          编辑草稿
+        </Link>
       </header>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5">
