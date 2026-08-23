@@ -86,42 +86,97 @@ const PRODUCT_LABELS: Record<string, string> = {
   datasheetUrl: "官方资料链接",
 };
 
+// 仅用于显示，内部 value 保持不变
+const SOURCE_STATUS_LABELS: Record<string, string> = {
+  manual: "人工填写",
+  official: "官方数据",
+  ai: "AI整理",
+  calculated: "计算值",
+  estimated: "估算值",
+  missing: "缺失",
+  unknown: "未知",
+};
+
+// 人工可选择的来源（已移除“缺失”：未填写 ≠ 来源缺失）
+const SOURCE_STATUS_SELECTABLE = ["manual", "official"] as const;
+// 预留来源，仅展示、暂不可选（保持内部 value 不变）
+const SOURCE_STATUS_RESERVED = ["ai", "calculated", "estimated"] as const;
+
+// 仅用于显示，内部 value 保持不变
+const AVAILABILITY_LABELS: Record<string, string> = {
+  available: "可用",
+  unavailable: "停产",
+  unknown: "未知",
+};
+
+const AVAILABILITY_OPTIONS = ["available", "unavailable", "unknown"];
+
+type ProductLineState = {
+  productLineName: string;
+  material: string;
+  variant: string;
+  diameter: string;
+  netWeight: string;
+  description: string;
+  officialUrl: string;
+  datasheetUrl: string;
+  note: string;
+};
+
+type ExistingDraft = {
+  sourceRunId: string;
+  productLine: ProductLineState;
+  parameters: ParameterRow[];
+  colors: ColorRow[];
+  presets: PresetRow[];
+};
+
 export default function ManualFilamentForm({
   brand,
   parameterTemplate,
+  existingDraft,
 }: {
   brand: ManualBrand;
   parameterTemplate: ManualParameterTemplateItem[];
+  existingDraft?: ExistingDraft;
 }) {
   const router = useRouter();
-  const [productLine, setProductLine] = useState({
-    productLineName: "",
-    material: "",
-    variant: "",
-    diameter: "1.75",
-    netWeight: "1000",
-    description: "",
-    officialUrl: "",
-    datasheetUrl: "",
-    note: "",
-  });
+  const [productLine, setProductLine] = useState<ProductLineState>(
+    existingDraft?.productLine ?? {
+      productLineName: "",
+      material: "",
+      variant: "",
+      diameter: "1.75",
+      netWeight: "1000",
+      description: "",
+      officialUrl: "",
+      datasheetUrl: "",
+      note: "",
+    },
+  );
   const [parameters, setParameters] = useState<ParameterRow[]>(() =>
-    parameterTemplate.map((item) => ({
+    existingDraft?.parameters ?? parameterTemplate.map((item) => ({
       ...item,
       value: "",
       sourceStatus: "manual",
       sourceNote: "",
     })),
   );
-  const [colors, setColors] = useState<ColorRow[]>(() => [
-    { ...makeColor(), colorNameZh: "黑色", colorNameEn: "Black" },
-    { ...makeColor(), colorNameZh: "白色", colorNameEn: "White" },
-  ]);
-  const [presets, setPresets] = useState<PresetRow[]>([]);
+  const [colors, setColors] = useState<ColorRow[]>(
+    existingDraft?.colors ?? [
+      { ...makeColor(), colorNameZh: "黑色", colorNameEn: "Black" },
+      { ...makeColor(), colorNameZh: "白色", colorNameEn: "White" },
+    ],
+  );
+  const [presets, setPresets] = useState<PresetRow[]>(existingDraft?.presets ?? []);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
     const initial = new Set<string>();
-    const groups = groupParameters(parameterTemplate.map((item) => ({ ...item, value: "", sourceStatus: "manual" as const, sourceNote: "" })));
-    groups.slice(0, 3).forEach(([category]) => initial.add(category));
+    const sourceRows = existingDraft?.parameters ?? parameterTemplate.map((item) => ({ ...item, value: "", sourceStatus: "manual" as const, sourceNote: "" }));
+    const groups = groupParameters(sourceRows);
+    // 有已填写参数的分类默认展开；全为空的分类默认折叠
+    groups.forEach(([category, rows]) => {
+      if (rows.some((row) => row.value.trim())) initial.add(category);
+    });
     return initial;
   });
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -232,37 +287,41 @@ export default function ManualFilamentForm({
         return;
       }
 
+      const payload = {
+        brandId: brand.brandId,
+        productLine,
+        parameters,
+        colors: colors.map((color) => ({
+          id: color.id,
+          colorNameZh: color.colorNameZh,
+          colorNameEn: color.colorNameEn,
+          officialColorCode: color.officialColorCode,
+          availability: color.availability,
+          image: color.image ? {
+            objectKey: color.image.objectKey,
+            url: color.image.url,
+            fileName: color.image.fileName,
+            contentType: color.image.contentType,
+            size: color.image.size,
+            displayMode: "contain",
+          } : null,
+          note: color.note,
+        })),
+        presets,
+      };
+
       const response = await fetch("/api/admin/manual-filaments", {
-        method: "POST",
+        method: existingDraft ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandId: brand.brandId,
-          productLine,
-          parameters,
-          colors: colors.map((color) => ({
-            id: color.id,
-            colorNameZh: color.colorNameZh,
-            colorNameEn: color.colorNameEn,
-            officialColorCode: color.officialColorCode,
-            availability: color.availability,
-            image: color.image ? {
-              objectKey: color.image.objectKey,
-              url: color.image.url,
-              fileName: color.image.fileName,
-              contentType: color.image.contentType,
-              size: color.image.size,
-              displayMode: "contain",
-            } : null,
-            note: color.note,
-          })),
-          presets,
-        }),
+        body: JSON.stringify(existingDraft
+          ? { sourceRunId: existingDraft.sourceRunId, ...payload }
+          : payload),
       });
       const body = await response.json().catch(() => null) as { redirectUrl?: string; error?: string } | null;
       if (!response.ok || !body?.redirectUrl) {
         throw new Error(body?.error || `保存失败 HTTP ${response.status}`);
       }
-      setMessage({ type: "success", text: "已保存手动耗材草稿。" });
+      setMessage({ type: "success", text: existingDraft ? "已更新手动耗材草稿。" : "已保存手动耗材草稿。" });
       router.push(body.redirectUrl);
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "保存失败" });
@@ -284,8 +343,8 @@ export default function ManualFilamentForm({
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-slate-500">品牌管理 / 添加耗材</p>
-        <h1 className="text-2xl font-semibold">添加耗材：{brand.brandName}</h1>
+        <p className="text-sm text-slate-500">{existingDraft ? "审核队列 / 编辑草稿" : "品牌管理 / 添加耗材"}</p>
+        <h1 className="text-2xl font-semibold">{existingDraft ? "编辑草稿" : `添加耗材：${brand.brandName}`}</h1>
         <p className="mt-2 text-sm text-slate-600">人工录入草稿，不触发 FIP、OCR、Evidence 队列或发布。</p>
       </header>
 
@@ -359,7 +418,11 @@ export default function ManualFilamentForm({
                 <input className="rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="中文颜色名" value={color.colorNameZh} onChange={(event) => updateColor(color.id, { colorNameZh: event.target.value })} />
                 <input className="rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="英文颜色名" value={color.colorNameEn} onChange={(event) => updateColor(color.id, { colorNameEn: event.target.value })} />
                 <input className="rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="暂无官方色号" value={color.officialColorCode} onChange={(event) => updateColor(color.id, { officialColorCode: event.target.value })} />
-                <input className="rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="available" value={color.availability} onChange={(event) => updateColor(color.id, { availability: event.target.value })} />
+                <select className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm" value={color.availability} onChange={(event) => updateColor(color.id, { availability: event.target.value })}>
+                  {(AVAILABILITY_OPTIONS.includes(color.availability) ? AVAILABILITY_OPTIONS : [color.availability, ...AVAILABILITY_OPTIONS]).map((value) => (
+                    <option key={value} value={value}>{AVAILABILITY_LABELS[value] ?? value}</option>
+                  ))}
+                </select>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-3">
@@ -448,43 +511,55 @@ function ParameterFieldBlock({
 }) {
   const [showNote, setShowNote] = useState(false);
   const hasNote = row.sourceNote.trim().length > 0;
+  const isFilled = row.value.trim().length > 0;
+  const isSelectableSource = (SOURCE_STATUS_SELECTABLE as readonly string[]).includes(row.sourceStatus);
 
   return (
-    <div className="rounded border border-slate-200 bg-slate-50 p-2">
+    <div className="rounded border border-slate-200 bg-slate-50 p-1.5">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate text-sm font-medium" title={row.labelZh}>{row.labelZh}</div>
-          <div className="truncate text-xs text-slate-400" title={row.labelEn}>{row.labelEn}</div>
+          <div className="truncate text-sm font-medium leading-tight" title={row.labelZh}>{row.labelZh}</div>
+          <div className="truncate text-[10px] leading-tight text-slate-300" title={row.labelEn}>{row.labelEn}</div>
         </div>
-        {row.value.trim() ? <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" /> : null}
+        {isFilled ? <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" /> : null}
       </div>
-      <div className="mt-2 grid grid-cols-[1fr_64px] gap-1.5">
+      <div className="mt-1 grid grid-cols-[1fr_54px] gap-1.5">
         <input
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
+          className="rounded border border-slate-300 px-2 py-0.5 text-sm"
           placeholder="值"
           value={row.value}
           disabled={disabled}
           onChange={(event) => onUpdate(row.key, { value: event.target.value })}
         />
         <input
-          className="rounded border border-slate-300 px-1 py-1 text-center text-sm"
+          className="w-full rounded border border-slate-300 px-1 py-0.5 text-center text-sm"
           placeholder="单位"
           value={row.unit || ""}
           disabled={disabled}
           onChange={(event) => onUpdate(row.key, { unit: event.target.value })}
         />
       </div>
-      <div className="mt-1.5 flex items-center gap-1.5">
-        <select
-          className="rounded border border-slate-300 px-1 py-1 text-xs"
-          value={row.sourceStatus}
-          disabled={disabled}
-          onChange={(event) => onUpdate(row.key, { sourceStatus: event.target.value as ParameterRow["sourceStatus"] })}
-        >
-          <option value="manual">manual</option>
-          <option value="official">official</option>
-          <option value="missing">missing</option>
-        </select>
+      <div className="mt-1 flex items-center gap-1.5">
+        {isFilled ? (
+          <select
+            className="max-w-[104px] rounded border border-slate-300 px-1 py-0.5 text-xs"
+            value={row.sourceStatus}
+            disabled={disabled}
+            onChange={(event) => onUpdate(row.key, { sourceStatus: event.target.value as ParameterRow["sourceStatus"] })}
+          >
+            {SOURCE_STATUS_SELECTABLE.map((value) => (
+              <option key={value} value={value}>{SOURCE_STATUS_LABELS[value] ?? value}</option>
+            ))}
+            {SOURCE_STATUS_RESERVED.map((value) => (
+              <option key={value} value={value} disabled>{SOURCE_STATUS_LABELS[value]}（预留）</option>
+            ))}
+            {!isSelectableSource ? (
+              <option value={row.sourceStatus} disabled>{SOURCE_STATUS_LABELS[row.sourceStatus] ?? row.sourceStatus}</option>
+            ) : null}
+          </select>
+        ) : (
+          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-400">未填写</span>
+        )}
         <button
           type="button"
           onClick={() => setShowNote((current) => !current)}
@@ -495,7 +570,7 @@ function ParameterFieldBlock({
       </div>
       {(showNote || hasNote) ? (
         <input
-          className="mt-1.5 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          className="mt-1 w-full rounded border border-slate-300 px-2 py-0.5 text-sm"
           placeholder="来源备注"
           value={row.sourceNote}
           disabled={disabled}
