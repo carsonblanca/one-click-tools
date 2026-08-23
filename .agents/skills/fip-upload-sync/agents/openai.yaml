@@ -1,0 +1,4 @@
+interface:
+  display_name: "FIP Upload Sync"
+  short_description: "上传 .filament-import.zip 到后台 FIP 导入接口，不自动发布"
+  default_prompt: "Use $fip-upload-sync to validate and mechanically upload .filament-import.zip packages without auto-publishing or approving drafts."
