@@ -12,6 +12,7 @@ import {
   createFilamentDrafts,
   createFilamentImport,
   deleteFilamentImport,
+  listRecentFilamentDrafts,
   listRecentFilamentImports,
   type JsonValue,
 } from "@/lib/filaments/imports/supabase-import-repository";
@@ -130,15 +131,64 @@ function draftData(input: {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await readAdminSession();
   if (!session || !hasAdminScope(session.role, "candidate.view")) {
     return jsonError("无权查看导入记录", "FORBIDDEN", 403);
   }
   try {
     const imports = await listRecentFilamentImports();
+    const originalSourceRunId = request.nextUrl.searchParams.get("originalSourceRunId")?.trim() || "";
+    const matchingImports = originalSourceRunId
+      ? imports.filter((item) => {
+          const manifest = objectValue(item.manifest);
+          return item.sourceRunId === originalSourceRunId
+            || stringValue(manifest.originalSourceRunId) === originalSourceRunId;
+        })
+      : imports;
+
+    if (originalSourceRunId) {
+      const drafts = await listRecentFilamentDrafts();
+      const importIds = new Set(matchingImports.map((item) => item.id));
+      return NextResponse.json({
+        results: matchingImports.flatMap((item) => drafts
+          .filter((draft) => draft.import_id === item.id)
+          .map((draft) => {
+            const data = objectValue(draft.draft_data);
+            const colors = Array.isArray(data.colors) ? data.colors : [];
+            const images = Array.isArray(data.images) ? data.images : [];
+            const parameters = objectValue(data.parameters);
+            const candidates = Array.isArray(parameters.candidates) ? parameters.candidates : [];
+            const fields = objectValue(parameters.fields);
+            return {
+              importId: item.id,
+              sourceRunId: draft.source_run_id,
+              originalSourceRunId: stringValue(objectValue(item.manifest).originalSourceRunId),
+              productLine: draft.product_line_name || stringValue(objectValue(data.productLine).name),
+              materialType: draft.material_type || stringValue(objectValue(data.productLine).materialType),
+              createdAt: draft.created_at,
+              updatedAt: draft.updated_at,
+              status: draft.status,
+              reviewStatus: draft.review_status,
+              publicationStatus: draft.publication_status,
+              colorCount: colors.length,
+              imageCount: images.length,
+              parameterCandidateCount: candidates.length,
+              parameterFieldCount: Object.keys(fields).length,
+              complete: colors.length > 0 && images.length >= colors.length && candidates.length > 0,
+              draftPath: `/admin/filament-drafts/${encodeURIComponent(draft.source_run_id)}`,
+              editPath: `/admin/filament-drafts/${encodeURIComponent(draft.source_run_id)}/edit`,
+              deletable: draft.status === "draft"
+                && draft.review_status !== "approved"
+                && draft.publication_status !== "published",
+            };
+          })),
+        matchedImportCount: importIds.size,
+      });
+    }
+
     return NextResponse.json({
-      results: imports.map((item) => ({
+      results: matchingImports.map((item) => ({
         fileName: item.originalFilename,
         recognizedBrand: item.brandId.toUpperCase(),
         productLine: stringValue(objectValue(item.manifest).productLine),

@@ -975,6 +975,27 @@ Task: Diagnose failed Vercel build for imported draft edit deployment.
 - Local writes: 1 draft row updated. Production uploads, deletes, publication, and deployment: 0.
 - Next action: human review may correct or approve candidates; publication remains blocked until review.
 
+## 2026-08-23 — ABS catalog production deployment checkpoint
+
+- Release scope: four ABS catalog data sets, filament-library UI/detail pages, and editable admin draft workflow; unrelated brand, experiment, and auxiliary files excluded.
+- Release commits: `6583de0` and `09862fb`.
+- Local validation: production build PASS; remote Vercel build PASS.
+- Deployment: READY and aliased to `https://one-click-tools.com`; deployment id `dpl_ARmis7GojydvnR66kEbi4CryfvLy`.
+- Draft data prepared: Glow `13` candidates, ABS P `10`, transparent ABS T `16`, high-stability ABS `18`; all remain `status=draft`, `review_status=pending_review`, `publication_status=draft`.
+- Production FIP upload: pending. The authenticated upload page is open, but browser file injection was blocked by the browser security boundary; no FIP upload, duplicate creation, delete, approval, or publish occurred through the browser.
+- Next action: select the four validated FIP files manually on the open Production upload page, then verify the four new draft readbacks before human approval.
+
+## 2026-08-23 — Audit fip-upload-sync for OpenCode use
+
+- Audit scope: `.agents/skills/fip-upload-sync/SKILL.md`, `agents/openai.yaml`, and `scripts/upload-fip.mjs`; no code or Skill changes made.
+- Discoverability: PASS in the current workspace; the Skill manifest and default prompt are present. The Skill is currently untracked and was not included in the Vercel release commit, which is acceptable only when OpenCode runs from this same workspace.
+- FIP preflight: PASS 4/4 with no writes. Counts and package integrity passed for Glow, ABS P, ABS T, and High-Stability.
+- Endpoint behavior: the script logs in through `/api/admin/auth/login` and uploads only to `POST /api/admin/filament-import/kexcelled-evidence`; it contains no publish or delete call.
+- Production readiness: CONDITIONAL, not unattended-safe. The default base URL is localhost and production requires explicit `--base-url https://one-click-tools.com`; credentials must be supplied through secure environment variables.
+- Risks found: invalid files are skipped while valid files continue instead of failing the whole batch; the one-time retry can create a duplicate draft after an accepted upload with a lost response; there is no automatic post-upload readback or count verification; upload success does not itself prove colors/images/parameters persisted correctly.
+- Production action: no FIP upload, delete, approval, publication, or database write performed by this audit.
+- Recommended next action: harden the Skill with all-file preflight stop, idempotency/source-run duplicate detection, and mandatory post-upload readback before allowing OpenCode production use.
+
 ## 2026-08-23 — Requested local-test synchronization to one-click-tools.com
 
 - Task: assess whether the current local test state can be synchronized to the public Vercel site.
@@ -983,3 +1004,14 @@ Task: Diagnose failed Vercel build for imported draft edit deployment.
 - Vercel check: the local CLI could not start with the default npm cache because of an `EPERM` ownership error; a temporary-cache retry did not return a usable authentication result within the check window.
 - Production action: no deployment, publish, upload, delete, or database write performed.
 - Required next action: select and freeze an exact release scope (or provide a clean release commit), then rerun build and Vercel authorization checks before production deployment.
+
+## 2026-08-23 — Harden fip-upload-sync for online batch handoff
+
+- Task: adapt the OpenCode upload Skill to the required online, complete-package, deduplicated, human-review workflow.
+- Changes: upload mode now defaults to `https://one-click-tools.com` and rejects non-HTTPS targets unless `--allow-local` is explicit; all packages are preflighted before any write; one invalid package blocks the whole batch; ambiguous uploads are not retried; failed packages return a repair handoff for code/image recognition or manual completion.
+- Production readback: added a filtered admin import readback response exposing product line, material, colors, images, parameter candidates, status, publication state, and safe-to-delete eligibility for duplicate cleanup.
+- Deduplication: after the new draft readback passes, only older same-source/same-category deletable drafts are removed. Approved/published drafts are protected.
+- Human review: successful output includes the online edit URL; automatic approval and publication remain disabled (`published=0`).
+- Validation: Node syntax PASS; four final ABS packages preflight PASS (2/2/13, 6/6/10, 8/8/12, 36/36/13); TypeScript PASS. Skill quick validator was attempted but could not run because the environment lacks the Python `yaml` module.
+- Production writes: 0. No upload, delete, approval, or publication performed in this hardening step.
+- Next action: deploy the isolated readback API change, then run the hardened Skill against the four FIPs and manually verify the returned review URLs.
