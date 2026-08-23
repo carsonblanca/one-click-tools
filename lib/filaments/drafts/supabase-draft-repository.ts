@@ -8,6 +8,7 @@ export type UpdateDraftInput = {
   status?: string;
   reviewStatus?: string;
   publicationStatus?: string;
+  brandId?: string;
   productLineName?: string | null;
   materialType?: string | null;
   variant?: string | null;
@@ -22,6 +23,7 @@ export async function updateSupabaseFilamentDraftRow(input: UpdateDraftInput) {
   if (input.status !== undefined) updatePayload.status = input.status;
   if (input.reviewStatus !== undefined) updatePayload.review_status = input.reviewStatus;
   if (input.publicationStatus !== undefined) updatePayload.publication_status = input.publicationStatus;
+  if (input.brandId !== undefined) updatePayload.brand_id = input.brandId;
   if (input.productLineName !== undefined) updatePayload.product_line_name = input.productLineName;
   if (input.materialType !== undefined) updatePayload.material_type = input.materialType;
   if (input.variant !== undefined) updatePayload.variant = input.variant;

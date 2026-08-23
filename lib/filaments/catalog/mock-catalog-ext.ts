@@ -19,6 +19,11 @@ export type CatalogRecord = {
   rating: number;
   reviewCount: number;
   createdAt: string;
+  presetParameters?: Record<string, unknown>;
+  parameterEntries?: Array<{ key: string; value: string }>;
+  presetDefaultColor?: string | null;
+  imageSourceRunId?: string;
+  imageObjectKey?: string;
 };
 
 function dc(
@@ -56,9 +61,11 @@ function spool(
   od: number | null, width: number | null, hub: number | null,
   spoolMat: string | null, refill: boolean, cardboard: boolean, amsFit: "yes" | "conditional" | "no",
   adapter: boolean, img: string | null,
+  netWeightMode: "single" | "multiple" | "unknown" = "single",
+  netWeightOptionsG?: number[],
 ): SpoolSpec {
   return {
-    netFilamentWeight: netWt, emptySpoolWeight: emptyWt, fullSpoolWeight: fullWt,
+    netFilamentWeight: netWt, netWeightMode, netWeightOptionsG, emptySpoolWeight: emptyWt, fullSpoolWeight: fullWt,
     spoolOuterDiameter: od, spoolWidth: width, hubDiameter: hub, spoolMaterial: spoolMat,
     refillable: refill, cardboardSpool: cardboard, amsFit, adapterRequired: adapter,
     spoolImagePlaceholder: img,
@@ -94,6 +101,12 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-the-k6-petg": "PETG",
     };
     const materialType = materialTypeMap[c.productLineId] || "PLA";
+    // KEXCELLED ABS is officially sold in multiple net-weight specs (0.5 / 1 / 3 / 5 kg),
+    // so it must NOT be treated as a single 1 kg product. Register any KEXCELLED ABS
+    // product line ids in materialTypeMap above so materialType resolves to "ABS" here.
+    const isMultiSpecNetWeight = materialType === "ABS";
+    const netWeightMode: SpoolSpec["netWeightMode"] = isMultiSpecNetWeight ? "multiple" : "single";
+    const netWeightOptionsG: number[] | undefined = isMultiSpecNetWeight ? [500, 1000, 3000, 5000] : undefined;
     const variantMap: Record<string, string> = {
       "kexcelled-k5-pla": "Standard",
       "kexcelled-k5-pla-m": "Matte",
@@ -221,7 +234,7 @@ function buildKexcelledRecords(): CatalogRecord[] {
       productLineId: c.productLineId,
       parameterStatus: getKexcelledParameterStatus(c.productLineId),
       color,
-      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null, netWeightMode, netWeightOptionsG),
       rating: 0,
       reviewCount: 0,
       createdAt: "2026-06-19",
@@ -250,6 +263,9 @@ function buildKexcelledPlaceholderRecords(existingRecords: CatalogRecord[]): Cat
   const existingIds = new Set(existingRecords.map((record) => record.productLineId));
   return (kexcelledProductLines.productLines as Array<{ id: string; productLine: string; materialType: string; variant: string }>).filter((line) => !existingIds.has(line.id)).map((line) => {
     const materialType = line.id === "kexcelled-k10-peek" ? "PEEK" : line.id === "kexcelled-k10-pei" || line.id === "kexcelled-k11-pei" ? "PEI" : line.materialType;
+    const isMultiSpecNetWeight = materialType === "ABS";
+    const netWeightMode: SpoolSpec["netWeightMode"] = isMultiSpecNetWeight ? "multiple" : "single";
+    const netWeightOptionsG: number[] | undefined = isMultiSpecNetWeight ? [500, 1000, 3000, 5000] : undefined;
     const color: CatalogColor = {
       colorNameZh: "颜色信息待补充",
       colorNameEn: "Color information pending",
@@ -276,7 +292,7 @@ function buildKexcelledPlaceholderRecords(existingRecords: CatalogRecord[]): Cat
       productLineId: line.id,
       parameterStatus: getKexcelledParameterStatus(line.id),
       color,
-      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null),
+      spool: spool(1000, null, null, null, null, null, null, false, false, "yes", false, null, netWeightMode, netWeightOptionsG),
       rating: 0,
       reviewCount: 0,
       createdAt: "2026-06-20",
@@ -339,7 +355,12 @@ function buildR3dRecords(): CatalogRecord[] {
 
 const kexcelledColorRecords = buildKexcelledRecords();
 
-export const CATALOG_RECORDS: CatalogRecord[] = [
+// Local reset mode: keep the historical static source definitions in this file,
+// but do not expose them to the local catalog. Production-backed records remain
+// available through the published-data bridge.
+const SHOW_LOCAL_STATIC_CATALOG = false;
+
+export const CATALOG_RECORDS: CatalogRecord[] = SHOW_LOCAL_STATIC_CATALOG ? [
   {
     id: "bambu-pla-basic-black",
     brand: "Bambu Lab", brandZh: "Bambu Lab",
@@ -483,7 +504,7 @@ export const CATALOG_RECORDS: CatalogRecord[] = [
   ...kexcelledColorRecords,
   ...buildKexcelledPlaceholderRecords(kexcelledColorRecords),
   ...buildR3dRecords(),
-];
+] : [];
 
 export function getRecordsByBrand(brand: string): CatalogRecord[] {
   return CATALOG_RECORDS.filter((r) => r.brand === brand);

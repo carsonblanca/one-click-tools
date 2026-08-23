@@ -113,6 +113,10 @@ export function getCatalogColorFamilies() {
 }
 
 export function getCompareValue(record: CatalogRecord, key: string) {
+  const importedValue = record.presetParameters?.[key];
+  if (importedValue !== undefined && importedValue !== null && importedValue !== "") {
+    return Array.isArray(importedValue) ? importedValue.join(" / ") : String(importedValue);
+  }
   if (!hasPresetParameters(record) && pendingParameterKeys.has(key)) {
     return "Not in mock catalog";
   }
@@ -147,6 +151,7 @@ export function getCompareValue(record: CatalogRecord, key: string) {
 }
 
 export function filterCatalogRecords({
+  records: sourceRecords = CATALOG_RECORDS,
   selectedMaterial,
   selectedVariant,
   selectedBrand,
@@ -158,6 +163,7 @@ export function filterCatalogRecords({
   selectedPerformanceTags,
   searchHex,
 }: {
+  records?: CatalogRecord[];
   selectedMaterial: string | null;
   selectedVariant: string | null;
   selectedBrand: string | null;
@@ -169,7 +175,7 @@ export function filterCatalogRecords({
   selectedPerformanceTags: PerformanceTag[];
   searchHex: string | null;
 }) {
-  let records = [...CATALOG_RECORDS];
+  let records = [...sourceRecords];
 
   if (selectedMaterial) {
     records = records.filter((record) => record.materialType === selectedMaterial);

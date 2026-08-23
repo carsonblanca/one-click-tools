@@ -3,6 +3,14 @@ import PageShell from "@/components/PageShell";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BambuFilamentCatalogExperience from "@/components/filaments/BambuFilamentCatalogExperience";
+import {
+  listLocalPreviewKexcelledAbsProducts,
+  listPublishedKexcelledAbsProducts,
+  toPublicCatalogRecords,
+} from "@/lib/filaments/catalog/published-kexcelled";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "3D Printing Filament Library | OneClick Tools",
@@ -13,11 +21,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FilamentCatalogPage() {
+export default async function FilamentCatalogPage() {
+  let extraRecords: CatalogRecord[] = [];
+  try {
+    const products = process.env.NODE_ENV === "production"
+      ? await listPublishedKexcelledAbsProducts()
+      : await listLocalPreviewKexcelledAbsProducts();
+    extraRecords = toPublicCatalogRecords(products);
+  } catch {
+    extraRecords = [];
+  }
+
   return (
     <PageShell>
       <SiteHeader />
-      <BambuFilamentCatalogExperience locale="en" />
+      <BambuFilamentCatalogExperience locale="en" extraRecords={extraRecords} />
       <SiteFooter />
     </PageShell>
   );

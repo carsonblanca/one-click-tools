@@ -184,6 +184,7 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
   const filaments = getRecordsByBrand(brand.name);
   const panelClass = `rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
   const backHref = locale === "en" ? "/tools/bambu-filament-preset-generator" : `/${locale}/tools/bambu-filament-preset-generator`;
+  const filamentPath = (id: string) => locale === "en" ? `/filaments/${id}` : `/${locale}/filaments/${id}`;
   const summary = content?.summary ?? brand.summary;
   const legalEntity = localizedField(content?.legalEntity, brand.legalEntity);
   const countryOrRegion = localizedField(content?.countryOrRegion, brand.countryOrRegion);
@@ -259,7 +260,7 @@ export default function BrandProfilePage({ brand, locale = "en" }: { brand: Bran
             {filaments.length > 0 ? filaments.map((item) => (
               <Link
                 key={item.id}
-                href={`/filaments/${item.id}`}
+                href={filamentPath(item.id)}
                 className="block rounded-2xl border border-current/10 p-4 transition hover:opacity-80"
               >
                 <strong>{item.productLine}</strong>

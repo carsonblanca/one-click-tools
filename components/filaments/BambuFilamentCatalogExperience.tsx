@@ -11,6 +11,7 @@ import {
   generateBambuFilamentPresetSet,
   getBambuPrinterOptions,
 } from "@/lib/bambu-filament-presets";
+import { generateKexcelledAbsPreset } from "@/lib/filaments/presets/bambu/kexcelled-abs";
 import {
   CATALOG_RECORDS,
   filterCatalogRecords,
@@ -21,11 +22,11 @@ import {
   type BrandSort,
   getLocalizedFilamentColorName,
   getLocalizedFinishLabel,
-  getLocalizedTransparencyLabel,
   getLocalizedVariantEffectLabel,
   hasPresetParameters,
 } from "@/lib/filaments/catalog";
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
 import BrandLogo from "./BrandLogo";
 
@@ -90,10 +91,41 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+function ProductImage({ record }: { record: CatalogRecord }) {
+  const [unavailable, setUnavailable] = useState(false);
+  const productLineId = record.productLineId;
+
+  if (unavailable) {
+    return <BrandLogo brand={record.brand} size={36} />;
+  }
+
+  const imageUrl = record.imageSourceRunId
+    ? `/api/filaments/product-image?sourceRunId=${encodeURIComponent(record.imageSourceRunId)}${record.imageObjectKey ? `&assetKey=${encodeURIComponent(record.imageObjectKey)}` : ""}`
+    : record.brand === "Kexcelled" && productLineId
+      ? `/api/filaments/product-image?productLineId=${encodeURIComponent(productLineId)}`
+      : "";
+
+  if (!imageUrl) return <BrandLogo brand={record.brand} size={36} />;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt={`${record.brand} ${record.productLine}`}
+      className="h-full w-full rounded-xl object-contain"
+      onError={() => setUnavailable(true)}
+      src={imageUrl}
+    />
+  );
+}
+
 function getBrandProfilePath(brand: string) {
   if (brand === "Bambu Lab") return "/filaments/brands/bambu-lab";
   if (brand === "Generic") return "/filaments/brands/generic-profiles";
   return null;
+}
+
+function localizedPath(locale: Locale, path: string) {
+  return locale === "en" ? path : `/${locale}${path}`;
 }
 
 const LABELS: Record<Locale, Record<string, string>> = {
@@ -276,21 +308,22 @@ function getDisplayBrand(brand: string): string {
   return BRAND_SHORT_MAP[brand] || brand;
 }
 
-function variantCount(materialType: string, variant: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType && r.variant === variant).length;
+function variantCount(records: CatalogRecord[], materialType: string, variant: string): number {
+  return records.filter((r) => r.materialType === materialType && r.variant === variant).length;
 }
 
-function materialCount(materialType: string): number {
-  return CATALOG_RECORDS.filter((r) => r.materialType === materialType).length;
+function materialCount(records: CatalogRecord[], materialType: string): number {
+  return records.filter((r) => r.materialType === materialType).length;
 }
 
-function brandCount(brandName: string): number {
-  return CATALOG_RECORDS.filter((r) => r.brand === brandName).length;
+function brandCount(records: CatalogRecord[], brandName: string): number {
+  return records.filter((r) => r.brand === brandName).length;
 }
 
-export default function BambuFilamentCatalogExperience({ locale = "en" }: { locale?: Locale }) {
+export default function BambuFilamentCatalogExperience({ locale = "en", extraRecords = [] }: { locale?: Locale; extraRecords?: CatalogRecord[] }) {
   const { isDark } = useTheme();
   const t = LABELS[locale] || LABELS.en;
+  const catalogRecords = useMemo(() => [...CATALOG_RECORDS, ...extraRecords], [extraRecords]);
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
 
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -322,20 +355,21 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
 
   const realBrandCounts = useMemo(() => {
     const map = new Map<string, number>();
-    for (const r of CATALOG_RECORDS) {
+    for (const r of catalogRecords) {
       map.set(r.brand, (map.get(r.brand) || 0) + 1);
     }
     return map;
-  }, []);
+  }, [catalogRecords]);
 
   const availableVariants = useMemo(() => {
     if (!selectedMaterial) return [];
     const all = MATERIAL_VARIANTS[selectedMaterial] || [];
-    return all.filter((v) => variantCount(selectedMaterial, v) > 0);
-  }, [selectedMaterial]);
+    return all.filter((v) => variantCount(catalogRecords, selectedMaterial, v) > 0);
+  }, [catalogRecords, selectedMaterial]);
 
   const records = useMemo(
     () => filterCatalogRecords({
+      records: catalogRecords,
       selectedMaterial,
       selectedVariant,
       selectedBrand,
@@ -347,12 +381,12 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
       hasVerifiedPreset: filters.hasVerifiedPreset,
       selectedPerformanceTags: [],
     }),
-    [selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
+    [catalogRecords, selectedMaterial, selectedVariant, selectedBrand, searchHex, filters],
   );
 
   const selectedRecords = selectedIds
-    .map((id) => CATALOG_RECORDS.find((r) => r.id === id))
-    .filter((r): r is typeof CATALOG_RECORDS[number] => Boolean(r));
+    .map((id) => catalogRecords.find((r) => r.id === id))
+    .filter((r): r is CatalogRecord => Boolean(r));
 
   const sidePanelClass = `min-w-0 rounded-[22px] border p-4 shadow-sm ${
     isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20"
@@ -385,7 +419,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(typeof reader.result === "string" ? reader.result : null);
-      const searchableRecords = CATALOG_RECORDS.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
+      const searchableRecords = catalogRecords.filter((record) => record.color.hasDigitalSwatch && record.color.hex);
       const next = searchableRecords[Math.floor(Math.random() * searchableRecords.length)];
       if (next?.color.hex) setSearchHex(next.color.hex);
     };
@@ -539,7 +573,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
         <ToolLabel>{t.materialType}</ToolLabel>
         <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
           {MATERIAL_TYPES.map((mat) => {
-            const count = materialCount(mat);
+            const count = materialCount(catalogRecords, mat);
             return (
               <button key={mat} onClick={() => {
                 setSelectedMaterial(selectedMaterial === mat ? null : mat);
@@ -563,7 +597,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
           ) : (
             <div className="flex flex-wrap gap-2">
               {MATERIAL_VARIANTS[selectedMaterial]?.map((v) => {
-                const count = variantCount(selectedMaterial, v);
+                const count = variantCount(catalogRecords, selectedMaterial, v);
                 return (
                   <button key={v} onClick={() => setSelectedVariant(selectedVariant === v ? null : v)}
                     className={`rounded-xl px-3 py-2 text-sm transition ${selectedVariant === v ? activeClass : inactiveClass}`}
@@ -679,14 +713,20 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
             <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
               {records.map((record) => {
                 const cardPrinterId = cardPrinters[record.id] || printerOptions[0]?.id || "";
-                const generatedPreset = generateBambuFilamentPresetSet(cardPrinterId);
+                const generatedPreset = record.presetParameters
+                  ? [generateKexcelledAbsPreset({
+                      productLine: record.productLine,
+                      parameters: record.presetParameters,
+                      defaultColor: record.presetDefaultColor,
+                      printerId: cardPrinterId,
+                    })]
+                  : generateBambuFilamentPresetSet(cardPrinterId);
                 const matchPreset = generatedPreset.find((p) => p.material.type === record.materialType);
                 const hasVerifiedParams = hasPresetParameters(record);
                 const presetsDisabled = !hasVerifiedParams;
                 const c = record.color;
                 const colorName = getLocalizedFilamentColorName(c, locale);
                 const effectLabel = getLocalizedVariantEffectLabel(record.variant, locale);
-                const transLabel = getLocalizedTransparencyLabel(c.transparency, locale);
 
                 return (
                   <article key={record.id}
@@ -694,64 +734,42 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                       isDark ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]" : "border-[#E2DACB] bg-[#FFFDF8] shadow-[#D8CCB8]/20 hover:border-[#2563EB]/30"
                     }`}
                   >
-                    <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 gap-y-2">
-                      {c.hasDigitalSwatch && c.hex ? (
-                        <div
-                          className="h-11 w-11 rounded-xl border border-current/10"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                      ) : (
-                        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border border-dashed text-[10px] ${isDark ? "border-white/15 text-white/35" : "border-[#D8CCB8] text-[#8A8173]"}`}>
-                          --
-                        </div>
-                      )}
+                    <div className="grid min-w-0 grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] items-start gap-3">
+                      <Link
+                        href={localizedPath(locale, `/filaments/${record.id}`)}
+                        aria-label={`${colorName} ${t.detail}`}
+                        className={`group flex aspect-square min-h-[150px] min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-current/10 bg-white ${isDark ? "text-black" : ""}`}
+                      >
+                        <span className="block h-full w-full transition-transform duration-200 ease-out group-hover:scale-[1.12]">
+                          <ProductImage record={record} />
+                        </span>
+                      </Link>
 
-                      <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-base font-semibold leading-snug">
+                      <div className="min-w-0 space-y-2 py-1 pl-2">
+                        <h3 className="break-words text-base font-semibold leading-tight">
                           {colorName}
-                          {effectLabel ? ` (${effectLabel})` : ""}
                         </h3>
-                      </div>
-
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-current/10 bg-white">
-                        <BrandLogo brand={record.brand} size={36} />
-                      </div>
-
-                      <div className="min-w-0 self-center">
-                        <div className={`truncate text-sm ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
-                          {getDisplayBrand(record.brand)}{" \u00B7 "}{record.productLine}
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] leading-tight ${isDark ? "border-white/20 text-white/65" : "border-[#CFC5B5] text-[#6B665D]"}`}>
+                          {effectLabel || record.materialType}
+                        </span>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <BrandLogo brand={record.brand} size={24} />
+                          <span className={`min-w-0 truncate text-sm ${isDark ? "text-white/70" : "text-[#6B665D]"}`}>
+                            {getDisplayBrand(record.brand)}
+                          </span>
                         </div>
-                        <div className={`mt-1 flex items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
+                        <div className={`break-words text-xs leading-snug ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
+                          {record.productLine}
+                        </div>
+                        <div className={`break-words text-xs leading-snug ${isDark ? "text-white/55" : "text-[#6B665D]"}`}>
+                          {c.digitalSwatch?.officialColorCode || colorName}
+                        </div>
+                        <div className={`flex flex-wrap items-center gap-1 text-xs ${isDark ? "text-white/50" : "text-[#8A8173]"}`}>
                           <Stars value={record.rating} />
                           <span className="whitespace-nowrap">{record.rating.toFixed(1)} ({record.reviewCount})</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Info grid */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.colorCode}</div>
-                        {c.hasDigitalSwatch && c.hex && c.rgb ? (
-                          <>
-                            <div className={isDark ? "text-white/80" : "text-[#18181B]"}>HEX: {c.hex}</div>
-                            <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>RGB: {c.rgb.r}, {c.rgb.g}, {c.rgb.b}</div>
-                          </>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{colorName}</div>
-                        )}
-                      </div>
-                      <div className={`rounded-xl border p-2.5 ${isDark ? "border-white/10 bg-black/20" : "border-[#E8DFD0] bg-[#F7F2E8]"}`}>
-                        <div className={`mb-0.5 ${isDark ? "text-white/60" : "text-[#8A8173]"}`}>{t.physicalReference}</div>
-                        {c.hasPhysicalSwatch ? (
-                          <div className={isDark ? "text-white/80" : "text-[#18181B]"}>{c.physicalSwatchCount} {t.images}</div>
-                        ) : (
-                          <div className={isDark ? "text-white/40" : "text-[#8A8173]"}>{t.noPhysicalSwatch}</div>
-                        )}
-                        <div className={isDark ? "text-white/60" : "text-[#6B665D]"}>{transLabel}</div>
-                      </div>
-                    </div>
-
 
                     <div className="mt-4">
                       <div className="flex gap-2">
@@ -779,13 +797,10 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
                           {presetsDisabled ? t.paramsPending : (matchPreset ? t.downloadPreset : t.noPreset)}
                         </button>
                       </div>
-                      <p className={`mt-1.5 text-[11px] leading-tight ${isDark ? "text-white/35" : "text-[#8A8173]"}`}>
-                        {presetsDisabled ? t.presetsUnavailable : t.presetNoGcode}
-                      </p>
                     </div>
 
                     <div className="mt-3 flex gap-2">
-                      <Link href={`/filaments/${record.id}`}
+                      <Link href={localizedPath(locale, `/filaments/${record.id}`)}
                         className={`flex-1 rounded-2xl border px-3 py-2.5 text-center text-xs font-medium transition ${
                           isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#E5DED0] text-[#6B665D] hover:bg-[#F5F2EA]"
                         }`}
@@ -872,7 +887,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en" }: { loca
             ))}
           </div>
           {selectedRecords.length >= 2 ? (
-            <Link href={`/filaments/compare?ids=${selectedIds.join(",")}`}
+            <Link href={`${localizedPath(locale, "/filaments/compare")}?ids=${selectedIds.join(",")}`}
               className={`mt-3 block w-full rounded-2xl px-5 py-3 text-center text-sm font-medium ${
                 isDark ? "bg-lime-300 text-black" : "bg-[#2563EB] text-white"
               }`}

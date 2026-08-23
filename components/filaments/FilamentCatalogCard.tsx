@@ -96,7 +96,7 @@ export default function FilamentCatalogCard({
             <span>{getLocalizedTransparencyLabel(c.transparency, locale)}</span>
             {record.spool.cardboardSpool && <span>{locale === "en" ? "Cardboard spool" : locale === "zh-tw" ? "紙盤" : "纸盘"}</span>}
             <span>AMS: {record.spool.amsFit === "yes" ? (locale === "en" ? "Compatible" : locale === "zh-tw" ? "相容" : "兼容") : record.spool.amsFit === "conditional" ? (locale === "en" ? "Conditional" : locale === "zh-tw" ? "需適配" : "需适配") : (locale === "en" ? "Not compatible" : locale === "zh-tw" ? "不相容" : "不兼容")}</span>
-            <span>{record.spool.netFilamentWeight}g</span>
+            <span>{record.spool.netWeightMode === "multiple" && record.spool.netWeightOptionsG?.length ? record.spool.netWeightOptionsG.map((g) => (g / 1000).toString()).join(" / ") + " kg" : `${record.spool.netFilamentWeight}g`}</span>
           </div>
         </div>
       </div>

@@ -28,6 +28,8 @@ export type PhysicalSwatch = {
 
 export type SpoolSpec = {
   netFilamentWeight: number;
+  netWeightMode: "single" | "multiple" | "unknown";
+  netWeightOptionsG?: number[];
   emptySpoolWeight: number | null;
   fullSpoolWeight: number | null;
   spoolOuterDiameter: number | null;

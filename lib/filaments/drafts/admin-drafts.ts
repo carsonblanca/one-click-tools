@@ -8,18 +8,27 @@ export type ParameterReviewStatus = "missing" | "official" | "official_partial" 
 export type AdminFilamentDraft = {
   sourceRunId: string;
   importId: string;
-  brand: { name: string; nameZh?: string };
-  productLine: { name: string; materialType?: string; variant?: string };
+  brand: { id?: string; name: string; nameZh?: string; nameEn?: string };
+  productLine: {
+    name: string;
+    materialType?: string;
+    variant?: string;
+    diameterMm?: number | null;
+    netWeightG?: number | null;
+    description?: string;
+  };
   colors: Array<{
     domIndex: number;
-    rawSkuText: string;
+    rawSkuText?: string;
     officialColorCode?: string;
     nameZh: string;
     nameEn?: string;
     hexColor?: string;
+    availability?: string;
     displayStatus: ColorDisplayStatus;
     imageDisplayStatus: ImageDisplayStatus;
     imageReviewNote: string;
+    imageSelectionReason?: string;
     localImagePath?: string;
     colorVariants?: Array<Record<string, unknown>>;
   }>;
@@ -37,6 +46,15 @@ export type AdminFilamentDraft = {
     parameterLocked?: boolean;
     reviewedAt?: string;
     reviewedBy?: string;
+    manualParameters?: Array<{
+      id: string;
+      labelZh: string;
+      labelEn: string;
+      value: string;
+      unit: string;
+      sourceStatus: "official" | "manual" | "missing";
+      sourceNote: string;
+    }>;
   };
   importStatus: string;
   reviewStatus: string;
@@ -51,16 +69,18 @@ export type AdminFilamentDraft = {
 
 function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>): AdminFilamentDraft {
   const data = (sourceRow.draft_data ?? {}) as Record<string, unknown>;
+  const sourceProductLine = (data.productLine as Record<string, unknown> | null) || {};
   return {
     sourceRunId: sourceRow.source_run_id,
     importId: sourceRow.import_id,
-    brand: (data.brand as AdminFilamentDraft["brand"]) || { name: String(sourceRow.brand_id) },
+    brand: (data.brand as AdminFilamentDraft["brand"]) || { id: String(sourceRow.brand_id), name: String(sourceRow.brand_id) },
     productLine: {
-      name: String(sourceRow.product_line_name || (data.productLine as Record<string, unknown> | null)?.name || ""),
-      materialType: String(sourceRow.material_type || (data.productLine as Record<string, unknown> | null)?.materialType || ""),
-      variant: String(sourceRow.variant || (data.productLine as Record<string, unknown> | null)?.variant || ""),
+      ...sourceProductLine,
+      name: String(sourceRow.product_line_name || sourceProductLine.name || ""),
+      materialType: String(sourceRow.material_type || sourceProductLine.materialType || ""),
+      variant: String(sourceRow.variant || sourceProductLine.variant || ""),
     },
-    colors: (data.colors as AdminFilamentDraft["colors"]) || [],
+    colors: (data.canonicalColors as AdminFilamentDraft["colors"]) || (data.colors as AdminFilamentDraft["colors"]) || [],
     parameters: (data.parameters as AdminFilamentDraft["parameters"]) || {
       status: "missing",
       sourceType: "missing",
@@ -88,13 +108,24 @@ export async function updateAdminFilamentDraft(
 
   const draft = readAdminFilamentDraft(sourceRow);
   const nextDraft = updater(draft);
+  const originalData = (sourceRow.draft_data ?? {}) as Record<string, unknown>;
+  const nextDraftData = {
+    ...originalData,
+    ...nextDraft,
+    brand: nextDraft.brand,
+    productLine: nextDraft.productLine,
+    colors: nextDraft.colors,
+    canonicalColors: nextDraft.colors,
+    parameters: nextDraft.parameters,
+  };
 
   await updateSupabaseFilamentDraftRow({
     sourceRunId,
-    draftData: nextDraft,
+    draftData: nextDraftData,
     status: nextDraft.importStatus,
     reviewStatus: nextDraft.reviewStatus,
     publicationStatus: nextDraft.publicationStatus,
+    brandId: nextDraft.brand.id || nextDraft.brand.name,
     productLineName: nextDraft.productLine.name || null,
     materialType: nextDraft.productLine.materialType || null,
     variant: nextDraft.productLine.variant || null,

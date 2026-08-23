@@ -6,6 +6,7 @@ import { getManualBrand } from "@/lib/filaments/manual-filament-types";
 import { manualParameterTemplate } from "@/lib/filaments/manual-parameter-template";
 import DraftDetailClient from "../DraftDetailClient";
 import ManualFilamentForm from "../../../brands/[brandId]/filaments/new/ManualFilamentForm";
+import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
 
 function text(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -21,6 +22,11 @@ function arrayValue(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value)
     ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
     : [];
+}
+
+function candidateValue(candidates: Record<string, unknown>[], key: string): string {
+  const candidate = candidates.find((item) => text(item.key) === key);
+  return text(candidate?.value).replace(/\s*(mm|g)\s*$/i, "");
 }
 
 export default async function EditManualFilamentDraftPage({
@@ -47,6 +53,15 @@ export default async function EditManualFilamentDraftPage({
     const brand = objectValue(data.brand);
     const productLine = objectValue(data.productLine);
     const parameterBlock = objectValue(data.parameters);
+    const parameterFields = objectValue(parameterBlock.fields);
+    const parameterCandidates = arrayValue(parameterBlock.candidates);
+    const productLineForEdit = {
+      ...productLine,
+      name: resolveImportedProductLineName({ rowName: draft.product_line_name, materialType: draft.material_type, draftData: data }),
+      diameterMm: text(productLine.diameterMm) || candidateValue(parameterCandidates, "filamentDiameter"),
+      netWeightG: text(productLine.netWeightG) || candidateValue(parameterCandidates, "netWeight"),
+    };
+    const parameterSourceEvidence = arrayValue(parameterBlock.sourceEvidence);
     const colors = arrayValue(data.canonicalColors).length
       ? arrayValue(data.canonicalColors)
       : arrayValue(data.colors);
@@ -58,7 +73,7 @@ export default async function EditManualFilamentDraftPage({
       <main className="space-y-6">
         <header>
           <p className="text-sm text-slate-500">导入草稿安全编辑</p>
-          <h1 className="text-2xl font-semibold">{draft.product_line_name || "未命名耗材"}</h1>
+          <h1 className="text-2xl font-semibold">{resolveImportedProductLineName({ rowName: draft.product_line_name, materialType: draft.material_type, draftData: data }) || "未命名耗材"}</h1>
           <p className="mt-2 text-sm text-slate-600">
             仅修改明确编辑字段；参数候选、图片资产和导入证据保持不变。
           </p>
@@ -67,9 +82,15 @@ export default async function EditManualFilamentDraftPage({
           sourceRunId={sourceRunId}
           brandId={draft.brand_id}
           brand={brand}
-          productLine={productLine}
+          productLine={productLineForEdit}
           colors={colors}
           manualParameters={manualParameters}
+          parameterFields={parameterFields}
+          parameterCandidates={parameterCandidates}
+          parameterStatus={text(parameterBlock.status) || "missing"}
+          parameterSourceType={text(parameterBlock.sourceType) || "missing"}
+          parameterSourceEvidence={parameterSourceEvidence}
+          parameterReviewNote={text(parameterBlock.reviewNote)}
         />
       </main>
     );

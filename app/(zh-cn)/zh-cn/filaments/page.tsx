@@ -3,6 +3,14 @@ import PageShell from "@/components/PageShell";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BambuFilamentCatalogExperience from "@/components/filaments/BambuFilamentCatalogExperience";
+import {
+  listLocalPreviewKexcelledAbsProducts,
+  listPublishedKexcelledAbsProducts,
+  toPublicCatalogRecords,
+} from "@/lib/filaments/catalog/published-kexcelled";
+import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "3D 打印耗材库 | OneClick Tools",
@@ -13,11 +21,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SimplifiedChineseFilamentPage() {
+export default async function SimplifiedChineseFilamentPage() {
+  let extraRecords: CatalogRecord[] = [];
+  try {
+    const products = process.env.NODE_ENV === "production"
+      ? await listPublishedKexcelledAbsProducts()
+      : await listLocalPreviewKexcelledAbsProducts();
+    extraRecords = toPublicCatalogRecords(products);
+  } catch {
+    extraRecords = [];
+  }
+
   return (
     <PageShell>
       <SiteHeader />
-      <BambuFilamentCatalogExperience locale="zh-cn" />
+      <BambuFilamentCatalogExperience locale="zh-cn" extraRecords={extraRecords} />
       <SiteFooter />
     </PageShell>
   );

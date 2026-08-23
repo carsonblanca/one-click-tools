@@ -112,6 +112,10 @@ function hasDifference(values: string[]) {
   return new Set(values).size > 1;
 }
 
+function localizedPath(locale: Locale, path: string) {
+  return locale === "en" ? path : `/${locale}${path}`;
+}
+
 export default function FilamentComparePage({ ids, locale = "en" }: { ids: string[]; locale?: Locale }) {
   const { isDark } = useTheme();
   const t = COMPARE_LABELS[locale] || COMPARE_LABELS.en;
@@ -119,6 +123,8 @@ export default function FilamentComparePage({ ids, locale = "en" }: { ids: strin
     const requested = getCatalogRecords(ids).slice(0, 4);
     return requested.length >= 2 ? requested : CATALOG_RECORDS.slice(0, 2);
   }, [ids]);
+  const detailPath = (id: string) => localizedPath(locale, `/filaments/${id}`);
+  const presetGeneratorPath = localizedPath(locale, "/tools/bambu-filament-preset-generator");
 
   const panelClass = `rounded-2xl border ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#E5DED0] bg-[#FFFDF7]"}`;
   const diffClass = isDark ? "bg-lime-300/10" : "bg-blue-50";
@@ -163,7 +169,7 @@ export default function FilamentComparePage({ ids, locale = "en" }: { ids: strin
           </p>
         </div>
         <Link
-          href="/tools/bambu-filament-preset-generator"
+          href={presetGeneratorPath}
           className={`rounded-2xl px-5 py-3 text-sm font-medium whitespace-nowrap ${
             isDark ? "border border-white/10 text-white/70" : "border border-[#E5DED0] text-[#6B665D]"
           }`}
@@ -178,7 +184,7 @@ export default function FilamentComparePage({ ids, locale = "en" }: { ids: strin
           {selected.map((item) => (
             <Link
               key={item.id}
-              href={`/filaments/${item.id}`}
+              href={detailPath(item.id)}
               className={`block rounded-2xl border p-4 ${isDark ? "border-white/10" : "border-[#E5DED0]"}`}
             >
               <div className="flex items-center gap-3">
@@ -212,7 +218,7 @@ export default function FilamentComparePage({ ids, locale = "en" }: { ids: strin
               <th className="w-56 px-4 py-4 text-left font-semibold">{t.parameter}</th>
               {selected.map((item) => (
                 <th key={item.id} className="px-4 py-4 text-left font-semibold">
-                  <Link href={`/filaments/${item.id}`} className="hover:underline underline-offset-2">
+                  <Link href={detailPath(item.id)} className="hover:underline underline-offset-2">
                     {item.brand} {item.productLine}
                   </Link>
                 </th>
