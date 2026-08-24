@@ -51,7 +51,21 @@ export function authenticateBootstrapAdmin(email: string, password: string) {
   const ok = emailMatches && passwordMatches;
 
   return ok
-    ? { ok: true as const, actorId: `bootstrap-admin:${expectedEmail}` }
+    ? { ok: true as const, actorId: `bootstrap-admin:${expectedEmail}`, role: "admin" as const, actorType: "human" as const }
+    : { ok: false as const, reason: "invalid_credentials" as const };
+}
+
+export function authenticateOpenCodeUploader(email: string, password: string) {
+  const expectedEmail = process.env.OPENCODE_UPLOAD_EMAIL ?? "";
+  const expectedPassword = process.env.OPENCODE_UPLOAD_PASSWORD ?? "";
+  if (!expectedEmail || !expectedPassword) {
+    return { ok: false as const, reason: "not_configured" as const };
+  }
+  const ok =
+    safeEqual(email.trim().toLowerCase(), expectedEmail.trim().toLowerCase()) &&
+    safeEqual(password, expectedPassword);
+  return ok
+    ? { ok: true as const, actorId: "service:opencode-uploader", role: "upload_service" as const, actorType: "service" as const }
     : { ok: false as const, reason: "invalid_credentials" as const };
 }
 

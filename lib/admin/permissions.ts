@@ -5,6 +5,7 @@ export const ROLE_SCOPES: Readonly<Record<AdminRole, readonly AdminScope[]>> = {
     "display.view",
     "candidate.view",
     "candidate.create",
+    "candidate.delete",
     "candidate.edit.any",
     "display.draft.create",
     "display.draft.edit",
@@ -29,6 +30,7 @@ export const ROLE_SCOPES: Readonly<Record<AdminRole, readonly AdminScope[]>> = {
     "display.view",
     "candidate.view",
     "candidate.create",
+    "candidate.delete",
     "candidate.edit.any",
     "display.draft.create",
     "display.draft.edit",
@@ -50,6 +52,7 @@ export const ROLE_SCOPES: Readonly<Record<AdminRole, readonly AdminScope[]>> = {
     "display.draft.edit",
     "job.view",
   ],
+  upload_service: ["display.view", "candidate.view", "candidate.create", "job.view"],
   pull_service: ["source.batch.append", "job.view"],
   viewer: ["display.view"],
 };

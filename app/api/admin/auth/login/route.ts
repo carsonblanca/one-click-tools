@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   adminRequestContext,
+  authenticateOpenCodeUploader,
   authenticateBootstrapAdmin,
 } from "@/lib/admin/auth";
 import { adminAudit } from "@/lib/admin/audit-adapter";
@@ -43,7 +44,8 @@ export async function POST(request: NextRequest) {
     typeof credentials.email === "string" ? credentials.email : "";
   const password =
     typeof credentials.password === "string" ? credentials.password : "";
-  const auth = authenticateBootstrapAdmin(email, password);
+  const serviceAuth = authenticateOpenCodeUploader(email, password);
+  const auth = serviceAuth.ok ? serviceAuth : authenticateBootstrapAdmin(email, password);
 
   if (!auth.ok) {
     await adminAudit.append({
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error }, { status });
   }
 
-  const { token, session } = createAdminSessionToken(auth.actorId, "admin");
+  const { token, session } = createAdminSessionToken(auth.actorId, auth.role, auth.actorType);
   const response = NextResponse.json({
     ok: true,
     redirectTo: "/admin/filament-evidence",

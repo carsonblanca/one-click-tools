@@ -44,9 +44,7 @@ function loginCookieJar() {
   };
 }
 
-async function login(baseUrl) {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+async function login(baseUrl, email, password) {
   if (!email || !password) {
     fail("missing ADMIN_EMAIL or ADMIN_PASSWORD environment variable");
   }
@@ -80,6 +78,12 @@ function machineTokenAuth() {
   const token = process.env.OPENCODE_IMPORT_API_TOKEN?.trim();
   if (!token) return null;
   return { kind: "machine_token", token };
+}
+
+function serviceCredentials() {
+  const email = process.env.OPENCODE_UPLOAD_EMAIL?.trim();
+  const password = process.env.OPENCODE_UPLOAD_PASSWORD;
+  return email && password ? { email, password } : null;
 }
 
 function authHeaders(auth) {
@@ -326,12 +330,13 @@ async function main() {
 
   // Step 2: login
   let auth;
-  if (machineTokenAuth()) {
-    auth = machineTokenAuth();
-    debug("[auth] machine import token selected");
-  } else {
+  const credentials = serviceCredentials() || {
+    email: process.env.ADMIN_EMAIL?.trim(),
+    password: process.env.ADMIN_PASSWORD,
+  };
+  if (credentials.email && credentials.password) {
     try {
-      auth = await login(baseUrl);
+      auth = await login(baseUrl, credentials.email, credentials.password);
     } catch (err) {
       for (const item of toUpload) {
         results.push({ filename: basename(item.file), error: err.message, step: "login" });
@@ -339,6 +344,11 @@ async function main() {
       console.log(JSON.stringify(results, null, 2));
       process.exit(1);
     }
+  } else if (machineTokenAuth()) {
+    auth = machineTokenAuth();
+    debug("[auth] legacy machine import token selected");
+  } else {
+    fail("missing OPENCODE_UPLOAD_EMAIL/OPENCODE_UPLOAD_PASSWORD or ADMIN_EMAIL/ADMIN_PASSWORD");
   }
 
   // Step 3: upload each file

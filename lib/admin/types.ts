@@ -2,6 +2,7 @@ export const ADMIN_ROLES = [
   "admin",
   "codex",
   "opencode",
+  "upload_service",
   "pull_service",
   "viewer",
 ] as const;
@@ -35,6 +36,7 @@ export type AdminScope =
   | "display.view"
   | "candidate.view"
   | "candidate.create"
+  | "candidate.delete"
   | "candidate.edit.own"
   | "candidate.edit.any"
   | "display.draft.create"

@@ -55,7 +55,7 @@ node .agents/skills/fip-upload-sync/scripts/upload-fip.mjs \
 
 2. **Requires an online HTTPS target** for upload. Local upload requires explicit `--allow-local`.
 
-3. Authenticates with `OPENCODE_IMPORT_API_TOKEN` when present, using `Authorization: Bearer ...`; otherwise falls back to `ADMIN_EMAIL` and `ADMIN_PASSWORD` for the human-admin path.
+3. Authenticates with the dedicated `OPENCODE_UPLOAD_EMAIL` / `OPENCODE_UPLOAD_PASSWORD` service account when present. It falls back to `ADMIN_EMAIL` / `ADMIN_PASSWORD`; the Bearer token is legacy fallback only.
 
 4. **Uploads** through the existing import endpoint, then reads back product line, material, color count, image count, parameter candidate count, draft status, and publication state.
 
@@ -97,6 +97,8 @@ node .agents/skills/fip-upload-sync/scripts/upload-fip.mjs \
 |---|---|
 | `ADMIN_EMAIL` | Admin bootstrap email for login |
 | `ADMIN_PASSWORD` | Admin bootstrap password for login |
+| `OPENCODE_UPLOAD_EMAIL` | Dedicated upload-only service account email |
+| `OPENCODE_UPLOAD_PASSWORD` | Dedicated upload-only service account password |
 | `OPENCODE_IMPORT_API_TOKEN` | Scoped machine token for upload and readback only; never stored in the repository |
 | `BASE_URL` (optional) | Online deployment base URL; defaults to `https://one-click-tools.com` |
 
@@ -107,7 +109,7 @@ node .agents/skills/fip-upload-sync/scripts/upload-fip.mjs \
 - Read back every uploaded draft before cleanup.
 - Delete only verified duplicate draft records from the same category; never delete approved or published records.
 - Do **not** auto-publish or auto-approve. Human verification is mandatory.
-- Machine-token mode does not delete duplicates; duplicate cleanup remains a human-admin operation so the machine token cannot delete data.
+- The `upload_service` account cannot delete duplicates; duplicate cleanup remains a human-admin operation.
 - Upload status must stay `draft` / `queued`.
 - Never auto-retry an ambiguous upload; query/read back and resolve manually to avoid duplicates.
 - Output JSON to stdout; log diagnostic messages to stderr.
