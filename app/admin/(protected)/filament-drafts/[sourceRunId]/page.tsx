@@ -47,14 +47,6 @@ function draftLookupFailure(error: unknown) {
   return { category: "unknown", summary: "unexpected_draft_lookup_failure" };
 }
 
-function manualColorImageUrl(color: Record<string, unknown>): string {
-  const image = color.image;
-  if (image && typeof image === "object" && !Array.isArray(image)) {
-    return text((image as Record<string, unknown>).url);
-  }
-  return "";
-}
-
 export default async function FilamentDraftPage({
   params,
 }: {
@@ -272,30 +264,7 @@ export default async function FilamentDraftPage({
             })}
           </div>
         </section>
-      ) : (
-        <section className="rounded-lg border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold">颜色资料（{colors.length}）</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {colors.map((color, index) => {
-              const imageUrl = manualColorImageUrl(color);
-              return (
-                <article className="flex gap-3 rounded border border-slate-200 p-3" key={`${text(color.colorNameZh)}-${index}`}>
-                  {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img alt="" className="h-16 w-16 shrink-0 rounded border object-cover" src={imageUrl} />
-                  ) : <div className="h-16 w-16 shrink-0 rounded border bg-slate-100" />}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{text(color.colorNameZh) || "颜色名称待补充"}</p>
-                    <p className="truncate text-sm text-slate-500">{text(color.colorNameEn) || "英文名待补充"}</p>
-                    <p className="text-sm">{text(color.officialColorCode) || "暂无官方色号"}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
+      ) : null}
       {sourceType !== "manual" ? (
         <section className="rounded-lg border border-slate-200 bg-white p-5">
           <h2 className="font-semibold">证据候选（{evidence.length}）</h2>
