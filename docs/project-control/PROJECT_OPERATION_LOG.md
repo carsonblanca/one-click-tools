@@ -1015,3 +1015,16 @@ Task: Diagnose failed Vercel build for imported draft edit deployment.
 - Validation: Node syntax PASS; four final ABS packages preflight PASS (2/2/13, 6/6/10, 8/8/12, 36/36/13); TypeScript PASS. Skill quick validator was attempted but could not run because the environment lacks the Python `yaml` module.
 - Production writes: 0. No upload, delete, approval, or publication performed in this hardening step.
 - Next action: deploy the isolated readback API change, then run the hardened Skill against the four FIPs and manually verify the returned review URLs.
+
+## 2026-08-24 — Online ABS batch upload and duplicate cleanup
+
+- Production deployment: `dpl_5gYRfKvTjReomhz3EXbHLKxoyYg8`, READY and aliased to `https://one-click-tools.com`.
+- Online admin session: authenticated as `admin`; no credentials were stored in the repository or logs.
+- New draft readback PASS:
+  - `THE K5 ABS 夜光系列`: `13` parameters, `2` colors, `2` spool images, `draft`, unpublished. New sourceRunId: `capture-20260817024614-e0d318af934a-b3792368`.
+  - `THE K5 ABS P`: `10` parameters, `6` colors, `6` spool images, `draft`, unpublished. New sourceRunId: `capture-20260817024719-a9870e0684e1-4ccbb3bb`.
+  - `THE K5™ ABS T`: `12` parameters, `8` colors, `8` spool images, `draft`, unpublished. New sourceRunId: `capture-20260817024438-9acb75e7a1e3-daf17a26`.
+  - `THE K5 ABS 高安定性`: `13` parameters, `36` colors, `36` spool images, `draft`, unpublished. New sourceRunId: `capture-20260817024828-d998ea43cf3a-1ca5aa58`.
+- Duplicate cleanup: removed exactly four previously identified stale ABS draft imports; the four new verified drafts remain. No approved or published draft was targeted.
+- Final state: one verified draft per ABS product line, all pending human review, publication count `0`.
+- Remaining action: human review of the four edit pages; do not publish until approved.
