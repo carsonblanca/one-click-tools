@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { hasAdminScope } from "@/lib/admin/permissions";
 import { readAdminSession } from "@/lib/admin/session";
 import {
+  hasMachineImportToken,
+  MACHINE_IMPORT_ACTOR_ID,
+} from "@/lib/admin/machine-import-auth";
+import {
   fipImageEntries,
   FipValidationError,
   parseKexcelledFip,
@@ -133,7 +137,8 @@ function draftData(input: {
 
 export async function GET(request: NextRequest) {
   const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.view")) {
+  const machineAuthorized = hasMachineImportToken(request);
+  if (!machineAuthorized && (!session || !hasAdminScope(session.role, "candidate.view"))) {
     return jsonError("无权查看导入记录", "FORBIDDEN", 403);
   }
   try {
@@ -218,7 +223,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const session = await readAdminSession();
-  if (!session || !hasAdminScope(session.role, "candidate.create")) {
+  const machineAuthorized = hasMachineImportToken(request);
+  if (!machineAuthorized && (!session || !hasAdminScope(session.role, "candidate.create"))) {
     return jsonError("无权导入耗材包", "FORBIDDEN", 403);
   }
 
@@ -239,7 +245,8 @@ export async function POST(request: NextRequest) {
     const parsed = parseKexcelledFip(bytes);
     const importId = randomUUID();
     const sourceRunId = `${parsed.sourceRunId}-${importId.slice(0, 8)}`;
-    const actorId = session.actorId;
+    const actorId = machineAuthorized ? MACHINE_IMPORT_ACTOR_ID : session?.actorId;
+    if (!actorId) return jsonError("无法识别导入操作者", "FORBIDDEN", 403);
     const packageUpload = await uploadFipPackageToR2({
       importId,
       brandId,

@@ -76,6 +76,18 @@ async function login(baseUrl) {
   return jar;
 }
 
+function machineTokenAuth() {
+  const token = process.env.OPENCODE_IMPORT_API_TOKEN?.trim();
+  if (!token) return null;
+  return { kind: "machine_token", token };
+}
+
+function authHeaders(auth) {
+  return auth.kind === "machine_token"
+    ? { authorization: `Bearer ${auth.token}` }
+    : { cookie: auth.toHeader() };
+}
+
 function validateZip(filePath) {
   debug(`[validate] ${filePath}`);
   let buffer;
@@ -122,6 +134,9 @@ function validateZip(filePath) {
   }
   if (Number(report.detailImageCount || 0) > 0 && Number(report.ocrTextCount || 0) === 0) {
     return { ok: false, error: "FIP 含详情图但没有 OCR 文本，已阻止上传" };
+  }
+  if (String(report.parameterTableStatus || "").toLowerCase() === "missing" || report.parameterTablesRecovered === false) {
+    return { ok: false, error: "FIP 详情参数表未恢复，已阻止上传；请重新采集详情图OCR" };
   }
   if (!Array.isArray(colors) || colors.length === 0) {
     return { ok: false, error: "FIP 没有颜色记录，已阻止上传" };
@@ -182,7 +197,7 @@ function validateZip(filePath) {
   };
 }
 
-async function uploadFile(baseUrl, cookieJar, filePath) {
+async function uploadFile(baseUrl, auth, filePath) {
   const filename = basename(filePath);
   debug(`[upload] ${filename}`);
 
@@ -196,9 +211,7 @@ async function uploadFile(baseUrl, cookieJar, filePath) {
 
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      cookie: cookieJar.toHeader(),
-    },
+    headers: authHeaders(auth),
     body: form,
     redirect: "manual",
   });
@@ -219,9 +232,9 @@ async function uploadFile(baseUrl, cookieJar, filePath) {
   return body;
 }
 
-async function readback(baseUrl, cookieJar, originalSourceRunId) {
+async function readback(baseUrl, auth, originalSourceRunId) {
   const url = `${baseUrl}/api/admin/filament-import/kexcelled-evidence?originalSourceRunId=${encodeURIComponent(originalSourceRunId)}`;
-  const response = await fetch(url, { headers: { cookie: cookieJar.toHeader() } });
+  const response = await fetch(url, { headers: authHeaders(auth) });
   const text = await response.text();
   let body = null;
   try { body = JSON.parse(text); } catch { /* handled below */ }
@@ -229,10 +242,10 @@ async function readback(baseUrl, cookieJar, originalSourceRunId) {
   return body;
 }
 
-async function deleteDraft(baseUrl, cookieJar, sourceRunId) {
+async function deleteDraft(baseUrl, auth, sourceRunId) {
   const response = await fetch(`${baseUrl}/api/admin/filament-import/kexcelled-evidence/${encodeURIComponent(sourceRunId)}`, {
     method: "DELETE",
-    headers: { cookie: cookieJar.toHeader() },
+    headers: authHeaders(auth),
   });
   const text = await response.text();
   let body = null;
@@ -312,15 +325,20 @@ async function main() {
   }
 
   // Step 2: login
-  let cookieJar;
-  try {
-    cookieJar = await login(baseUrl);
-  } catch (err) {
-    for (const item of toUpload) {
-      results.push({ filename: basename(item.file), error: err.message, step: "login" });
+  let auth;
+  if (machineTokenAuth()) {
+    auth = machineTokenAuth();
+    debug("[auth] machine import token selected");
+  } else {
+    try {
+      auth = await login(baseUrl);
+    } catch (err) {
+      for (const item of toUpload) {
+        results.push({ filename: basename(item.file), error: err.message, step: "login" });
+      }
+      console.log(JSON.stringify(results, null, 2));
+      process.exit(1);
     }
-    console.log(JSON.stringify(results, null, 2));
-    process.exit(1);
   }
 
   // Step 3: upload each file
@@ -328,10 +346,10 @@ async function main() {
     const file = item.file;
     const filename = basename(file);
     try {
-      const body = await uploadFile(baseUrl, cookieJar, file);
+      const body = await uploadFile(baseUrl, auth, file);
       const sourceRunId = body.sourceRunId || "";
       const draftIds = body.draftIds || [];
-      const audit = await readback(baseUrl, cookieJar, item.meta.originalSourceRunId);
+      const audit = await readback(baseUrl, auth, item.meta.originalSourceRunId);
       const created = (audit?.results || []).find((draft) => draft.sourceRunId === sourceRunId);
       if (!created) throw new Error("上传响应成功，但读回未找到新草稿");
       const readbackPass = created.productLine === item.meta.productLine
@@ -345,15 +363,17 @@ async function main() {
 
       const stale = (audit?.results || []).filter((draft) => draft.sourceRunId !== sourceRunId && sameCategory(draft, item.meta));
       const deleted = [];
-      for (const oldDraft of stale) {
-        await deleteDraft(baseUrl, cookieJar, oldDraft.sourceRunId);
-        deleted.push(oldDraft.sourceRunId);
+      if (auth.kind !== "machine_token") {
+        for (const oldDraft of stale) {
+          await deleteDraft(baseUrl, auth, oldDraft.sourceRunId);
+          deleted.push(oldDraft.sourceRunId);
+        }
       }
       results.push({
         filename,
         importId: body.importId || "",
         draftId: Array.isArray(draftIds) ? draftIds.join(", ") : String(draftIds),
-        status: "uploaded_and_deduplicated",
+        status: auth.kind === "machine_token" ? "uploaded_needs_manual_dedup" : "uploaded_and_deduplicated",
         sourceRunId,
         deletedDuplicateSourceRunIds: deleted,
         productLine: created.productLine,
