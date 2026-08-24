@@ -1028,3 +1028,12 @@ Task: Diagnose failed Vercel build for imported draft edit deployment.
 - Duplicate cleanup: removed exactly four previously identified stale ABS draft imports; the four new verified drafts remain. No approved or published draft was targeted.
 - Final state: one verified draft per ABS product line, all pending human review, publication count `0`.
 - Remaining action: human review of the four edit pages; do not publish until approved.
+
+## 2026-08-24 — Fix imported draft detail duplication and parameter readback display
+
+- Finding: the imported draft detail page rendered the editable `颜色字段` cards and then rendered the same `colors` array again as a read-only `颜色资料（36）` section. This was duplicate presentation, not duplicate database color records.
+- Finding: `parameters.candidates` was present (`13` for high-stability ABS), but the page read legacy `fieldCandidate/sourceText` keys instead of `canonicalKey/normalizedValue`, causing candidate rows to appear as `—`. The edit page also did not pass imported parameter props to the client and therefore showed fallback manual template rows.
+- Fix: imported detail now displays Chinese parameter labels and actual candidate values; imported edit loads the extracted candidates; the redundant imported color summary is removed while preserving the editable color list and stored data.
+- Validation: targeted TypeScript PASS; targeted ESLint PASS; production Vercel build PASS; live readback PASS (`参数候选（13）`, values visible, no bottom `颜色资料（36）`, color editor present, legacy template absent).
+- Deployment: `dpl_EavYgkNvEPjG9AzfZW7o6qRDsPAU`, READY and aliased to `https://one-click-tools.com`.
+- Data impact: no color deletion, parameter rewrite, upload, approval, or publication. Production publication remains `0`.
