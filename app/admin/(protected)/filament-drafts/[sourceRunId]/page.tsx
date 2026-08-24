@@ -5,6 +5,7 @@ import { requireAdminScope } from "@/lib/admin/auth";
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import DraftDetailClient from "./DraftDetailClient";
 import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
+import { parameterLabel } from "@/lib/filaments/parameters/parameter-labels";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -137,6 +138,12 @@ export default async function FilamentDraftPage({
           productLine={productLine}
           colors={colors}
           manualParameters={manualParameters}
+          parameterFields={parameters}
+          parameterCandidates={parameterCandidates}
+          parameterStatus={text(parameterBlock.status) || "missing"}
+          parameterSourceType={text(parameterBlock.sourceType) || "missing"}
+          parameterSourceEvidence={arrayValue(parameterBlock.sourceEvidence)}
+          parameterReviewNote={text(parameterBlock.reviewNote)}
         />
       ) : null}
 
@@ -165,10 +172,13 @@ export default async function FilamentDraftPage({
                 </thead>
                 <tbody>
                   {parameterCandidates.map((candidate, index) => (
-                    <tr className="border-b border-slate-100" key={text(candidate.fieldCandidate) || index}>
-                      <td className="py-2 pr-3 font-medium">{text(candidate.fieldCandidate) || "—"}</td>
-                      <td className="py-2 pr-3 max-w-xs truncate text-slate-600" title={text(candidate.sourceText)}>
-                        {text(candidate.sourceText) || "—"}
+                    <tr className="border-b border-slate-100" key={text(candidate.candidateId) || text(candidate.canonicalKey) || index}>
+                      <td className="py-2 pr-3 font-medium">
+                        {parameterLabel(text(candidate.canonicalKey) || text(candidate.fieldCandidate) || text(candidate.field) || text(candidate.key), "zh-cn")}
+                      </td>
+                      <td className="py-2 pr-3 max-w-xs truncate text-slate-600" title={text(candidate.rawValue) || text(objectValue(candidate.source).snippet)}>
+                        {text(candidate.normalizedDisplayValue) || text(candidate.normalizedValue) || text(candidate.rawValue) || text(candidate.value) || "—"}
+                        {text(candidate.unit) ? ` ${text(candidate.unit)}` : ""}
                       </td>
                       <td className="py-2">
                         <span className={`inline-block rounded px-2 py-0.5 text-xs ${
@@ -223,7 +233,7 @@ export default async function FilamentDraftPage({
         </section>
       )}
 
-      {sourceType !== "manual" ? (
+      {sourceType === "manual" ? (
         <section className="rounded-lg border border-slate-200 bg-white p-5">
           <h2 className="font-semibold">颜色资料（{colors.length}）</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
