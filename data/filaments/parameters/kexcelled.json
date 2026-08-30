@@ -438,22 +438,22 @@
         "recommended": {
           "operator": "range",
           "value": null,
-          "min": 210,
+        "min": 200,
           "max": 230,
           "unit": "C",
-          "raw": "210-230°C"
+        "raw": "200-230°C"
         }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
         "recommended": {
-          "operator": "range",
-          "value": null,
-          "min": 30,
-          "max": 60,
+          "operator": "lte",
+          "value": 60,
+          "min": null,
+          "max": null,
           "unit": "C",
-          "raw": "30-60°C"
+          "raw": "室温-60°C"
         }
       },
       "maxVolumetricSpeedMm3s": null,
@@ -461,9 +461,17 @@
         "operator": "range",
         "value": null,
         "min": 40,
-        "max": 100,
+        "max": 80,
         "unit": "mm/s",
-        "raw": "40-100 mm/s (Bowden) / 40-80 mm/s (Direct Drive)"
+        "raw": "40-80 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 100,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "100%"
       },
       "dryingRecommendation": {
         "temperatureC": 50,
@@ -498,7 +506,7 @@
       "sourceStatus": "official_product_page",
       "parameterStatus": "partial",
       "lastVerifiedAt": "2026-06-19",
-      "sourceNotes": "Official parameters from Kexcelled THE K6 PLA CF10 product page. Direct Drive: 0.5-5mm retraction, 40-80mm/s speed. Bowden: 2-10mm retraction, 40-100mm/s speed. Chamber: room temp. Min nozzle: 0.4mm. Fan: 100%. Platform: glass/PEI/sticker. Wear-resistant nozzle recommended."
+      "sourceNotes": "Owner-supplied official product image: nozzle 200-230°C, bed room temperature-60°C, cooling fan 100%, speed 40-80 mm/s. Other product-page details remain in the original evidence."
     },
     {
       "id": "kexcelled-k5-pla-cf-params",
@@ -895,15 +903,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 210,
+          "max": 230,
+          "unit": "C",
+          "raw": "210-230°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 30,
+          "max": 65,
+          "unit": "C",
+          "raw": "30-65°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 100,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "100%"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -925,11 +962,18 @@
         "adapterRequired": null,
         "notes": null
       },
-      "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620. No official print parameters found. Silk PLA variant."
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k5-pla-silk",
+          "label": "Kexcelled THE K5 PLA Silk official product image",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-08-26"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Official product image supplied for audit: nozzle 210-230°C, bed 30-65°C, cooling fan 100%, recommended print speed 40-80 mm/s. Flow ratio, density, shrink, and maximum volumetric speed were not shown in the supplied image and remain unfilled."
     },
     {
       "id": "kexcelled-k7-pet-cf10-params",
@@ -938,15 +982,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 250,
+          "max": 280,
+          "unit": "C",
+          "raw": "250-280°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 70,
+          "max": 100,
+          "unit": "C",
+          "raw": "70-100°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 0,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "OFF"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -969,10 +1042,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K7 PET CF10."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 250-280°C, bed 70-100°C, cooling fan OFF, speed 40-80 mm/s. Other print fields remain unverified."
     },
     {
       "id": "kexcelled-k8-pa-cf-params",
@@ -981,15 +1054,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 270,
+          "max": 290,
+          "unit": "C",
+          "raw": "270-290°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 70,
+          "max": 100,
+          "unit": "C",
+          "raw": "70-100°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 270,
+        "unit": "mm/s",
+        "raw": "40-270 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 0,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "OFF"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1012,10 +1114,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 PA CF."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 270-290°C, bed 70-100°C, cooling fan OFF, speed 40-270 mm/s. Other print fields remain unverified."
     },
     {
       "id": "kexcelled-k8-pc-params",
@@ -1024,15 +1126,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 250,
+          "max": 270,
+          "unit": "C",
+          "raw": "250-270°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 80,
+          "max": 100,
+          "unit": "C",
+          "raw": "80-100°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 40,
+        "max": 80,
+        "unit": "mm/s",
+        "raw": "40-80 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 0,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "OFF"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1054,11 +1185,18 @@
         "adapterRequired": null,
         "notes": null
       },
-      "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 PC."
+      "sources": [
+        {
+          "url": "https://kexcelled3d.com/zh/products/the-k8-pc",
+          "label": "Kexcelled THE K8 PC official product image",
+          "sourceStatus": "official_product_page",
+          "lastVerifiedAt": "2026-08-26"
+        }
+      ],
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 250-270°C, bed 80-100°C, cooling fan OFF, speed 40-80 mm/s. Other print fields remain unverified."
     },
     {
       "id": "kexcelled-k10-peek-params",
@@ -1067,15 +1205,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 400,
+          "max": 450,
+          "unit": "C",
+          "raw": "400-450°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 100,
+          "max": 160,
+          "unit": "C",
+          "raw": "100-160°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 20,
+        "max": 50,
+        "unit": "mm/s",
+        "raw": "20-50 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 0,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "OFF"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1098,10 +1265,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K10 PEEK."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 400-450°C, bed 100-160°C, cooling fan OFF, speed 20-50 mm/s, chamber 80-140°C. Chamber temperature is retained in provenance but not mapped to the current field model."
     },
     {
       "id": "kexcelled-k10-pei-params",
@@ -1110,12 +1277,26 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 360,
+          "max": 390,
+          "unit": "C",
+          "raw": "360-390°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 150,
+          "max": 220,
+          "unit": "C",
+          "raw": "150-220°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
       "recommendedPrintSpeed": null,
@@ -1141,10 +1322,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K10 PEI."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 360-390°C, bed 150-220°C, chamber 80-140°C. Chamber temperature is retained in provenance but not mapped to the current field model."
     },
     {
       "id": "kexcelled-k11-pei-params",
@@ -1153,15 +1334,36 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 320,
+          "max": 350,
+          "unit": "C",
+          "raw": "320-350°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 140,
+          "max": 220,
+          "unit": "C",
+          "raw": "140-220°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 20,
+        "max": 50,
+        "unit": "mm/s",
+        "raw": "20-50 mm/s"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1184,10 +1386,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K11 PEI."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image: nozzle 320-350°C, bed 140-220°C, speed 20-50 mm/s, chamber 90-180°C. Chamber temperature is retained in provenance but not mapped to the current field model."
     },
     {
       "id": "kexcelled-k7-tpu-params",
@@ -1196,15 +1398,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 215,
+          "max": 235,
+          "unit": "C",
+          "raw": "215-235°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 50,
+          "max": 80,
+          "unit": "C",
+          "raw": "50-80°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "lt",
+        "value": 50,
+        "min": null,
+        "max": null,
+        "unit": "mm/s",
+        "raw": "<50 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 100,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "100%"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1227,10 +1458,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K7 TPU."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image for K7 TPU 64D: nozzle 215-235°C, bed 50-80°C, cooling fan 100%, speed <50 mm/s. Other print fields remain unverified."
     },
     {
       "id": "kexcelled-k8-tpu-params",
@@ -1239,15 +1470,44 @@
       "nozzleTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 225,
+          "max": 245,
+          "unit": "C",
+          "raw": "225-245°C"
+        }
       },
       "bedTemperature": {
         "initialLayer": null,
         "otherLayers": null,
-        "recommended": null
+        "recommended": {
+          "operator": "range",
+          "value": null,
+          "min": 50,
+          "max": 80,
+          "unit": "C",
+          "raw": "50-80°C"
+        }
       },
       "maxVolumetricSpeedMm3s": null,
-      "recommendedPrintSpeed": null,
+      "recommendedPrintSpeed": {
+        "operator": "range",
+        "value": null,
+        "min": 20,
+        "max": 50,
+        "unit": "mm/s",
+        "raw": "20-50 mm/s"
+      },
+      "coolingFan": {
+        "operator": "eq",
+        "value": 100,
+        "min": null,
+        "max": null,
+        "unit": "%",
+        "raw": "100%"
+      },
       "dryingRecommendation": {
         "temperatureC": null,
         "durationHours": null,
@@ -1270,10 +1530,10 @@
         "notes": null
       },
       "sources": [],
-      "sourceStatus": "not_found",
-      "parameterStatus": "missing",
-      "lastVerifiedAt": "2026-06-20",
-      "sourceNotes": "TMall evidence pack 20260620-batch32. No verified print parameters. THE K8 TPU."
+      "sourceStatus": "official_product_page",
+      "parameterStatus": "partial",
+      "lastVerifiedAt": "2026-08-26",
+      "sourceNotes": "Owner-supplied official product image for K8 TPU 95A: nozzle 225-245°C, bed 50-80°C, cooling fan 100%, speed 20-50 mm/s. Other print fields remain unverified."
     },
     {
       "id": "kexcelled-k5-petg-m-params",

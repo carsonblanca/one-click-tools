@@ -17,6 +17,13 @@ export const PARAMETER_LABELS: Record<string, { zh: string; en: string }> = {
   bedTemperature: { zh: "平台温度", en: "Bed temperature" },
   recommendedPrintSpeed: { zh: "推荐打印速度", en: "Recommended print speed" },
   coolingFan: { zh: "冷却风扇", en: "Cooling fan" },
+  flowRatio: { zh: "流量比例", en: "Flow ratio" },
+  shrink: { zh: "收缩", en: "Shrink" },
+  maxVolumetricSpeed: { zh: "最大体积速度", en: "Maximum volumetric speed" },
+  chamberTemperature: { zh: "腔体温度", en: "Chamber temperature" },
+  retractionLength: { zh: "回抽长度", en: "Retraction length" },
+  retractionSpeed: { zh: "回抽速度", en: "Retraction speed" },
+  zHop: { zh: "抬升高度", en: "Z hop" },
   dryingTemperature: { zh: "烘干温度", en: "Drying temperature" },
   dryingTime: { zh: "烘干时间", en: "Drying time" },
 };

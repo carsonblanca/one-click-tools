@@ -1,5 +1,8 @@
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { updateSupabaseFilamentDraftRow } from "./supabase-draft-repository";
+import { getParameterCategory, type ParameterCategory } from "@/lib/filaments/parameters/parameter-category";
+import { getParameterByProductLine } from "@/lib/filaments/parameters/catalog";
+import kexcelledProductLines from "@/data/filaments/product-lines/kexcelled.json";
 import { mapCanonicalFilamentProduct, type CanonicalFilamentProduct } from "@/lib/filaments/catalog/canonical-mapper";
 
 export type ColorDisplayStatus = "pending" | "approved" | "hidden";
@@ -45,16 +48,21 @@ export type AdminFilamentDraft = {
     parameterAppliedAt?: string;
     parameterAppliedBy?: string;
     parameterLocked?: boolean;
+    parameterCategories?: Record<string, ParameterCategory>;
+    parameterSources?: Record<string, "official" | "user" | "site">;
     reviewedAt?: string;
     reviewedBy?: string;
     manualParameters?: Array<{
       id: string;
+      key?: string;
       labelZh: string;
       labelEn: string;
       value: string;
       unit: string;
-      sourceStatus: "official" | "manual" | "missing";
+      sourceStatus: "official" | "site" | "user" | "manual" | "missing";
       sourceNote: string;
+      category: ParameterCategory;
+      locked?: boolean;
     }>;
   };
   importStatus: string;
@@ -69,9 +77,63 @@ export type AdminFilamentDraft = {
   canonical: CanonicalFilamentProduct;
 };
 
+function compact(value: unknown): string {
+  return typeof value === "string" ? value.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
+}
+
+function curatedPrintParameters(productLineName: string) {
+  const normalized = compact(productLineName);
+  const line = (kexcelledProductLines.productLines as Array<{ id: string; productLine: string }>).find(
+    (item) => compact(item.productLine) === normalized,
+  );
+  const record = line ? getParameterByProductLine(line.id) : null;
+  if (!record) return null;
+
+  const fields: Record<string, string> = {};
+  const add = (key: string, value: string | null | undefined) => {
+    if (value) fields[key] = value;
+  };
+  add("nozzleTemperature", record.nozzleTemperature.recommended?.raw);
+  add("bedTemperature", record.bedTemperature.recommended?.raw);
+  add("recommendedPrintSpeed", record.recommendedPrintSpeed?.raw);
+  add("coolingFan", record.coolingFan?.raw);
+  if (!Object.keys(fields).length) return null;
+
+  return {
+    fields,
+    categories: Object.fromEntries(Object.keys(fields).map((key) => [key, getParameterCategory(key)])),
+    sources: Object.fromEntries(Object.keys(fields).map((key) => [key, "official"])) as Record<string, "official" | "user" | "site">,
+  } as const;
+}
+
 export function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>): AdminFilamentDraft {
   const data = (sourceRow.draft_data ?? {}) as Record<string, unknown>;
   const sourceProductLine = (data.productLine as Record<string, unknown> | null) || {};
+  const rawParameters = (data.parameters as AdminFilamentDraft["parameters"] | null) || null;
+  const curated = curatedPrintParameters(String(sourceRow.product_line_name || sourceProductLine.name || ""));
+  const fields = { ...(curated?.fields || {}), ...(rawParameters?.fields || {}) };
+  const parameterCategories = { ...(curated?.categories || {}), ...(rawParameters?.parameterCategories || {}) };
+  const parameterSources: Record<string, "official" | "user" | "site"> = {
+    ...(curated?.sources || {}),
+    ...(rawParameters?.parameterSources || {}),
+  };
+  const parameters: AdminFilamentDraft["parameters"] = rawParameters
+    ? {
+        ...rawParameters,
+        fields,
+        parameterCategories,
+        parameterSources,
+        status: rawParameters.status === "missing" && curated ? "official_partial" : rawParameters.status,
+      }
+    : {
+        status: (curated ? "official_partial" : "missing") as ParameterReviewStatus,
+        sourceType: curated ? "official_product_page" : "missing",
+        fields,
+        sourceEvidence: [],
+        reviewNote: curated ? "已补充本地核验的官方打印参数，保存后写入草稿。" : "",
+        parameterCategories,
+        parameterSources,
+      };
   const canonical = mapCanonicalFilamentProduct({
     brandId: sourceRow.brand_id,
     brandName: String((data.brand as Record<string, unknown> | undefined)?.name || sourceRow.brand_id),
@@ -93,13 +155,7 @@ export function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType
       variant: String(sourceRow.variant || sourceProductLine.variant || ""),
     },
     colors: (data.canonicalColors as AdminFilamentDraft["colors"]) || (data.colors as AdminFilamentDraft["colors"]) || [],
-    parameters: (data.parameters as AdminFilamentDraft["parameters"]) || {
-      status: "missing",
-      sourceType: "missing",
-      fields: {},
-      sourceEvidence: [],
-      reviewNote: "",
-    },
+    parameters,
     importStatus: sourceRow.status,
     reviewStatus: sourceRow.review_status,
     publicationStatus: sourceRow.publication_status,

@@ -67,6 +67,7 @@ export type FilamentParameterRecord = {
   bedTemperature: TemperatureRange;
   maxVolumetricSpeedMm3s: number | null;
   recommendedPrintSpeed: NumericParameter | null;
+  coolingFan?: NumericParameter | null;
 
   dryingRecommendation: DryingRecommendation;
   hardenedNozzleRequired: boolean | null;
