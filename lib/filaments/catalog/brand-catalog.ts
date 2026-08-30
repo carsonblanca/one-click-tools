@@ -2,10 +2,24 @@ export type BrandEntry = {
   id: string;
   name: string;
   nameZh: string;
+  nameEn?: string;
+  slug?: string;
   aliases: string[];
   popularityRank: number;
   filamentCount: number;
   verificationStatus: "verified" | "pending";
+  nameZhTw?: string;
+  logoUrl?: string | null;
+  websiteUrl?: string | null;
+  origin?: string | null;
+  contactInfo?: string | null;
+  officialStoreUrl?: string | null;
+  officialStoreName?: string | null;
+  description?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  status?: "active" | "inactive" | "archived";
+  sortOrder?: number;
 };
 
 export type BrandSort = "popular" | "a-z" | "z-a" | "count";
