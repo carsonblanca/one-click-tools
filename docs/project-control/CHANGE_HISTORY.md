@@ -214,3 +214,9 @@ Kexcelled spool material guidance now uses `PP / PET / ABS（以实际料盘为�
 ## 2026-08-23 — Complete transparent ABS T parameters from supplied Tmall screenshots
 
 Updated local draft `capture-20260817024438-9acb75e7a1e3-d9ed9669` with 16 screenshot-derived official parameter candidates for the 8-color `THE K5™ ABS T` transparent series. All candidates remain `pending_review`; draft status remains unpublished and no approved `fields` were written. Set the previously empty product-line name to `THE K5™ ABS T` and normalized the print-speed key to `recommendedPrintSpeed` for Chinese display. Browser readback passed for all 8 color URLs; TypeScript and targeted ESLint passed. Production uploads, deletes, publication, and deployment: 0.
+## 2026-08-30 — Codex Context Recovery Protocol
+
+- Added `CURRENT_TASK_CHECKPOINT.md` as the small overwriteable current-task recovery state file.
+- Added `CODEX_CONTEXT_RECOVERY_PROTOCOL.md` covering minimal startup reads, context recovery continuation, loop/no-progress stops, append-only history, and frozen capability boundaries.
+- Recorded `Implement Minimal Shared Canonical Mapper + Read-Only Parameter Detail Projection` as `PAUSED_CONTEXT_OVERLOAD`; it remains paused pending the new protocol and was not resumed.
+- Documentation-only control change. Existing history and all business-code changes were preserved.

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasAdminScope } from "@/lib/admin/permissions";
 import { readAdminSession } from "@/lib/admin/session";
+import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { readAdminFilamentDraft } from "@/lib/filaments/drafts/admin-drafts";
+import { toParameterDetailProjection } from "@/lib/filaments/catalog/canonical-mapper";
 import { updateAdminFilamentDraft } from "@/lib/filaments/drafts/admin-drafts";
 import type {
   ColorDisplayStatus,
@@ -9,6 +12,26 @@ import type {
 } from "@/lib/filaments/drafts/admin-drafts";
 
 export const runtime = "nodejs";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ sourceRunId: string }> },
+) {
+  const session = await readAdminSession();
+  if (!session || !hasAdminScope(session.role, "candidate.view")) {
+    return NextResponse.json({ error: "无权查看草稿。" }, { status: 403 });
+  }
+
+  const { sourceRunId } = await params;
+  const sourceRow = await getFilamentDraftBySourceRunId(sourceRunId);
+  if (!sourceRow) return NextResponse.json({ error: "草稿不存在。" }, { status: 404 });
+
+  const draft = readAdminFilamentDraft(sourceRow);
+  return NextResponse.json({
+    sourceRunId,
+    projection: toParameterDetailProjection(draft.canonical),
+  });
+}
 
 const COLOR_STATUSES = new Set<ColorDisplayStatus>(["pending", "approved", "hidden"]);
 const IMAGE_STATUSES = new Set<ImageDisplayStatus>(["pending", "approved", "hidden", "no_image"]);

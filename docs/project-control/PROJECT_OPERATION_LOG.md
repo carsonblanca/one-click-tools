@@ -1037,3 +1037,9 @@ Task: Diagnose failed Vercel build for imported draft edit deployment.
 - Validation: targeted TypeScript PASS; targeted ESLint PASS; production Vercel build PASS; live readback PASS (`参数候选（13）`, values visible, no bottom `颜色资料（36）`, color editor present, legacy template absent).
 - Deployment: `dpl_EavYgkNvEPjG9AzfZW7o6qRDsPAU`, READY and aliased to `https://one-click-tools.com`.
 - Data impact: no color deletion, parameter rewrite, upload, approval, or publication. Production publication remains `0`.
+## 2026-08-30 20:40:00 +0800 — Implement Minimal Shared Canonical Mapper + Read-Only Parameter Detail Projection
+
+- Added a pure shared canonical mapper for identity, material/variant/surface classification, colors, images, technical/print parameters, preset families, and publication status.
+- Connected the mapper to the Admin draft read path and Frontend published Kexcelled path; added an authenticated read-only Admin GET projection for parameter detail, image summary, preset summary, and publication state.
+- Added targeted regression coverage for ABS P (10 parameters), the four frozen ABS products (10/13/13/12 parameter counts), and preservation of color/image counts.
+- No database/schema changes, business-data writes, Production writes, browser validation, OCR/FIP work, publication, deletion, deployment, or frozen KEXCELLED data-path changes.

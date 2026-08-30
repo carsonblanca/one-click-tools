@@ -2,9 +2,12 @@ import "server-only";
 
 import { getServerSupabaseClient } from "@/lib/supabase/server";
 import { inferIndustryColorNameEn } from "@/lib/filaments/catalog/color-name-inference";
-import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
+import { getParameterCategory, type ParameterCategory } from "@/lib/filaments/parameters/parameter-category";
+import { getParameterByProductLine } from "@/lib/filaments/parameters/catalog";
+import kexcelledProductLines from "@/data/filaments/product-lines/kexcelled.json";
 import type { CatalogRecord } from "./mock-catalog-ext";
 import type { CatalogColor, ColorFamily } from "./mock-colors";
+import { mapCanonicalFilamentProduct, type CanonicalFilamentProduct } from "./canonical-mapper";
 
 export type PublicKexcelledAbsProduct = {
   sourceRunId: string;
@@ -12,10 +15,11 @@ export type PublicKexcelledAbsProduct = {
   variant: string;
   materialType: string;
   parameters: Record<string, unknown>;
-  parameterEntries: Array<{ key: string; value: string }>;
+  parameterEntries: Array<{ key: string; value: string; category: ParameterCategory }>;
   defaultColor: string | null;
-  colors: Array<{ name: string; code: string; sku: string; hex: string | null; imageUrl: string | null; imageObjectKey: string | null; physicalSwatchUrl: string | null; physicalSwatchStatus: string }>;
+  colors: Array<{ name: string; code: string; sku: string; hex: string | null; imageUrl: string | null; imageObjectKey: string | null; physicalSwatchUrl: string | null; physicalSwatchStatus: string; finish: string }>;
   images: string[];
+  canonical: CanonicalFilamentProduct;
 };
 
 function objectValue(value: unknown): Record<string, unknown> {
@@ -28,8 +32,29 @@ function text(value: unknown): string {
   return typeof value === "string" || typeof value === "number" ? String(value).trim() : "";
 }
 
-function parameterValue(value: Record<string, unknown>) {
-  return text(value.normalizedDisplayValue) || text(value.normalizedValue) || text(value.rawValue) || text(value.value);
+function compact(value: unknown): string {
+  return text(value).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function curatedParameterRecord(productLineName: string) {
+  const normalized = compact(productLineName);
+  const line = (kexcelledProductLines.productLines as Array<{ id: string; productLine: string }>).find(
+    (item) => compact(item.productLine) === normalized,
+  );
+  return line ? getParameterByProductLine(line.id) : null;
+}
+
+function curatedParameterFields(productLineName: string): Record<string, string> {
+  const record = curatedParameterRecord(productLineName);
+  if (!record) return {};
+  const fields: Record<string, string> = {};
+  const add = (key: string, value: string | null | undefined) => { if (value) fields[key] = value; };
+  add("nozzleTemperature", record.nozzleTemperature.recommended?.raw);
+  add("bedTemperature", record.bedTemperature.recommended?.raw);
+  add("recommendedPrintSpeed", record.recommendedPrintSpeed?.raw);
+  add("maxVolumetricSpeed", record.maxVolumetricSpeedMm3s == null ? null : `${record.maxVolumetricSpeedMm3s} mm³/s`);
+  add("coolingFan", record.coolingFan?.raw);
+  return fields;
 }
 
 function firstColor(data: Record<string, unknown>) {
@@ -45,47 +70,55 @@ function firstColor(data: Record<string, unknown>) {
 function mapProduct(row: Record<string, unknown>): PublicKexcelledAbsProduct {
   const data = objectValue(row.draft_data);
   const productLine = objectValue(data.productLine);
+  const productLineName = text(row.product_line_name) || text(productLine.name);
   const rawColors = Array.isArray(data.canonicalColors) ? data.canonicalColors : Array.isArray(data.colors) ? data.colors : [];
-  const rawImages = Array.isArray(data.images) ? data.images : [];
   const parameterBlock = objectValue(data.parameters);
-  const rawCandidates = Array.isArray(parameterBlock.candidates) ? parameterBlock.candidates : [];
-  const parameterFields = objectValue(parameterBlock.fields);
-  const parameterEntries = Object.entries(parameterFields).map(([key, value]) => ({ key, value: text(value) }));
-  for (const value of rawCandidates) {
-    const candidate = objectValue(value);
-    const key = text(candidate.canonicalKey) || text(candidate.key);
-    const candidateValue = parameterValue(candidate);
-    if (key && candidateValue && !parameterEntries.some((entry) => entry.key === key)) {
-      parameterEntries.push({ key, value: candidateValue });
-    }
-  }
+  const parameterFields = { ...curatedParameterFields(text(row.product_line_name) || text(productLine.name)), ...objectValue(parameterBlock.fields) };
+  const canonical = mapCanonicalFilamentProduct({
+    brandId: row.brand_id,
+    brandName: "Kexcelled",
+    productLineName,
+    materialType: row.material_type || productLine.materialType,
+    variant: row.variant || productLine.variant,
+    reviewStatus: row.review_status,
+    publicationStatus: row.publication_status,
+    draftData: { ...data, parameters: { ...parameterBlock, fields: parameterFields } },
+  });
+  const parameterEntries = [...canonical.technicalParameters, ...canonical.printParameters].map((parameter) => ({
+    key: parameter.key,
+    value: parameter.value,
+    category: parameter.category,
+  }));
+  const publicVariant = canonical.identity.variant;
+  const inferredFinish = canonical.classification.surfaceEffect;
   return {
     sourceRunId: text(row.source_run_id),
-    productLine: resolveImportedProductLineName({ rowName: row.product_line_name, materialType: row.material_type || productLine.materialType, draftData: data }),
-    variant: text(row.variant) || text(productLine.variant),
-    materialType: text(row.material_type) || text(productLine.materialType) || "ABS",
+    productLine: canonical.identity.productLine,
+    variant: publicVariant,
+    materialType: canonical.identity.materialType,
     parameters: Object.fromEntries(parameterEntries.map((entry) => [entry.key, entry.value])),
     parameterEntries,
     defaultColor: firstColor(data),
-    colors: rawColors.map((value) => {
+    colors: rawColors.map((value, index) => {
       const color = objectValue(value);
       const variants = Array.isArray(color.colorVariants) ? color.colorVariants : Array.isArray(color.skuVariants) ? color.skuVariants : [];
       const firstVariant = objectValue(variants[0]);
       return {
-        name: text(color.nameZh || color.displayNameZh || color.nameEn),
-        code: text(color.officialColorCode || color.colorCode),
-        sku: text(color.rawSkuText || firstVariant.rawSkuText),
+        name: canonical.colors[index]?.nameZh || text(color.nameZh || color.displayNameZh || color.nameEn),
+        code: canonical.colors[index]?.officialColorCode || text(color.officialColorCode || color.colorCode),
+        sku: canonical.colors[index]?.sku || text(color.rawSkuText || firstVariant.rawSkuText),
         hex: text(color.hexColor || color.hex || color.colorHex) || null,
         imageUrl: text(color.publicUrl || color.imageUrl || color.localImagePath) || null,
         imageObjectKey: text(color.imageObjectKey || color.r2ObjectKey || color.localImagePath || color.imagePackagePath || firstVariant.imagePackagePath) || null,
         physicalSwatchUrl: text(color.physicalSwatchUrl || color.physicalColorCardUrl) || null,
         physicalSwatchStatus: text(color.physicalSwatchStatus || color.physicalColorCardStatus),
+        finish: inferredFinish !== "semi-glossy"
+          ? inferredFinish
+          : (text(color.finish || color.surfaceFinish) || inferredFinish),
       };
     }),
-    images: rawImages.map((value) => {
-      const image = objectValue(value);
-      return text(image.publicUrl || image.url || image.imageUrl || image.localImagePath);
-    }).filter(Boolean),
+    images: canonical.images.map((image) => image.ref),
+    canonical,
   };
 }
 
@@ -120,7 +153,7 @@ function publicColor(color: PublicKexcelledAbsProduct["colors"][number]): Catalo
     colorFamily: colorFamily(hex),
     hex,
     rgb,
-    finish: "semi-glossy",
+    finish: (color.finish || "semi-glossy") as CatalogColor["finish"],
     transparency: "opaque",
     hasDigitalSwatch: Boolean(hex || color.code),
     hasPhysicalSwatch: Boolean(color.physicalSwatchUrl && color.physicalSwatchStatus === "approved"),

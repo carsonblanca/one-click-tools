@@ -1,5 +1,6 @@
 import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { updateSupabaseFilamentDraftRow } from "./supabase-draft-repository";
+import { mapCanonicalFilamentProduct, type CanonicalFilamentProduct } from "@/lib/filaments/catalog/canonical-mapper";
 
 export type ColorDisplayStatus = "pending" | "approved" | "hidden";
 export type ImageDisplayStatus = "pending" | "approved" | "hidden" | "no_image";
@@ -65,11 +66,22 @@ export type AdminFilamentDraft = {
   createdAt?: string;
   updatedAt?: string;
   updatedBy?: string;
+  canonical: CanonicalFilamentProduct;
 };
 
-function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>): AdminFilamentDraft {
+export function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>>): AdminFilamentDraft {
   const data = (sourceRow.draft_data ?? {}) as Record<string, unknown>;
   const sourceProductLine = (data.productLine as Record<string, unknown> | null) || {};
+  const canonical = mapCanonicalFilamentProduct({
+    brandId: sourceRow.brand_id,
+    brandName: String((data.brand as Record<string, unknown> | undefined)?.name || sourceRow.brand_id),
+    productLineName: sourceRow.product_line_name || sourceProductLine.name,
+    materialType: sourceRow.material_type || sourceProductLine.materialType,
+    variant: sourceRow.variant || sourceProductLine.variant,
+    reviewStatus: sourceRow.review_status,
+    publicationStatus: sourceRow.publication_status,
+    draftData: data,
+  });
   return {
     sourceRunId: sourceRow.source_run_id,
     importId: sourceRow.import_id,
@@ -96,6 +108,7 @@ function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType<typeof
     rawSkuCount: data.rawSkuCount as number | undefined,
     createdAt: sourceRow.created_at,
     updatedAt: sourceRow.updated_at,
+    canonical,
   };
 }
 
@@ -118,6 +131,16 @@ export async function updateAdminFilamentDraft(
     canonicalColors: nextDraft.colors,
     parameters: nextDraft.parameters,
   };
+  const canonical = mapCanonicalFilamentProduct({
+    brandId: nextDraft.brand.id || nextDraft.brand.name,
+    brandName: nextDraft.brand.name,
+    productLineName: nextDraft.productLine.name,
+    materialType: nextDraft.productLine.materialType,
+    variant: nextDraft.productLine.variant,
+    reviewStatus: nextDraft.reviewStatus,
+    publicationStatus: nextDraft.publicationStatus,
+    draftData: nextDraftData,
+  });
 
   await updateSupabaseFilamentDraftRow({
     sourceRunId,
@@ -132,5 +155,5 @@ export async function updateAdminFilamentDraft(
     updatedBy: nextDraft.updatedBy || "system",
   });
 
-  return nextDraft;
+  return { ...nextDraft, canonical };
 }
