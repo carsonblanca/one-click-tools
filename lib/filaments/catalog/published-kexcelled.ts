@@ -222,12 +222,11 @@ export function toPublicCatalogRecords(products: PublicKexcelledAbsProduct[]): C
   }));
 }
 
-async function listKexcelledAbsProducts(options: { includePendingDrafts: boolean }) {
+async function listKexcelledProducts(options: { includePendingDrafts: boolean }) {
   let query = getServerSupabaseClient()
     .from("filament_drafts")
     .select("source_run_id,product_line_name,material_type,variant,draft_data")
     .ilike("brand_id", "kexcelled")
-    .eq("material_type", "ABS")
     .order("product_line_name", { ascending: true });
 
   query = options.includePendingDrafts
@@ -241,7 +240,12 @@ async function listKexcelledAbsProducts(options: { includePendingDrafts: boolean
 }
 
 export async function listPublishedKexcelledAbsProducts() {
-  return listKexcelledAbsProducts({ includePendingDrafts: false });
+  return (await listKexcelledProducts({ includePendingDrafts: false }))
+    .filter((product) => product.materialType === "ABS");
+}
+
+export async function listPublishedKexcelledProducts() {
+  return listKexcelledProducts({ includePendingDrafts: false });
 }
 
 /**
@@ -252,5 +256,13 @@ export async function listLocalPreviewKexcelledAbsProducts() {
   if (process.env.NODE_ENV === "production") {
     throw new Error("local_preview_unavailable_in_production");
   }
-  return listKexcelledAbsProducts({ includePendingDrafts: true });
+  return (await listKexcelledProducts({ includePendingDrafts: true }))
+    .filter((product) => product.materialType === "ABS");
+}
+
+export async function listLocalPreviewKexcelledProducts() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("local_preview_unavailable_in_production");
+  }
+  return listKexcelledProducts({ includePendingDrafts: true });
 }

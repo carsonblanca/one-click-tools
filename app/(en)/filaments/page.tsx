@@ -4,8 +4,8 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BambuFilamentCatalogExperience from "@/components/filaments/BambuFilamentCatalogExperience";
 import {
-  listLocalPreviewKexcelledAbsProducts,
-  listPublishedKexcelledAbsProducts,
+  listLocalPreviewKexcelledProducts,
+  listPublishedKexcelledProducts,
   toPublicCatalogRecords,
 } from "@/lib/filaments/catalog/published-kexcelled";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
@@ -25,8 +25,8 @@ export default async function FilamentCatalogPage() {
   let extraRecords: CatalogRecord[] = [];
   try {
     const products = process.env.NODE_ENV === "production"
-      ? await listPublishedKexcelledAbsProducts()
-      : await listLocalPreviewKexcelledAbsProducts();
+      ? await listPublishedKexcelledProducts()
+      : await listLocalPreviewKexcelledProducts();
     extraRecords = toPublicCatalogRecords(products);
   } catch {
     extraRecords = [];

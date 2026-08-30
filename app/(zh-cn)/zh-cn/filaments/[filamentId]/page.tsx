@@ -7,8 +7,8 @@ import FilamentDetailPageContent from "@/components/filaments/FilamentDetailPage
 import { CATALOG_RECORDS, getCatalogRecord } from "@/lib/filaments/catalog";
 import { getLocalizedFilamentColorName } from "@/lib/filaments/catalog/localization";
 import {
-  listLocalPreviewKexcelledAbsProducts,
-  listPublishedKexcelledAbsProducts,
+  listLocalPreviewKexcelledProducts,
+  listPublishedKexcelledProducts,
   toPublicCatalogRecords,
 } from "@/lib/filaments/catalog/published-kexcelled";
 
@@ -22,8 +22,8 @@ async function resolveCatalogRecord(filamentId: string) {
 
   try {
     const products = process.env.NODE_ENV === "production"
-      ? await listPublishedKexcelledAbsProducts()
-      : await listLocalPreviewKexcelledAbsProducts();
+      ? await listPublishedKexcelledProducts()
+      : await listLocalPreviewKexcelledProducts();
     return toPublicCatalogRecords(products).find((record) => record.id === filamentId);
   } catch {
     return undefined;
@@ -35,8 +35,8 @@ async function resolveRelatedRecords(filamentId: string) {
   if (staticRecord) return CATALOG_RECORDS;
   try {
     const products = process.env.NODE_ENV === "production"
-      ? await listPublishedKexcelledAbsProducts()
-      : await listLocalPreviewKexcelledAbsProducts();
+      ? await listPublishedKexcelledProducts()
+      : await listLocalPreviewKexcelledProducts();
     return toPublicCatalogRecords(products);
   } catch {
     return [];
