@@ -10,6 +10,21 @@ type BrandOption = {
   productLines: Array<{ id: string; label: string; materialType: string }>;
 };
 
+type ImportedEvidenceAudit = {
+  sourceRunId: string;
+  productLine: string;
+  materialType: string;
+  status: string;
+  reviewStatus: string;
+  publicationStatus: string;
+  colorCount: number;
+  imageCount: number;
+  parameterCandidateCount: number;
+  parameterFieldCount: number;
+  evidenceCount: number;
+  complete: boolean;
+};
+
 const EVIDENCE_TYPES = [
   ["official_color_reference", "官方颜色参考图"],
   ["product_detail_color_card", "商品详情色卡图"],
@@ -22,10 +37,12 @@ const EVIDENCE_TYPES = [
 export default function FilamentEvidenceWorkbench({
   brands,
   initialDrafts,
+  importedEvidenceAudit,
   actorId,
 }: {
   brands: BrandOption[];
   initialDrafts: FilamentEvidenceDraft[];
+  importedEvidenceAudit: ImportedEvidenceAudit[];
   actorId: string;
 }) {
   const [brandId, setBrandId] = useState("");
@@ -163,6 +180,32 @@ export default function FilamentEvidenceWorkbench({
               </tr>
             ))}</tbody>
           </table>
+        </div>
+      </section>
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold">已导入耗材证据审计</h2>
+            <p className="mt-1 text-sm text-[#667281]">只读汇总 FIP 导入记录中的颜色、图片、参数候选和证据数据；不替代人工审核。</p>
+          </div>
+        </div>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead><tr className="border-b"><th className="p-2">产品系列</th><th className="p-2">材料</th><th className="p-2">颜色</th><th className="p-2">图片</th><th className="p-2">参数候选/字段</th><th className="p-2">证据</th><th className="p-2">状态</th><th className="p-2">详情</th></tr></thead>
+            <tbody>{importedEvidenceAudit.map((item) => (
+              <tr key={item.sourceRunId} className="border-b">
+                <td className="p-2">{item.productLine}</td>
+                <td className="p-2">{item.materialType}</td>
+                <td className="p-2">{item.colorCount}</td>
+                <td className="p-2">{item.imageCount}</td>
+                <td className="p-2">{item.parameterCandidateCount} / {item.parameterFieldCount}</td>
+                <td className="p-2">{item.evidenceCount}</td>
+                <td className={`p-2 font-medium ${item.complete ? "text-emerald-700" : "text-amber-700"}`}>{item.complete ? "数据完整" : "需补充"}</td>
+                <td className="p-2"><Link className="text-[#1F5FAF] hover:underline" href={`/admin/filament-drafts/${encodeURIComponent(item.sourceRunId)}`}>查看草稿</Link></td>
+              </tr>
+            ))}</tbody>
+          </table>
+          {!importedEvidenceAudit.length ? <p className="p-3 text-sm text-slate-500">暂无 Kexcelled 导入记录</p> : null}
         </div>
       </section>
     </div>

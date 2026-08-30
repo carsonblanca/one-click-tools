@@ -6,6 +6,7 @@ import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-
 import DraftDetailClient from "./DraftDetailClient";
 import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
 import { parameterLabel } from "@/lib/filaments/parameters/parameter-labels";
+import PublishDraftButton from "./PublishDraftButton";
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -118,6 +119,7 @@ export default async function FilamentDraftPage({
             >
               编辑草稿
             </Link>
+            {draft.publication_status !== "published" ? <PublishDraftButton sourceRunId={sourceRunId} /> : null}
           </div>
         </div>
       </header>
