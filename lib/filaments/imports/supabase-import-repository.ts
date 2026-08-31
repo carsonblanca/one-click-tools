@@ -320,6 +320,61 @@ export type RawFilamentDraftRow = {
   updated_by: string;
 };
 
+export type FilamentDraftCollisionRow = Pick<RawFilamentDraftRow,
+  "id" | "import_id" | "draft_key" | "source_run_id" | "status" | "review_status" | "publication_status"
+>;
+
+export type FilamentImportCollisionRow = Pick<FilamentImportRow,
+  "id" | "source_run_id" | "status" | "original_filename" | "r2_object_key"
+>;
+
+const COLLISION_DRAFT_COLUMNS = "id,import_id,draft_key,source_run_id,status,review_status,publication_status";
+const COLLISION_IMPORT_COLUMNS = "id,source_run_id,status,original_filename,r2_object_key";
+
+export async function getFilamentDraftCollisionRowsBySourceRunIds(sourceRunIds: readonly string[]) {
+  if (!sourceRunIds.length) return [] as FilamentDraftCollisionRow[];
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(COLLISION_DRAFT_COLUMNS)
+    .in("source_run_id", [...sourceRunIds])
+    .returns<FilamentDraftCollisionRow[]>();
+  if (error) throw repositoryError("get_draft_source_run_collisions");
+  return data ?? [];
+}
+
+export async function getFilamentDraftCollisionRowsByDraftKeys(draftKeys: readonly string[]) {
+  if (!draftKeys.length) return [] as FilamentDraftCollisionRow[];
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(COLLISION_DRAFT_COLUMNS)
+    .in("draft_key", [...draftKeys])
+    .returns<FilamentDraftCollisionRow[]>();
+  if (error) throw repositoryError("get_draft_key_collisions");
+  return data ?? [];
+}
+
+export async function getFilamentImportCollisionRowsBySourceRunIds(sourceRunIds: readonly string[]) {
+  if (!sourceRunIds.length) return [] as FilamentImportCollisionRow[];
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .select(COLLISION_IMPORT_COLUMNS)
+    .in("source_run_id", [...sourceRunIds])
+    .returns<FilamentImportCollisionRow[]>();
+  if (error) throw repositoryError("get_import_source_run_collisions");
+  return data ?? [];
+}
+
+export async function getFilamentImportCollisionRowsByIds(importIds: readonly string[]) {
+  if (!importIds.length) return [] as FilamentImportCollisionRow[];
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .select(COLLISION_IMPORT_COLUMNS)
+    .in("id", [...importIds])
+    .returns<FilamentImportCollisionRow[]>();
+  if (error) throw repositoryError("get_import_id_collisions");
+  return data ?? [];
+}
+
 const RAW_FILAMENT_DRAFT_COLUMNS = "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at,created_by,updated_by";
 
 export async function getFilamentDraftRawBySourceRunId(sourceRunId: string): Promise<RawFilamentDraftRow | null> {
