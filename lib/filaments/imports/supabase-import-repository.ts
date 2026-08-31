@@ -124,6 +124,16 @@ export async function getFilamentImportBySourceRunId(sourceRunId: string) {
   return data ? mapImportRow(data) : null;
 }
 
+export async function getFilamentImportRawById(id: string): Promise<FilamentImportRow | null> {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_imports")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<FilamentImportRow>();
+  if (error) throw repositoryError("get_import_by_id");
+  return data ?? null;
+}
+
 export async function updateFilamentImportBySourceRunId(input: {
   sourceRunId: string;
   originalFilename?: string;
@@ -288,4 +298,38 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     created_at: string;
     updated_at: string;
   } | null;
+}
+
+export type RawFilamentDraftRow = {
+  id: string;
+  import_id: string;
+  draft_key: string;
+  source_run_id: string;
+  product_index: number;
+  status: string;
+  review_status: string;
+  publication_status: string;
+  brand_id: string;
+  product_line_name: string | null;
+  material_type: string | null;
+  variant: string | null;
+  draft_data: JsonValue;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+};
+
+const RAW_FILAMENT_DRAFT_COLUMNS = "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at,created_by,updated_by";
+
+export async function getFilamentDraftRawBySourceRunId(sourceRunId: string): Promise<RawFilamentDraftRow | null> {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(RAW_FILAMENT_DRAFT_COLUMNS)
+    .eq("source_run_id", sourceRunId)
+    .order("product_index", { ascending: true })
+    .limit(1)
+    .maybeSingle<RawFilamentDraftRow>();
+  if (error) throw repositoryError("get_raw_draft");
+  return data ?? null;
 }
