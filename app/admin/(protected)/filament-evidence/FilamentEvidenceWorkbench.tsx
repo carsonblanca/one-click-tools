@@ -19,7 +19,8 @@ type ImportedEvidenceAudit = {
   publicationStatus: string;
   colorCount: number;
   imageCount: number;
-  parameterCandidateCount: number;
+  rawCandidateCount: number;
+  acceptedParameterCount: number | null;
   parameterFieldCount: number;
   evidenceCount: number;
   complete: boolean;
@@ -191,14 +192,16 @@ export default function FilamentEvidenceWorkbench({
         </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead><tr className="border-b"><th className="p-2">产品系列</th><th className="p-2">材料</th><th className="p-2">颜色</th><th className="p-2">图片</th><th className="p-2">参数候选/字段</th><th className="p-2">证据</th><th className="p-2">状态</th><th className="p-2">详情</th></tr></thead>
+            <thead><tr className="border-b"><th className="p-2">产品系列</th><th className="p-2">材料</th><th className="p-2">颜色</th><th className="p-2">图片</th><th className="p-2">原始候选</th><th className="p-2">已接受参数</th><th className="p-2">参数字段</th><th className="p-2">证据</th><th className="p-2">状态</th><th className="p-2">详情</th></tr></thead>
             <tbody>{importedEvidenceAudit.map((item) => (
               <tr key={item.sourceRunId} className="border-b">
                 <td className="p-2">{item.productLine}</td>
                 <td className="p-2">{item.materialType}</td>
                 <td className="p-2">{item.colorCount}</td>
                 <td className="p-2">{item.imageCount}</td>
-                <td className="p-2">{item.parameterCandidateCount} / {item.parameterFieldCount}</td>
+                <td className="p-2">{item.rawCandidateCount}</td>
+                <td className="p-2">{item.acceptedParameterCount ?? "—"}</td>
+                <td className="p-2">{item.parameterFieldCount}</td>
                 <td className="p-2">{item.evidenceCount}</td>
                 <td className={`p-2 font-medium ${item.complete ? "text-emerald-700" : "text-amber-700"}`}>{item.complete ? "数据完整" : "需补充"}</td>
                 <td className="p-2"><Link className="text-[#1F5FAF] hover:underline" href={`/admin/filament-drafts/${encodeURIComponent(item.sourceRunId)}`}>查看草稿</Link></td>

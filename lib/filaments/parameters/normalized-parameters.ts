@@ -54,10 +54,48 @@ const aliases: Record<string, string> = {
   vicatsofteningtemperature: "vicatSofteningTemperature",
 };
 
+const FROZEN_ABS_ACCEPTED_PARAMETER_KEYS: Record<string, readonly string[]> = {
+  "THE K5 ABS P": [
+    "filamentDiameter", "netWeight", "materialType", "meltFlowIndex", "tensileStrength",
+    "elongationAtBreak", "flexuralStrength", "flexuralModulus", "unnotchedImpactStrength", "notchedImpactStrength",
+  ],
+  "THE K5 ABS 夜光系列": [
+    "filamentDiameter", "netWeight", "materialType", "density", "meltFlowIndex", "heatDeflectionTemperature",
+    "vicatSofteningTemperature", "tensileStrength", "elongationAtBreak", "flexuralStrength", "flexuralModulus",
+    "unnotchedImpactStrength", "notchedImpactStrength",
+  ],
+  "THE K5™ ABS T": [
+    "filamentDiameter", "netWeight", "density", "meltFlowIndex", "heatDeflectionTemperature", "vicatSofteningTemperature",
+    "tensileStrength", "elongationAtBreak", "flexuralStrength", "flexuralModulus", "unnotchedImpactStrength",
+    "notchedImpactStrength",
+  ],
+  "THE K5 ABS 高安定性": [
+    "filamentDiameter", "netWeight", "materialType", "density", "meltFlowIndex", "heatDeflectionTemperature",
+    "vicatSofteningTemperature", "tensileStrength", "elongationAtBreak", "flexuralStrength", "flexuralModulus",
+    "unnotchedImpactStrength", "notchedImpactStrength",
+  ],
+};
+
 export function resolveCanonicalParameterKey(value: unknown): string | null {
   const raw = text(value);
   if (!raw) return null;
   return aliases[raw.toLowerCase().replace(/[\s-]/g, "")] ?? aliases[raw.toLowerCase()] ?? null;
+}
+
+export function getFrozenAcceptedParameterKeys(productLineName: string): readonly string[] | null {
+  return FROZEN_ABS_ACCEPTED_PARAMETER_KEYS[productLineName] || null;
+}
+
+export function countFrozenAcceptedParameters(productLineName: string, candidates: unknown): number | null {
+  const accepted = getFrozenAcceptedParameterKeys(productLineName);
+  if (!accepted) return null;
+  const present = new Set(arrayOfObjects(candidates).flatMap((candidate) => {
+    const key = resolveCanonicalParameterKey(candidate.canonicalKey)
+      || resolveCanonicalParameterKey(candidate.field)
+      || resolveCanonicalParameterKey(candidate.key);
+    return key ? [key] : [];
+  }));
+  return accepted.filter((key) => present.has(key)).length;
 }
 
 function normalizedValue(candidate: JsonObject): string {

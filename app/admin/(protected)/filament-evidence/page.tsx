@@ -3,6 +3,7 @@ import path from "node:path";
 import { requireAdminScope } from "@/lib/admin/auth";
 import { listFilamentEvidenceDrafts } from "@/lib/filaments/evidence/evidence-draft-store";
 import { listRecentFilamentDrafts } from "@/lib/filaments/imports/supabase-import-repository";
+import { countFrozenAcceptedParameters } from "@/lib/filaments/parameters/normalized-parameters";
 import FilamentEvidenceWorkbench from "./FilamentEvidenceWorkbench";
 
 type ProductLineFile = {
@@ -67,7 +68,11 @@ async function readImportedEvidenceAudit() {
         publicationStatus: draft.publication_status,
         colorCount: colors.length,
         imageCount: images.length,
-        parameterCandidateCount: candidates.length,
+        rawCandidateCount: candidates.length,
+        acceptedParameterCount: countFrozenAcceptedParameters(
+          draft.product_line_name || String(objectValue(data.productLine).name || ""),
+          candidates,
+        ),
         parameterFieldCount: Object.keys(fields).length,
         evidenceCount: evidence.length,
         complete,
