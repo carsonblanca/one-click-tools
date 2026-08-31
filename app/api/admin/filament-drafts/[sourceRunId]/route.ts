@@ -10,6 +10,7 @@ import type {
   ImageDisplayStatus,
   ParameterReviewStatus,
 } from "@/lib/filaments/drafts/admin-drafts";
+import type { ParameterCategory } from "@/lib/filaments/parameters/parameter-category";
 
 export const runtime = "nodejs";
 
@@ -79,6 +80,7 @@ type DraftPatch = {
     unit?: string;
     sourceStatus?: string;
     sourceNote?: string;
+    category?: ParameterCategory;
   }>;
   parameters?: {
     status: ParameterReviewStatus;
@@ -198,6 +200,7 @@ export async function PATCH(
             unit: item.unit || "",
             sourceStatus: manualParamSourceStatus(item.sourceStatus),
             sourceNote: item.sourceNote || "",
+            category: item.category === "print" ? "print" : "material",
           })),
         reviewedAt: now,
         reviewedBy: session.actorId,
