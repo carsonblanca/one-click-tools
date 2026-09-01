@@ -4,6 +4,7 @@ import { listRecentFilamentDrafts } from "@/lib/filaments/imports/supabase-impor
 import { getManualBrand } from "@/lib/filaments/manual-filament-types";
 import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
 import DraftPublishControls from "./DraftPublishControls";
+import FrozenAbsProductionInsertControl from "./FrozenAbsProductionInsertControl";
 
 function text(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -43,6 +44,9 @@ export default async function FilamentDraftsPage() {
             name: resolveImportedProductLineName({ rowName: draft.product_line_name, materialType: draft.material_type, draftData: draft.draft_data }) || "未命名耗材",
             published: draft.publication_status === "published",
           }))} />
+        </div>
+        <div className="mt-6">
+          <FrozenAbsProductionInsertControl />
         </div>
       </header>
 

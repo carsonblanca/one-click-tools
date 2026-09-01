@@ -17,8 +17,11 @@ import {
   getFilamentImportRawById,
 } from "@/lib/filaments/imports/supabase-import-repository";
 import { FROZEN_ABS_PRODUCTION_PREFLIGHT_TARGETS } from "@/lib/filaments/imports/frozen-production-preflight";
+import { frozenAbsExecutablePayloadRaw } from "@/lib/filaments/imports/frozen-production-executable-payload";
 
 export const runtime = "nodejs";
+
+const PAGE_EXECUTE_HEADER_VALUE = "confirm-frozen-abs-page-insert-only";
 
 function isProduction() {
   return process.env.VERCEL_ENV === "production";
@@ -44,7 +47,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const payload = parseFrozenProductionExecutablePayload(await request.text());
+  const requestBody = await request.text();
+  const pageExecution = requestBody.length === 0 && request.headers.get("x-frozen-abs-page-execute") === PAGE_EXECUTE_HEADER_VALUE;
+  const payload = parseFrozenProductionExecutablePayload(pageExecution ? frozenAbsExecutablePayloadRaw() : requestBody);
   if (!payload.ok) {
     return NextResponse.json({ error: payload.code }, { status: 400 });
   }
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
   if (!isProduction()) {
     return NextResponse.json({ dryRun: true, insertOnly: true, sourceCount: payload.records.length });
   }
-  if (request.headers.get("x-frozen-abs-execute") !== FROZEN_ABS_EXECUTE_HEADER_VALUE) {
+  if (!pageExecution && request.headers.get("x-frozen-abs-execute") !== FROZEN_ABS_EXECUTE_HEADER_VALUE) {
     return NextResponse.json({ error: "explicit_execute_confirmation_required" }, { status: 409 });
   }
 

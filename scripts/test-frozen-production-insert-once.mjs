@@ -7,6 +7,7 @@ const {
   FROZEN_ABS_EXECUTE_HEADER_VALUE,
   mayExecuteFrozenProductionInsert,
 } = await jiti.import("../lib/filaments/imports/frozen-production-insert-once.ts");
+const { frozenAbsExecutablePayloadRaw } = await jiti.import("../lib/filaments/imports/frozen-production-executable-payload.ts");
 
 const humanAdmin = { actorId: "admin", actorType: "human", role: "admin", sessionId: "test", expiresAt: 9_999_999_999 };
 
@@ -16,5 +17,6 @@ assert.equal(mayExecuteFrozenProductionInsert(null), false);
 assert.equal(mayExecuteFrozenProductionInsert({ ...humanAdmin, actorType: "service" }), false);
 assert.equal(mayExecuteFrozenProductionInsert({ ...humanAdmin, role: "codex" }), false);
 assert.equal(mayExecuteFrozenProductionInsert(humanAdmin), true);
+assert.equal(frozenAbsExecutablePayloadRaw().length > 0, true);
 
 console.log("frozen production insert-once guards: PASS");
