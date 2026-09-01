@@ -8,9 +8,9 @@ import {
 } from "@/lib/admin/machine-import-auth";
 import {
   fipImageEntries,
-  FipValidationError,
-  parseKexcelledFip,
-} from "@/lib/filaments/imports/kexcelled-fip";
+  GenericFipValidationError,
+  parseFilamentFip,
+} from "@/lib/filaments/imports/generic-fip";
 import {
   appendAdminAuditLog,
   createFilamentDrafts,
@@ -98,6 +98,7 @@ function mapColors(
 
 function draftData(input: {
   fileName: string;
+  brandId: string;
   product: Record<string, unknown>;
   colors: Record<string, unknown>[];
   parameters: Record<string, unknown>[];
@@ -111,7 +112,7 @@ function draftData(input: {
   const fields = fieldsAcceptedFromCandidates(candidates);
   return {
     source: { zipFilename: input.fileName },
-    brand: { name: "KEXCELLED" },
+    brand: { name: input.brandId },
     productLine: {
       name: stringValue(product.productLine),
       materialType: stringValue(product.materialType),
@@ -236,13 +237,17 @@ export async function POST(request: NextRequest) {
     const file = formData.get("files");
     const brandId = stringValue(formData.get("brandId")).toLowerCase();
     if (!(file instanceof File)) return jsonError("请选择 FIP 文件", "FILE_REQUIRED", 400);
-    if (brandId !== "kexcelled") return jsonError("当前仅支持 KEXCELLED FIP", "UNSUPPORTED_BRAND", 400);
+    if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(brandId)) return jsonError("品牌 ID 无效", "INVALID_BRAND", 400);
     if (!file.name.toLowerCase().endsWith(".filament-import.zip")) {
       return jsonError("不是合法 FIP", "INVALID_FIP", 400, "文件扩展名必须为 .filament-import.zip");
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const parsed = parseKexcelledFip(bytes);
+    const parsed = parseFilamentFip(bytes);
+    const manifestBrand = stringValue(parsed.manifest.brand).toLowerCase();
+    if (!manifestBrand || manifestBrand !== brandId) {
+      return jsonError("品牌 ID 与 FIP manifest 不一致", "BRAND_MISMATCH", 400);
+    }
     const importId = randomUUID();
     const sourceRunId = `${parsed.sourceRunId}-${importId.slice(0, 8)}`;
     const actorId = machineAuthorized ? MACHINE_IMPORT_ACTOR_ID : session?.actorId;
@@ -290,27 +295,37 @@ export async function POST(request: NextRequest) {
     });
     createdImportId = importId;
 
-    const drafts = await createFilamentDrafts(parsed.products.map((product, productIndex) => ({
-      id: randomUUID(),
-      importId,
-      draftKey: safeDraftKey(sourceRunId, productIndex),
-      sourceRunId,
-      productIndex,
-      brandId,
-      productLineName: stringValue(product.productLine) || null,
-      materialType: stringValue(product.materialType) || null,
-      variant: stringValue(product.variant) || null,
-      draftData: jsonValue(draftData({
-        fileName: file.name,
-        product,
-        colors: parsed.colors,
-        parameters: parsed.parameters,
-        images: parsed.images,
-        evidence: parsed.evidence,
-        assetKeys,
-      })),
-      actorId,
-    })));
+    const drafts = await createFilamentDrafts(parsed.products.map((product, productIndex) => {
+      // A generic FIP may contain multiple product candidates. Keep each
+      // draft's color/image projection limited to its own product boundary.
+      const productColors = Array.isArray(product.colors)
+        ? product.colors.filter((value): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value))
+        : parsed.colors;
+      const productImagePaths = new Set(productColors.map((color) => stringValue(color.packagePath)));
+      const productImages = parsed.images.filter((image) => productImagePaths.has(stringValue(image.packagePath)));
+      return {
+        id: randomUUID(),
+        importId,
+        draftKey: safeDraftKey(sourceRunId, productIndex),
+        sourceRunId,
+        productIndex,
+        brandId,
+        productLineName: stringValue(product.productLine) || null,
+        materialType: stringValue(product.materialType) || null,
+        variant: stringValue(product.variant) || null,
+        draftData: jsonValue(draftData({
+          fileName: file.name,
+          brandId,
+          product,
+          colors: productColors,
+          parameters: parsed.parameters,
+          images: productImages,
+          evidence: parsed.evidence,
+          assetKeys,
+        })),
+        actorId,
+      };
+    }));
 
     await appendAdminAuditLog({
       actorId,
@@ -358,7 +373,7 @@ export async function POST(request: NextRequest) {
         // Preserve the original import failure.
       }
     }
-    if (error instanceof FipValidationError) {
+    if (error instanceof GenericFipValidationError) {
       return jsonError(error.message, "INVALID_FIP", 400, error.details);
     }
     const code = error instanceof Error && error.message.startsWith("missing_")
