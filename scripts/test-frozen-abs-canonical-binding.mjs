@@ -7,6 +7,8 @@ const rows = [
   { source_run_id: "capture-20260824112412-1b922918eb3b-1a2cf768", product_line_name: "THE K5™ ABS T", material_type: "ABS", variant: "Basic" },
   { source_run_id: "capture-20260817024438-9acb75e7a1e3-d9ed9669", product_line_name: "THE K5™ ABS T", material_type: "ABS", variant: "Basic" },
   { source_run_id: "other", product_line_name: "THE K5™ PLA", material_type: "PLA", variant: "Basic" },
+  { source_run_id: "capture-20260824112444-35b30a75d3c1-1cb32773", draft_data: { productLine: { name: "THE K5 ABS P", materialType: "ABS", variant: "Basic" } } },
+  { source_run_id: "capture-20260817024719-a9870e0684e1-4b966ba9", draft_data: { productLine: { name: "THE K5 ABS P", materialType: "ABS", variant: "Basic" } } },
 ];
 
 assert.deepEqual(selectCanonicalPublishedKexcelledRows(rows).map((row) => row.source_run_id), [

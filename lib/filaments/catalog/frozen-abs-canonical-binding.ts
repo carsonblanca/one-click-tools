@@ -8,7 +8,17 @@ const FROZEN_ABS_SOURCE_BY_IDENTITY = new Map([
 ]);
 
 function identityKey(row: PublishedKexcelledRow): string {
-  return [row.product_line_name, row.material_type, row.variant]
+  const draftData = row.draft_data && typeof row.draft_data === "object" && !Array.isArray(row.draft_data)
+    ? row.draft_data as PublishedKexcelledRow
+    : {};
+  const productLine = draftData.productLine && typeof draftData.productLine === "object" && !Array.isArray(draftData.productLine)
+    ? draftData.productLine as PublishedKexcelledRow
+    : {};
+  return [
+    row.product_line_name || productLine.name,
+    row.material_type || productLine.materialType,
+    row.variant || productLine.variant,
+  ]
     .map((value) => String(value ?? "").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ""))
     .join("|");
 }
