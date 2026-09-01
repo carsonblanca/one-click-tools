@@ -16,4 +16,11 @@ assert.deepEqual(selectCanonicalPublishedKexcelledRows(rows).map((row) => row.so
   "capture-20260817024438-9acb75e7a1e3-d9ed9669",
   "other",
 ]);
+
+assert.deepEqual(selectCanonicalPublishedKexcelledRows([
+  { source_run_id: "capture-20260824112444-35b30a75d3c1-1cb32773" },
+  { source_run_id: "capture-20260817024719-a9870e0684e1-4b966ba9" },
+]).map((row) => row.source_run_id), [
+  "capture-20260817024719-a9870e0684e1-4b966ba9",
+]);
 console.log("frozen ABS canonical binding: PASS");

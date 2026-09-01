@@ -7,6 +7,13 @@ const FROZEN_ABS_SOURCE_BY_PRODUCT_LINE = new Map([
   ["thek5abs高安定性", "capture-20260817024828-d998ea43cf3a-27ab63c4"],
 ]);
 
+const RETIRED_ABS_SOURCE_RUN_IDS = new Set([
+  "capture-20260824112444-35b30a75d3c1-1cb32773",
+  "capture-20260824112506-1343f6fe707d-e18b8c1d",
+  "capture-20260824112412-1b922918eb3b-1a2cf768",
+  "capture-20260824114407-fa86fe2cb8d5-6e2cc746",
+]);
+
 function productLineKey(row: PublishedKexcelledRow): string {
   const draftData = row.draft_data && typeof row.draft_data === "object" && !Array.isArray(row.draft_data)
     ? row.draft_data as PublishedKexcelledRow
@@ -23,9 +30,11 @@ function productLineKey(row: PublishedKexcelledRow): string {
 export function selectCanonicalPublishedKexcelledRows(rows: PublishedKexcelledRow[]): PublishedKexcelledRow[] {
   const selectedFrozen = new Set<string>();
   return rows.filter((row) => {
+    const sourceRunId = String(row.source_run_id ?? "");
+    if (RETIRED_ABS_SOURCE_RUN_IDS.has(sourceRunId)) return false;
     const frozenSourceRunId = FROZEN_ABS_SOURCE_BY_PRODUCT_LINE.get(productLineKey(row));
     if (!frozenSourceRunId) return true;
-    if (String(row.source_run_id ?? "") !== frozenSourceRunId) return false;
+    if (sourceRunId !== frozenSourceRunId) return false;
     if (selectedFrozen.has(frozenSourceRunId)) return false;
     selectedFrozen.add(frozenSourceRunId);
     return true;
