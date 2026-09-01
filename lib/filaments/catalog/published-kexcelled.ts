@@ -9,6 +9,7 @@ import type { CatalogRecord } from "./mock-catalog-ext";
 import type { CatalogColor, ColorFamily } from "./mock-colors";
 import { mapCanonicalFilamentProduct, type CanonicalFilamentProduct } from "./canonical-mapper";
 
+import { selectCanonicalPublishedKexcelledRows } from "./frozen-abs-canonical-binding";
 export type PublicKexcelledAbsProduct = {
   sourceRunId: string;
   productLine: string;
@@ -236,7 +237,7 @@ async function listKexcelledProducts(options: { includePendingDrafts: boolean })
   const { data, error } = await query;
 
   if (error) throw new Error("published_kexcelled_abs_read_failed");
-  return ((data || []) as Array<Record<string, unknown>>).map(mapProduct);
+  return selectCanonicalPublishedKexcelledRows((data || []) as Array<Record<string, unknown>>).map(mapProduct);
 }
 
 export async function listPublishedKexcelledAbsProducts() {
