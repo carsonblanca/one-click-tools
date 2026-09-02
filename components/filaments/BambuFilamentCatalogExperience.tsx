@@ -28,7 +28,7 @@ import {
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
-import { canonicalProductKey, countCanonicalProducts } from "@/lib/filaments/catalog/canonical-product-dataset";
+import { countCanonicalProducts, uniqueCanonicalProducts } from "@/lib/filaments/catalog/canonical-product-dataset";
 import BrandLogo from "./BrandLogo";
 
 type MaterialVariantMap = Record<string, string[]>;
@@ -41,6 +41,10 @@ const MATERIAL_VARIANTS: MaterialVariantMap = {
   ABS: ["Basic"],
   ASA: ["Basic"],
   PA: ["Basic", "CF", "GF"],
+  PP: ["Basic", "GF"],
+  PCTG: ["Basic"],
+  TPE: ["Basic"],
+  Composite: ["Basic", "CF", "GF"],
   PC: ["Basic"],
   PVA: ["Basic"],
   HIPS: ["Basic"],
@@ -50,7 +54,7 @@ const MATERIAL_VARIANTS: MaterialVariantMap = {
   Other: ["Basic"],
 };
 
-const MATERIAL_TYPES = ["PLA", "PETG", "PET", "TPU", "ABS", "ASA", "PA", "PC", "PEEK", "PEI", "PVA", "HIPS", "Support", "Other"];
+const MATERIAL_TYPES = ["PLA", "PETG", "PET", "TPU", "ABS", "ASA", "PA", "PC", "PP", "PCTG", "TPE", "Composite", "PEEK", "PEI", "PVA", "HIPS", "Support", "Other"];
 
 function downloadJson(fileName: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -324,7 +328,7 @@ function brandCount(records: CatalogRecord[], brandName: string): number {
 export default function BambuFilamentCatalogExperience({ locale = "en", extraRecords = [] }: { locale?: Locale; extraRecords?: CatalogRecord[] }) {
   const { isDark } = useTheme();
   const t = LABELS[locale] || LABELS.en;
-  const catalogRecords = useMemo(() => [...CATALOG_RECORDS, ...extraRecords], [extraRecords]);
+  const catalogRecords = useMemo(() => uniqueCanonicalProducts([...CATALOG_RECORDS, ...extraRecords]), [extraRecords]);
   const printerOptions = useMemo(() => getBambuPrinterOptions(), []);
 
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
