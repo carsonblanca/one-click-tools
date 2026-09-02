@@ -10,6 +10,7 @@ import {
   fipImageEntries,
   GenericFipValidationError,
   parseFilamentFip,
+  sourceRunIdForProduct,
 } from "@/lib/filaments/imports/generic-fip";
 import {
   appendAdminAuditLog,
@@ -307,7 +308,7 @@ export async function POST(request: NextRequest) {
         id: randomUUID(),
         importId,
         draftKey: safeDraftKey(sourceRunId, productIndex),
-        sourceRunId,
+        sourceRunId: sourceRunIdForProduct(sourceRunId, productIndex),
         productIndex,
         brandId,
         productLineName: stringValue(product.productLine) || null,
@@ -344,7 +345,7 @@ export async function POST(request: NextRequest) {
       importId,
       draftIds: drafts.map((draft) => draft.id),
       sourceRunId,
-      redirectTo: `/admin/filament-drafts/${encodeURIComponent(sourceRunId)}`,
+      redirectTo: `/admin/filament-drafts/${encodeURIComponent(drafts[0]?.source_run_id || sourceRunId)}`,
       summary: {
         productLine: stringValue(parsed.products[0]?.productLine),
         materialType: stringValue(parsed.products[0]?.materialType),

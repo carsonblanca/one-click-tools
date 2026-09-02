@@ -24,6 +24,11 @@ export type ParsedFilamentFip = {
   sourceRunId: string;
 };
 
+/** Keep one import's source identity while giving each product draft a unique route key. */
+export function sourceRunIdForProduct(sourceRunId: string, productIndex: number) {
+  return `${sourceRunId}::product-${productIndex}`;
+}
+
 export class GenericFipValidationError extends Error {
   readonly details: string;
 
