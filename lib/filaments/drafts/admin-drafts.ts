@@ -1,4 +1,4 @@
-import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { getFilamentDraftById, getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { updateSupabaseFilamentDraftRow } from "./supabase-draft-repository";
 import { getParameterCategory, type ParameterCategory } from "@/lib/filaments/parameters/parameter-category";
 import { getParameterByProductLine } from "@/lib/filaments/parameters/catalog";
@@ -171,8 +171,9 @@ export function readAdminFilamentDraft(sourceRow: NonNullable<Awaited<ReturnType
 export async function updateAdminFilamentDraft(
   sourceRunId: string,
   updater: (draft: AdminFilamentDraft) => AdminFilamentDraft,
+  draftId?: string,
 ) {
-  const sourceRow = await getFilamentDraftBySourceRunId(sourceRunId);
+  const sourceRow = draftId ? await getFilamentDraftById(draftId) : await getFilamentDraftBySourceRunId(sourceRunId);
   if (!sourceRow) return null;
 
   const draft = readAdminFilamentDraft(sourceRow);
@@ -199,6 +200,7 @@ export async function updateAdminFilamentDraft(
   });
 
   await updateSupabaseFilamentDraftRow({
+    draftId: sourceRow.id,
     sourceRunId,
     draftData: nextDraftData,
     status: nextDraft.importStatus,

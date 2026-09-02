@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasAdminScope } from "@/lib/admin/permissions";
 import { readAdminSession } from "@/lib/admin/session";
-import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { getFilamentDraftById, getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { readAdminFilamentDraft } from "@/lib/filaments/drafts/admin-drafts";
 import { toParameterDetailProjection } from "@/lib/filaments/catalog/canonical-mapper";
 import { updateAdminFilamentDraft } from "@/lib/filaments/drafts/admin-drafts";
@@ -24,11 +24,14 @@ export async function GET(
   }
 
   const { sourceRunId } = await params;
-  const sourceRow = await getFilamentDraftBySourceRunId(sourceRunId);
+  const draftId = new URL(_request.url).searchParams.get("draftId") || undefined;
+  const sourceRow = draftId ? await getFilamentDraftById(draftId) : await getFilamentDraftBySourceRunId(sourceRunId);
+  if (sourceRow && sourceRow.source_run_id !== sourceRunId) return NextResponse.json({ error: "草稿绑定信息不匹配。" }, { status: 409 });
   if (!sourceRow) return NextResponse.json({ error: "草稿不存在。" }, { status: 404 });
 
   const draft = readAdminFilamentDraft(sourceRow);
   return NextResponse.json({
+    draftId: sourceRow.id,
     sourceRunId,
     projection: toParameterDetailProjection(draft.canonical),
   });
@@ -112,6 +115,7 @@ export async function PATCH(
   }
 
   const { sourceRunId } = await params;
+  const draftId = new URL(request.url).searchParams.get("draftId") || undefined;
 
   if (!patch.product && !patch.colors && !patch.parameters && !patch.manualParameters) {
     return NextResponse.json({ error: "无有效更新字段。" }, { status: 400 });
@@ -216,7 +220,7 @@ export async function PATCH(
       updatedAt: now,
       updatedBy: session.actorId,
     };
-    });
+    }, draftId);
   } catch (error) {
     const message = error instanceof Error ? error.message : "save_failed";
     return NextResponse.json({ error: message }, { status: 500 });

@@ -11,11 +11,18 @@ await access(routeUrl);
 const routeSource = await readFile(routeUrl, "utf8");
 assert.match(routeSource, /export async function POST/);
 assert.equal(fileURLToPath(routeUrl).endsWith("app/api/admin/filament-drafts/batch-publish/route.ts"), true);
+const listPageSource = await readFile(new URL("../app/admin/(protected)/filament-drafts/page.tsx", import.meta.url), "utf8");
+const detailPageSource = await readFile(new URL("../app/admin/(protected)/filament-drafts/[sourceRunId]/page.tsx", import.meta.url), "utf8");
+const detailClientSource = await readFile(new URL("../app/admin/(protected)/filament-drafts/[sourceRunId]/DraftDetailClient.tsx", import.meta.url), "utf8");
+assert.match(listPageSource, /draftId: draft\.id/);
+assert.match(listPageSource, /\?draftId=\$\{encodeURIComponent\(draft\.id\)\}/);
+assert.match(detailPageSource, /getFilamentDraftById\(draftId\)/);
+assert.match(detailClientSource, /\?draftId=\$\{encodeURIComponent\(draftId\)\}/);
 
 const batchIds = Array.from({ length: 9 }, (_, index) => `opencode-dry-run-${index + 1}`);
 assert.deepEqual(parseBatchPublishRequest({ sourceRunIds: batchIds }), {
   ok: true,
-  sourceRunIds: batchIds,
+  items: batchIds.map((sourceRunId) => ({ sourceRunId })),
 });
 assert.equal(parseBatchPublishRequest({ sourceRunIds: [] }).ok, false);
 assert.equal(parseBatchPublishRequest({ sourceRunIds: ["../invalid"] }).ok, false);
@@ -23,8 +30,18 @@ assert.equal(parseBatchPublishRequest({ sourceRunIds: [batchIds[0], batchIds[0]]
 assert.equal(parseBatchPublishRequest({ sourceRunIds: batchIds, draftId: "draft-1" }).ok, false);
 assert.deepEqual(parseBatchPublishRequest({ sourceRunIds: [batchIds[0]], draftId: "draft-1" }), {
   ok: true,
-  sourceRunIds: [batchIds[0]],
-  draftId: "draft-1",
+  items: [{ sourceRunId: batchIds[0], draftId: "draft-1" }],
+});
+
+assert.deepEqual(parseBatchPublishRequest({ drafts: [
+  { sourceRunId: "capture-X", draftId: "draft-a" },
+  { sourceRunId: "capture-X", draftId: "draft-b" },
+] }), {
+  ok: true,
+  items: [
+    { sourceRunId: "capture-X", draftId: "draft-a" },
+    { sourceRunId: "capture-X", draftId: "draft-b" },
+  ],
 });
 
 const rows = new Map(batchIds.map((sourceRunId, index) => [sourceRunId, {
@@ -35,8 +52,9 @@ const rows = new Map(batchIds.map((sourceRunId, index) => [sourceRunId, {
 }]));
 let writeCount = 0;
 const dependencies = {
-  async readDraft(sourceRunId) {
-    return rows.get(sourceRunId) || null;
+  async readDraft(sourceRunId, draftId) {
+    const row = rows.get(sourceRunId) || null;
+    return draftId && row?.id !== draftId ? null : row;
   },
   async publishDraft({ sourceRunId }) {
     writeCount += 1;
@@ -87,7 +105,33 @@ const wrongDraftId = await publishDraftBatch({
   draftId: "wrong-draft",
 }, dependencies);
 assert.deepEqual(wrongDraftId.published, []);
-assert.match(wrongDraftId.failed[0].error, /draftId 不匹配/);
+assert.match(wrongDraftId.failed[0].error, /草稿不存在/);
 assert.equal(writeCount, 3);
+
+const sameSourceRows = new Map([
+  ["draft-a", { id: "draft-a", sourceRunId: "capture-X", status: "draft", publicationStatus: "draft" }],
+  ["draft-b", { id: "draft-b", sourceRunId: "capture-X", status: "draft", publicationStatus: "draft" }],
+]);
+const sameSourceDependencies = {
+  async readDraft(sourceRunId, draftId) {
+    const row = sameSourceRows.get(draftId);
+    return row?.sourceRunId === sourceRunId ? row : null;
+  },
+  async publishDraft({ draftId }) {
+    writeCount += 1;
+    const row = sameSourceRows.get(draftId);
+    return { ...row, status: "published", publicationStatus: "published" };
+  },
+};
+const sameSourceBatch = await publishDraftBatch({
+  sourceRunIds: ["capture-X", "capture-X"],
+  drafts: [
+    { sourceRunId: "capture-X", draftId: "draft-a" },
+    { sourceRunId: "capture-X", draftId: "draft-b" },
+  ],
+  actorId: "test-admin",
+}, sameSourceDependencies);
+assert.deepEqual(sameSourceBatch.published, ["capture-X", "capture-X"]);
+assert.equal(writeCount, 5);
 
 console.log("filament batch publish route tests passed");

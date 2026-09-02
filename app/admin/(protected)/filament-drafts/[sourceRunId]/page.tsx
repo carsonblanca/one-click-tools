@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
-import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { getFilamentDraftById, getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import DraftDetailClient from "./DraftDetailClient";
 import { resolveImportedProductLineName } from "@/lib/filaments/catalog/product-line-name";
 import { parameterLabel } from "@/lib/filaments/parameters/parameter-labels";
@@ -50,15 +50,21 @@ function draftLookupFailure(error: unknown) {
 
 export default async function FilamentDraftPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sourceRunId: string }>;
+  searchParams: Promise<{ draftId?: string }>;
 }) {
   await requireAdminScope("candidate.view");
   const { sourceRunId } = await params;
+  const { draftId } = await searchParams;
   const requestId = randomUUID();
   let draft;
   try {
-    draft = await getFilamentDraftBySourceRunId(sourceRunId);
+    draft = draftId
+      ? await getFilamentDraftById(draftId)
+      : await getFilamentDraftBySourceRunId(sourceRunId);
+    if (draft && draft.source_run_id !== sourceRunId) draft = null;
   } catch (error) {
     const failure = draftLookupFailure(error);
     console.error("filament_draft_detail_failed", {
@@ -115,11 +121,11 @@ export default async function FilamentDraftPage({
             </Link>
             <Link
               className="rounded bg-cyan-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-cyan-800"
-              href={`/admin/filament-drafts/${encodeURIComponent(sourceRunId)}/edit`}
+              href={`/admin/filament-drafts/${encodeURIComponent(sourceRunId)}/edit?draftId=${encodeURIComponent(draft.id)}`}
             >
               编辑草稿
             </Link>
-            {draft.publication_status !== "published" ? <PublishDraftButton sourceRunId={sourceRunId} /> : null}
+            {draft.publication_status !== "published" ? <PublishDraftButton sourceRunId={sourceRunId} draftId={draft.id} /> : null}
           </div>
         </div>
       </header>
@@ -127,6 +133,7 @@ export default async function FilamentDraftPage({
       {sourceType !== "manual" ? (
         <DraftDetailClient
           sourceRunId={sourceRunId}
+          draftId={draft.id}
           brandId={draft.brand_id}
           brand={brand}
           productLine={productLine}

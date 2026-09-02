@@ -191,6 +191,7 @@ function makeParameter(): ManualParameter {
 
 export default function DraftDetailClient({
   sourceRunId,
+  draftId,
   brandId,
   brand,
   productLine,
@@ -204,6 +205,7 @@ export default function DraftDetailClient({
   parameterReviewNote,
 }: {
   sourceRunId: string;
+  draftId: string;
   brandId: string;
   brand: DraftObject;
   productLine: DraftObject;
@@ -305,7 +307,7 @@ export default function DraftDetailClient({
 
     try {
       const res = await fetch(
-        `/api/admin/filament-drafts/${encodeURIComponent(sourceRunId)}`,
+        `/api/admin/filament-drafts/${encodeURIComponent(sourceRunId)}?draftId=${encodeURIComponent(draftId)}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -378,7 +380,7 @@ export default function DraftDetailClient({
     } finally {
       setSaving(false);
     }
-  }, [hasChanges, hasParameterChanges, saving, sourceRunId, editable, initial, manualParameters, productFields, parameterFields, parameterRows, parameterStatus, parameterSourceType, parameterSourceEvidence, parameterReviewNote]);
+  }, [hasChanges, hasParameterChanges, saving, sourceRunId, draftId, editable, initial, manualParameters, productFields, parameterFields, parameterRows, parameterStatus, parameterSourceType, parameterSourceEvidence, parameterReviewNote]);
 
   const updateColor = useCallback(
     (

@@ -3,6 +3,7 @@ import "server-only";
 import { getServerSupabaseClient } from "@/lib/supabase/server";
 
 export type UpdateDraftInput = {
+  draftId?: string;
   sourceRunId: string;
   draftData: unknown;
   status?: string;
@@ -28,10 +29,12 @@ export async function updateSupabaseFilamentDraftRow(input: UpdateDraftInput) {
   if (input.materialType !== undefined) updatePayload.material_type = input.materialType;
   if (input.variant !== undefined) updatePayload.variant = input.variant;
 
-  const { error } = await getServerSupabaseClient()
+  let query = getServerSupabaseClient()
     .from("filament_drafts")
     .update(updatePayload)
     .eq("source_run_id", input.sourceRunId);
+  if (input.draftId) query = query.eq("id", input.draftId);
+  const { error } = await query;
 
   if (error) {
     const code = error.code || "unknown";

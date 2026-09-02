@@ -39,6 +39,7 @@ export default async function FilamentDraftsPage() {
         <p className="mt-2 text-sm text-slate-600">包含手动录入和 FIP 导入的未发布草稿。</p>
         <div className="mt-4">
           <DraftPublishControls drafts={drafts.map((draft) => ({
+            draftId: draft.id,
             sourceRunId: draft.source_run_id,
             name: resolveImportedProductLineName({ rowName: draft.product_line_name, materialType: draft.material_type, draftData: draft.draft_data }) || "未命名耗材",
             published: draft.publication_status === "published",
@@ -81,8 +82,14 @@ export default async function FilamentDraftsPage() {
                         查看
                       </Link>
                       <Link
+                        className="ml-3 text-slate-700 hover:underline"
+                        href={`/admin/filament-drafts/${encodeURIComponent(draft.source_run_id)}?draftId=${encodeURIComponent(draft.id)}`}
+                      >
+                        详情
+                      </Link>
+                      <Link
                         className="ml-3 text-cyan-700 hover:underline"
-                        href={`/admin/filament-drafts/${encodeURIComponent(draft.source_run_id)}/edit`}
+                        href={`/admin/filament-drafts/${encodeURIComponent(draft.source_run_id)}/edit?draftId=${encodeURIComponent(draft.id)}`}
                       >
                         {sourceType === "manual" ? "继续编辑" : "编辑导入草稿"}
                       </Link>

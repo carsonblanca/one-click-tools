@@ -20,7 +20,7 @@ export type BatchPublishResult = {
 };
 
 export type BatchPublishDependencies = {
-  readDraft(sourceRunId: string): Promise<PublishDraftState | null>;
+  readDraft(sourceRunId: string, draftId?: string): Promise<PublishDraftState | null>;
   publishDraft(input: {
     sourceRunId: string;
     draftId: string;
@@ -34,7 +34,7 @@ export type BatchPublishDependencies = {
 };
 
 type ParsedBatchPublishRequest =
-  | { ok: true; sourceRunIds: string[]; draftId?: string }
+  | { ok: true; items: Array<{ sourceRunId: string; draftId?: string }> }
   | { ok: false; error: string };
 
 function objectValue(value: unknown): Record<string, unknown> {
@@ -57,6 +57,18 @@ function errorMessage(error: unknown): string {
 
 export function parseBatchPublishRequest(value: unknown): ParsedBatchPublishRequest {
   const body = objectValue(value);
+  if (Array.isArray(body.drafts)) {
+    if (body.drafts.length === 0 || body.drafts.length > MAX_PUBLISH_BATCH_SIZE) {
+      return { ok: false, error: `单次最多发布 ${MAX_PUBLISH_BATCH_SIZE} 条草稿。` };
+    }
+    const items = body.drafts.map((item) => {
+      const row = objectValue(item);
+      return { sourceRunId: sourceRunId(row.sourceRunId), draftId: sourceRunId(row.draftId) };
+    });
+    if (items.some((item) => !item.sourceRunId || !item.draftId)) return { ok: false, error: "草稿绑定信息无效。" };
+    if (new Set(items.map((item) => item.draftId)).size !== items.length) return { ok: false, error: "草稿不得重复。" };
+    return { ok: true, items };
+  }
   if (!Array.isArray(body.sourceRunIds)) {
     return { ok: false, error: "sourceRunIds 必须是数组。" };
   }
@@ -81,7 +93,7 @@ export function parseBatchPublishRequest(value: unknown): ParsedBatchPublishRequ
   if (draftId && sourceRunIds.length !== 1) {
     return { ok: false, error: "draftId 仅适用于单条发布。" };
   }
-  return { ok: true, sourceRunIds, ...(draftId ? { draftId } : {}) };
+  return { ok: true, items: sourceRunIds.map((sourceRunIdValue) => ({ sourceRunId: sourceRunIdValue, ...(draftId ? { draftId } : {}) })) };
 }
 
 function validateDraftState(
@@ -104,19 +116,24 @@ export async function publishDraftBatch(
     actorId: string;
     dryRun?: boolean;
     draftId?: string;
+    drafts?: Array<{ sourceRunId: string; draftId: string }>;
   },
   dependencies: BatchPublishDependencies,
 ): Promise<BatchPublishResult> {
-  const preflight = await Promise.all(input.sourceRunIds.map(async (runId) => {
+  const items = input.drafts?.length
+    ? input.drafts
+    : input.sourceRunIds.map((sourceRunIdValue) => ({ sourceRunId: sourceRunIdValue, draftId: input.draftId }));
+  const preflight = await Promise.all(items.map(async (item) => {
     try {
-      const draft = await dependencies.readDraft(runId);
+      const draft = await dependencies.readDraft(item.sourceRunId, item.draftId);
       return {
-        sourceRunId: runId,
+        sourceRunId: item.sourceRunId,
+        draftId: item.draftId,
         draft,
-        issues: validateDraftState(runId, draft, input.draftId),
+        issues: validateDraftState(item.sourceRunId, draft, item.draftId),
       };
     } catch (error) {
-      return { sourceRunId: runId, draft: null, issues: [errorMessage(error)] };
+      return { sourceRunId: item.sourceRunId, draftId: item.draftId, draft: null, issues: [errorMessage(error)] };
     }
   }));
 

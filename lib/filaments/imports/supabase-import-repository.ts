@@ -278,10 +278,11 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     )
     .eq("source_run_id", sourceRunId)
     .order("product_index", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .returns<RawFilamentDraftRow[]>();
   if (error) throw repositoryError("get_draft");
-  return data as {
+  if (!data?.length) return null;
+  if (data.length > 1) throw repositoryError("ambiguous_draft_source_run_id");
+  return data[0] as {
     id: string;
     import_id: string;
     draft_key: string;
@@ -298,6 +299,23 @@ export async function getFilamentDraftBySourceRunId(sourceRunId: string) {
     created_at: string;
     updated_at: string;
   } | null;
+}
+
+export async function getFilamentDraftById(id: string) {
+  const { data, error } = await getServerSupabaseClient()
+    .from("filament_drafts")
+    .select(
+      "id,import_id,draft_key,source_run_id,product_index,status,review_status,publication_status,brand_id,product_line_name,material_type,variant,draft_data,created_at,updated_at",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw repositoryError("get_draft_by_id");
+  return data as Awaited<ReturnType<typeof getFilamentDraftBySourceRunId>>;
+}
+
+export async function getFilamentDraftByIdAndSourceRunId(id: string, sourceRunId: string) {
+  const draft = await getFilamentDraftById(id);
+  return draft?.source_run_id === sourceRunId ? draft : null;
 }
 
 export type RawFilamentDraftRow = {

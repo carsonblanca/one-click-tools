@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { requireAdminScope } from "@/lib/admin/auth";
-import { getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
+import { getFilamentDraftById, getFilamentDraftBySourceRunId } from "@/lib/filaments/imports/supabase-import-repository";
 import { getManualBrand } from "@/lib/filaments/manual-filament-types";
 import { manualParameterTemplate } from "@/lib/filaments/manual-parameter-template";
 import DraftDetailClient from "../DraftDetailClient";
@@ -31,17 +31,21 @@ function candidateValue(candidates: Record<string, unknown>[], key: string): str
 
 export default async function EditManualFilamentDraftPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sourceRunId: string }>;
+  searchParams: Promise<{ draftId?: string }>;
 }) {
   const session = await requireAdminScope("display.draft.edit");
   if (session.role !== "admin" && session.role !== "codex") {
     redirect("/admin/forbidden");
   }
   const { sourceRunId } = await params;
+  const { draftId } = await searchParams;
 
-  const draft = await getFilamentDraftBySourceRunId(sourceRunId);
+  const draft = draftId ? await getFilamentDraftById(draftId) : await getFilamentDraftBySourceRunId(sourceRunId);
   if (!draft) notFound();
+  if (draft.source_run_id !== sourceRunId) notFound();
 
   const brand = getManualBrand(draft.brand_id);
   if (!brand) notFound();
@@ -80,6 +84,7 @@ export default async function EditManualFilamentDraftPage({
         </header>
         <DraftDetailClient
           sourceRunId={sourceRunId}
+          draftId={draft.id}
           brandId={draft.brand_id}
           brand={brand}
           productLine={productLineForEdit}

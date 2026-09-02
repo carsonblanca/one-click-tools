@@ -3,6 +3,7 @@ import { hasAdminScope } from "@/lib/admin/permissions";
 import { readAdminSession } from "@/lib/admin/session";
 import {
   appendAdminAuditLog,
+  getFilamentDraftByIdAndSourceRunId,
   getFilamentDraftBySourceRunId,
 } from "@/lib/filaments/imports/supabase-import-repository";
 import {
@@ -42,12 +43,17 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await publishDraftBatch({
-    sourceRunIds: parsed.sourceRunIds,
+    sourceRunIds: parsed.items.map((item) => item.sourceRunId),
     actorId: session.actorId,
-    draftId: parsed.draftId,
+    draftId: parsed.items.length === 1 ? parsed.items[0].draftId : undefined,
+    drafts: parsed.items.every((item): item is { sourceRunId: string; draftId: string } => Boolean(item.draftId))
+      ? parsed.items as Array<{ sourceRunId: string; draftId: string }>
+      : undefined,
   }, {
-    async readDraft(sourceRunId) {
-      const row = await getFilamentDraftBySourceRunId(sourceRunId);
+    async readDraft(sourceRunId, draftId) {
+      const row = draftId
+        ? await getFilamentDraftByIdAndSourceRunId(draftId, sourceRunId)
+        : await getFilamentDraftBySourceRunId(sourceRunId);
       return row ? draftState(row) : null;
     },
     publishDraft: publishSupabaseFilamentDraft,

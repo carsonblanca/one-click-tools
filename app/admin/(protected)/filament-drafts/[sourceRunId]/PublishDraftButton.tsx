@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function PublishDraftButton({ sourceRunId }: { sourceRunId: string }) {
+export default function PublishDraftButton({ sourceRunId, draftId }: { sourceRunId: string; draftId: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export default function PublishDraftButton({ sourceRunId }: { sourceRunId: strin
       const response = await fetch("/api/admin/filament-drafts/batch-publish", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sourceRunIds: [sourceRunId] }),
+        body: JSON.stringify({ drafts: [{ sourceRunId, draftId }] }),
       });
       const payload = await response.json().catch(() => null) as { published?: string[]; failed?: Array<{ error: string }>; error?: string } | null;
       if (!response.ok) throw new Error(payload?.error || "发布失败。");
