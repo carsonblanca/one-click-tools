@@ -29,6 +29,14 @@ export function sourceRunIdForProduct(sourceRunId: string, productIndex: number)
   return `${sourceRunId}::product-${productIndex}`;
 }
 
+export function genericDraftColorNames(color: JsonObject) {
+  const nameZh = [color.nameZh, color.displayNameZhCN, color.sellerColorName, color.rawSellerOption]
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0) || "";
+  const nameEn = [color.nameEn, color.displayNameEn]
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0) || "";
+  return { nameZh: nameZh.trim(), nameEn: nameEn.trim() };
+}
+
 export class GenericFipValidationError extends Error {
   readonly details: string;
 

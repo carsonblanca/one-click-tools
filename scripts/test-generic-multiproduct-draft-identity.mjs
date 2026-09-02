@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
-import { sourceRunIdForProduct } from "../lib/filaments/imports/generic-fip.ts";
+import { genericDraftColorNames, sourceRunIdForProduct } from "../lib/filaments/imports/generic-fip.ts";
 
 const base = "capture-r3d-sample-abc123";
 const ids = [0, 1, 2, 3, 4].map((index) => sourceRunIdForProduct(base, index));
@@ -15,4 +15,12 @@ assert.deepEqual(ids, [
   "capture-r3d-sample-abc123::product-4",
 ]);
 assert.ok(ids.every((id) => id.startsWith(`${base}::product-`)));
+assert.deepEqual(genericDraftColorNames({ displayNameZhCN: "哑光黑", displayNameEn: "Matte Black" }), {
+  nameZh: "哑光黑",
+  nameEn: "Matte Black",
+});
+assert.deepEqual(genericDraftColorNames({ sellerColorName: "seller fallback" }), {
+  nameZh: "seller fallback",
+  nameEn: "",
+});
 console.log("generic multi-product draft identity tests passed");

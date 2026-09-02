@@ -9,6 +9,7 @@ import {
 import {
   fipImageEntries,
   GenericFipValidationError,
+  genericDraftColorNames,
   parseFilamentFip,
   sourceRunIdForProduct,
 } from "@/lib/filaments/imports/generic-fip";
@@ -73,11 +74,13 @@ function mapColors(
     ]),
   );
   return colors.map((color, index) => {
+    const names = genericDraftColorNames(color);
     const localImagePath = stringValue(color.localImagePath);
     const packagePath = sourceToPackage.get(localImagePath) || localImagePath;
     const objectKey = assetKeys.get(packagePath);
     return {
       ...color,
+      ...names,
       domIndex: index,
       rawSkuText: stringValue(color.rawSkuText)
         || stringValue(objectValue(Array.isArray(color.skuVariants) ? color.skuVariants[0] : {}).rawSkuText),
