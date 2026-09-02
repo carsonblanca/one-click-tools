@@ -28,6 +28,7 @@ import {
 import type { Finish } from "@/lib/filaments/catalog/mock-colors";
 import type { CatalogRecord } from "@/lib/filaments/catalog/mock-catalog-ext";
 import type { Locale } from "@/lib/i18n";
+import { canonicalProductKey, countCanonicalProducts } from "@/lib/filaments/catalog/canonical-product-dataset";
 import BrandLogo from "./BrandLogo";
 
 type MaterialVariantMap = Record<string, string[]>;
@@ -313,7 +314,7 @@ function variantCount(records: CatalogRecord[], materialType: string, variant: s
 }
 
 function materialCount(records: CatalogRecord[], materialType: string): number {
-  return records.filter((r) => r.materialType === materialType).length;
+  return countCanonicalProducts(records, (record) => record.materialType === materialType);
 }
 
 function brandCount(records: CatalogRecord[], brandName: string): number {
@@ -356,7 +357,7 @@ export default function BambuFilamentCatalogExperience({ locale = "en", extraRec
   const realBrandCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const r of catalogRecords) {
-      map.set(r.brand, (map.get(r.brand) || 0) + 1);
+      map.set(r.brand, countCanonicalProducts(catalogRecords, (record) => record.brand === r.brand));
     }
     return map;
   }, [catalogRecords]);

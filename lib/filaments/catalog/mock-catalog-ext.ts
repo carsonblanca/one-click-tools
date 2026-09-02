@@ -1,5 +1,6 @@
 import type { CatalogColor, SpoolSpec, Finish, Transparency, ColorFamily, DigitalSwatch, PhysicalSwatch } from "./mock-colors";
 import { getAllFilamentColors } from "@/lib/filaments/colors/catalog";
+import { normalizeMaterialType } from "./material-taxonomy";
 import r3dProductLines from "@/data/filaments/product-lines/r3d.json";
 import kexcelledProductLines from "@/data/filaments/product-lines/kexcelled.json";
 
@@ -100,7 +101,8 @@ function buildKexcelledRecords(): CatalogRecord[] {
       "kexcelled-the-k5-petg": "PETG",
       "kexcelled-the-k6-petg": "PETG",
     };
-    const materialType = materialTypeMap[c.productLineId] || "PLA";
+    const productLineName = (kexcelledProductLines.productLines as Array<{ id: string; productLine: string }>).find((line) => line.id === c.productLineId)?.productLine || "";
+    const materialType = normalizeMaterialType(materialTypeMap[c.productLineId], productLineName);
     // KEXCELLED ABS is officially sold in multiple net-weight specs (0.5 / 1 / 3 / 5 kg),
     // so it must NOT be treated as a single 1 kg product. Register any KEXCELLED ABS
     // product line ids in materialTypeMap above so materialType resolves to "ABS" here.

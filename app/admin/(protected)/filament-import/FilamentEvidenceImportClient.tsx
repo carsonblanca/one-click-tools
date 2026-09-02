@@ -181,6 +181,7 @@ const MAX_BYTES = 25 * 1024 * 1024;
 const REJECTED_SUFFIX = /\.(exe|dll|dylib|so|sh|bat|cmd|js|mjs|app)$/i;
 const SUPPORTED_IMPORT_BRANDS = [
   { id: "kexcelled", label: "KEXCELLED" },
+  { id: "r3d", label: "R3D" },
 ] as const;
 const DEFAULT_IMPORT_BRAND_ID = SUPPORTED_IMPORT_BRANDS[0]?.id || "";
 
@@ -471,7 +472,7 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
         succeededCount++;
         const result: KexcelledEvidenceImportResult = {
           fileName: selected[i].name,
-          recognizedBrand: "KEXCELLED",
+          recognizedBrand: uploadBrandId.toUpperCase(),
           productLine: payload.summary?.productLine || "",
           materialType: payload.summary?.materialType || "",
           colorCount: payload.summary?.colorCount || 0,
@@ -874,7 +875,6 @@ export default function FilamentEvidenceImportClient({ role, sessionId }: { role
           ))}
           <option value="" disabled>ALIZ（暂未接入）</option>
           <option value="" disabled>MOCHUANG（暂未接入）</option>
-          <option value="" disabled>R3D（暂未接入）</option>
         </select>
         <label className="mt-4 block text-sm font-medium text-[#18202A]" htmlFor="kexcelled-evidence-zips">上传耗材包</label>
         <input

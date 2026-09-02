@@ -1,6 +1,6 @@
 export const MATERIAL_TYPES = [
   "PLA", "PETG", "PET", "TPU", "ABS", "ASA", "PA", "PC",
-  "PEEK", "PEI", "PVA", "HIPS", "Support", "Other",
+  "PP", "PCTG", "TPE", "Composite", "PEEK", "PEI", "PVA", "HIPS", "Support", "Other",
 ] as const;
 
 export const MATERIAL_VARIANTS: Record<string, string[]> = {
@@ -11,6 +11,10 @@ export const MATERIAL_VARIANTS: Record<string, string[]> = {
   ABS: ["Basic", "Transparent", "High Stability"],
   ASA: ["Basic"],
   PA: ["Basic", "CF", "GF"],
+  PP: ["Basic", "GF"],
+  PCTG: ["Basic"],
+  TPE: ["Basic"],
+  Composite: ["Basic", "CF", "GF"],
   PC: ["Basic"],
   PVA: ["Basic"],
   HIPS: ["Basic"],
@@ -21,7 +25,7 @@ export const MATERIAL_VARIANTS: Record<string, string[]> = {
 };
 
 const MATERIAL_TOKENS = [
-  "PETG", "TPU", "ABS", "ASA", "PEEK", "PEI", "PVA", "HIPS", "PLA", "PET", "PA", "PC",
+  "PETG", "TPU", "ABS", "ASA", "PEEK", "PEI", "PVA", "HIPS", "PCTG", "PLA", "PET", "PP", "PA", "PC", "TPE",
 ];
 
 export function inferMaterialTypeFromName(name: string): string | null {
